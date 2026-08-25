@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useState } from "react";
 
 type WaterReading = {
@@ -134,23 +135,16 @@ export default function Home() {
         {/* Sidebar */}
         <aside className="hidden w-64 shrink-0 border-r border-white/5 bg-[#071d23]/90 px-5 py-7 lg:block">
 
-          <div className="mb-12 flex items-center gap-3">
-
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#00b8a9] text-lg font-bold text-[#032f35] shadow-[0_0_25px_rgba(0,184,169,0.3)]">
-              AS
-            </div>
-
-            <div>
-              <div className="text-lg font-semibold tracking-wide">
-                Aqua<span className="text-[#27e0d0]">Sentinel</span>
-              </div>
-
-              <div className="text-[10px] uppercase tracking-[0.2em] text-slate-500">
-                Labs
-              </div>
-            </div>
-
-          </div>
+          <div className="mb-12">
+  <Image
+    src="/logo.jpg"
+    alt="AquaSentinel Labs"
+    width={420}
+    height={130}
+    priority
+    className="h-auto w-full max-w-[210px]"
+  />
+</div>
 
           <nav className="space-y-2">
 
@@ -225,17 +219,16 @@ export default function Home() {
           {/* Top bar */}
           <header className="mb-10 flex items-center justify-between">
 
-            <div className="flex items-center gap-2 lg:hidden">
-
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#00b8a9] text-sm font-bold text-[#032f35]">
-                AS
-              </div>
-
-              <div className="text-lg font-semibold">
-                Aqua<span className="text-[#27e0d0]">Sentinel</span>
-              </div>
-
-            </div>
+            <div className="flex items-center lg:hidden">
+  <Image
+    src="/logo.jng"
+    alt="AquaSentinel Labs"
+    width={420}
+    height={130}
+    priority
+    className="h-auto w-[190px]"
+  />
+</div>
 
             <div className="ml-auto flex items-center gap-4">
 
