@@ -221,7 +221,7 @@ export default function Home() {
 
             <div className="flex items-center lg:hidden">
   <Image
-    src="/logo.jng"
+    src="/logo.jpg"
     alt="AquaSentinel Labs"
     width={420}
     height={130}
