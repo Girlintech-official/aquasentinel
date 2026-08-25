@@ -60,9 +60,9 @@ export default function Home() {
     async function loadData() {
       try {
         const [waterRes, fishRes, riskRes] = await Promise.all([
-          fetch("http://127.0.0.1:8000/water-readings"),
-          fetch("http://127.0.0.1:8000/fish-observations"),
-          fetch("http://127.0.0.1:8000/risk-assessments"),
+          fetch("https://aquasentinel-production-3814.up.railway.app/water-readings"),
+          fetch("https://aquasentinel-production-3814.up.railway.app/fish-observations"),
+          fetch("https://aquasentinel-production-3814.up.railway.app/risk-assessments"),
         ]);
 
         const waterData = await waterRes.json();
@@ -799,3 +799,4 @@ function MetricCard({
     </div>
   );
 }
+

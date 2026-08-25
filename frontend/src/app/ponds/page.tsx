@@ -18,7 +18,7 @@ export default function PondsPage() {
   useEffect(() => {
     async function loadPonds() {
       try {
-        const response = await fetch("http://127.0.0.1:8000/ponds");
+        const response = await fetch("https://aquasentinel-production-3814.up.railway.app/ponds");
         const data = await response.json();
 
         setPonds(data);
@@ -139,3 +139,4 @@ export default function PondsPage() {
     </main>
   );
 }
+

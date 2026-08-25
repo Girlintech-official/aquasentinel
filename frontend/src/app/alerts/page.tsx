@@ -19,7 +19,7 @@ export default function AlertsPage() {
     async function loadAlerts() {
       try {
         const response = await fetch(
-          "http://127.0.0.1:8000/risk-assessments"
+          "https://aquasentinel-production-3814.up.railway.app/risk-assessments"
         );
 
         const data = await response.json();
@@ -169,3 +169,4 @@ export default function AlertsPage() {
     </main>
   );
 }
+

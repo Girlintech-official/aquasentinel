@@ -19,7 +19,7 @@ export default function HistoryPage() {
     async function loadHistory() {
       try {
         const response = await fetch(
-          "http://127.0.0.1:8000/water-readings"
+          "https://aquasentinel-production-3814.up.railway.app/water-readings"
         );
 
         const data = await response.json();
@@ -136,3 +136,4 @@ export default function HistoryPage() {
     </main>
   );
 }
+

@@ -60,10 +60,10 @@ export default function PondPage() {
       try {
         const [pondsRes, waterRes, fishRes, riskRes] =
           await Promise.all([
-            fetch("http://127.0.0.1:8000/ponds"),
-            fetch(`http://127.0.0.1:8000/water-readings?pond_id=${id}`),
-            fetch("http://127.0.0.1:8000/fish-observations"),
-            fetch("http://127.0.0.1:8000/risk-assessments"),
+            fetch("https://aquasentinel-production-3814.up.railway.app/ponds"),
+            fetch(`https://aquasentinel-production-3814.up.railway.app/water-readings?pond_id=${id}`),
+            fetch("https://aquasentinel-production-3814.up.railway.app/fish-observations"),
+            fetch("https://aquasentinel-production-3814.up.railway.app/risk-assessments"),
           ]);
 
         const ponds = await pondsRes.json();
