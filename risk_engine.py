@@ -19,28 +19,63 @@ def assess_risk(temperature, ph, dissolved_oxygen, activity_level):
     score = 0
     factors = []
 
-    if temperature < 24 or temperature > 30:
-        score += 25
-        factors.append("Temperature outside preferred range")
-
-    if ph < 6.5 or ph > 8.5:
-        score += 25
-        factors.append("pH outside preferred range")
-
-    if dissolved_oxygen < 5:
+    # Temperature assessment
+    if temperature < 20 or temperature > 34:
         score += 30
+        factors.append("Severely abnormal water temperature")
+
+    elif temperature < 22 or temperature > 32:
+        score += 20
+        factors.append("Moderately abnormal water temperature")
+
+    elif temperature < 24 or temperature > 30:
+        score += 10
+        factors.append("Slightly abnormal water temperature")
+
+    # pH assessment
+    if ph < 5.5 or ph > 9.5:
+        score += 30
+        factors.append("Severely abnormal pH")
+
+    elif ph < 6.0 or ph > 9.0:
+        score += 20
+        factors.append("Moderately abnormal pH")
+
+    elif ph < 6.5 or ph > 8.5:
+        score += 10
+        factors.append("Slightly abnormal pH")
+
+    # Dissolved oxygen assessment
+    if dissolved_oxygen < 3:
+        score += 35
+        factors.append("Critically low dissolved oxygen")
+
+    elif dissolved_oxygen < 4:
+        score += 25
         factors.append("Low dissolved oxygen")
 
-    if activity_level.lower() in ["low", "unusual"]:
-        score += 20
-        factors.append("Reduced or unusual fish activity")
+    elif dissolved_oxygen < 5:
+        score += 15
+        factors.append("Reduced dissolved oxygen")
 
-    if score >= 60:
-        risk_level = "High"
-    elif score >= 30:
-        risk_level = "Moderate"
+    # Fish behaviour assessment
+    activity = activity_level.lower().strip()
+
+    if activity in ["very low", "unusual"]:
+        score += 25
+        factors.append("Severely reduced or unusual fish activity")
+
+    elif activity == "low":
+        score += 15
+        factors.append("Reduced fish activity")
+
+    # Final risk classification
+    if score >= 50:
+     risk_level = "High"
+    elif score >= 10:
+     risk_level = "Moderate"
     else:
-        risk_level = "Low"
+     risk_level = "Low"
 
     return risk_level, score, factors
 
