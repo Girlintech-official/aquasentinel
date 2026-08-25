@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AquaSentinel Dashboard</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 30px;
+            background: #f4f7f9;
+        }
+
+        h1 {
+            margin-bottom: 5px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 25px;
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .card h3 {
+            margin-top: 0;
+            color: #555;
+        }
+
+        .value {
+            font-size: 30px;
+            font-weight: bold;
+        }
+
+        .risk {
+            margin-top: 25px;
+            padding: 25px;
+            background: white;
+            border-radius: 12px;
+        }
+
+        .alert {
+            margin-top: 25px;
+            padding: 20px;
+            background: white;
+            border-radius: 12px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>🐟 AquaSentinel</h1>
+    <p class="subtitle">Aquaculture Early-Warning Dashboard</p>
+    <div class="card">
+    <h3>🏭 Farm</h3>
+    <div class="value" id="farm-name">--</div>
+</div>
+
+<div class="card">
+    <h3>🐟 Pond</h3>
+    <div class="value" id="pond-name">--</div>
+    <p id="species">--</p>
+</div>
+
+    <div class="cards">
+
+        <div class="card">
+            <h3>🌡️ Temperature</h3>
+            <div class="value" id="temperature">-- °C</div>
+        </div>
+
+        <div class="card">
+            <h3>💧 pH</h3>
+            <div class="value" id="ph">--</div>
+        </div>
+
+        <div class="card">
+            <h3>🫧 Dissolved Oxygen</h3>
+            <div class="value" id="oxygen">-- mg/L</div>
+        </div>
+
+        <div class="card">
+            <h3>🐟 Fish Activity</h3>
+            <div class="value" id="activity">--</div>
+        </div>
+
+    </div>
+
+    <div class="risk">
+        <h2>🧠 Risk Assessment</h2>
+        <p>
+    Risk Level:
+    <strong id="risk-level">--</strong>
+</p>
+
+<div id="risk-status"
+     style="font-size: 24px; font-weight: bold;">
+    --
+</div>
+        <p>Risk Score: <strong id="risk-score">--</strong></p>
+        <p>Factors: <span id="factors">--</span></p>
+    </div>
+    <div class="risk">
+    <h2>📊 Monitoring History</h2>
+    <div id="history">Loading...</div>
+</div>
+    <div class="alert">
+    <h2>🚨 Alerts</h2>
+    <div id="alert-history">Loading...</div>
+</div>
+
+    <script>
+
+        async function loadDashboard() {
+
+            const waterResponse =
+                await fetch("/water-readings");
+
+            const waterData =
+                await waterResponse.json();
+
+            if (waterData.length > 0) {
+
+                const latest =
+                    waterData[0];
+
+                document.getElementById("temperature")
+                    .textContent =
+                    `${latest.temperature} °C`;
+
+                document.getElementById("ph")
+                    .textContent =
+                    latest.ph;
+
+                document.getElementById("oxygen")
+                    .textContent =
+                    `${latest.dissolved_oxygen} mg/L`;
+            }
+
+
+            const fishResponse =
+                await fetch("/fish-observations");
+
+            const fishData =
+                await fishResponse.json();
+
+            if (fishData.length > 0) {
+
+                document.getElementById("activity")
+                    .textContent =
+                    fishData[0].activity_level;
+            }
+
+
+            const riskResponse =
+                await fetch("/risk-assessments");
+
+            const riskData =
+                await riskResponse.json();
+
+            if (riskData.length > 0) {
+
+                const latestRisk =
+                    riskData[0];
+
+                document.getElementById("risk-level")
+                    .textContent =
+                    latestRisk.risk_level;
+                    const riskStatus =
+    document.getElementById("risk-status");
+
+if (latestRisk.risk_level === "High") {
+    riskStatus.textContent = "🚨 HIGH RISK";
+} else if (latestRisk.risk_level === "Moderate") {
+    riskStatus.textContent = "⚠️ MODERATE RISK";
+} else {
+    riskStatus.textContent = "✅ LOW RISK";
+}
+
+                document.getElementById("risk-score")
+                    .textContent =
+                    latestRisk.risk_score;
+
+                document.getElementById("factors")
+                    .textContent =
+                    latestRisk.contributing_factors;
+            }
+
+
+            const alertResponse =
+                await fetch("/alerts");
+
+            const alertData =
+                await alertResponse.json();
+
+            if (alertData.length > 0) {
+
+                document.getElementById("alert-message")
+                    .textContent =
+                    alertData[0].message;
+            }
+        }
+        async function loadHistory() {
+
+    const response = await fetch("/history");
+    const data = await response.json();
+
+    const history = document.getElementById("history");
+
+    if (data.length === 0) {
+        history.textContent = "No historical readings available.";
+        return;
+    }
+
+    history.innerHTML = data.map(reading => `
+        <p>
+            ${new Date(reading.recorded_at).toLocaleString()}
+            —
+            ${reading.temperature} °C,
+            pH ${reading.ph},
+            ${reading.dissolved_oxygen} mg/L DO
+        </p>
+    `).join("");
+}
+
+loadHistory();
+
+async function loadPondInfo() {
+
+    const response = await fetch("/ponds");
+    const data = await response.json();
+
+    if (data.length > 0) {
+
+        const pond = data[0];
+
+        document.getElementById("farm-name")
+            .textContent = pond.farm;
+
+        document.getElementById("pond-name")
+            .textContent = pond.name;
+
+        document.getElementById("species")
+            .textContent = pond.species;
+    }
+}
+
+loadPondInfo();
+async function loadAlertHistory() {
+
+    const response = await fetch("/alerts");
+    const data = await response.json();
+
+    const container =
+        document.getElementById("alert-history");
+
+    if (data.length === 0) {
+        container.textContent = "No alerts available.";
+        return;
+    }
+
+    container.innerHTML = data.map(alert => `
+        <div style="margin-bottom: 15px;">
+            <strong>${alert.alert_level}</strong>
+            <p>${alert.message}</p>
+            <small>
+                ${new Date(alert.sent_at).toLocaleString()}
+            </small>
+        </div>
+    `).join("");
+}
+
+loadAlertHistory();
+
+loadDashboard();
+setInterval(loadDashboard, 10000);
+
+    </script>
+
+</body>
+</html>
