@@ -6,8 +6,9 @@ load_dotenv()
 
 
 def get_connection():
-    return psycopg.connect(os.getenv("DATABASE_URL"))
-
+    return psycopg.connect(
+    os.environ["DATABASE_URL"]
+)
 
 def main():
     conn = get_connection()

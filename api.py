@@ -266,3 +266,17 @@ def run_risk_analysis():
     return {
         "message": "Risk analysis completed successfully."
     }
+
+@app.get("/db-test")
+def db_test():
+    conn = get_connection()
+
+    with conn.cursor() as cur:
+        cur.execute("SELECT version();")
+        result = cur.fetchone()
+
+    conn.close()
+
+    return {
+        "database": result[0]
+    }
