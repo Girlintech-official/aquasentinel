@@ -35,6 +35,7 @@ export default function Home() {
   const [risk, setRisk] = useState<RiskAssessment | null>(null);
 
   const [greeting, setGreeting] = useState("Good afternoon.");
+  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
     function updateGreeting() {
@@ -60,9 +61,9 @@ export default function Home() {
     async function loadData() {
       try {
         const [waterRes, fishRes, riskRes] = await Promise.all([
-          fetch("https://aquasentinel-production-3814.up.railway.app/water-readings"),
-          fetch("https://aquasentinel-production-3814.up.railway.app/fish-observations"),
-          fetch("https://aquasentinel-production-3814.up.railway.app/risk-assessments"),
+          fetch("https://aquasentinel-api-q232.onrender.com/water-readings"),
+          fetch("https://aquasentinel-api-q232.onrender.com/fish-observations"),
+          fetch("https://aquasentinel-api-q232.onrender.com/risk-assessments"),
         ]);
 
         const waterData = await waterRes.json();
@@ -132,19 +133,19 @@ export default function Home() {
 
       <div className="relative flex min-h-screen">
 
-        {/* Sidebar */}
+        {/* Desktop Sidebar */}
         <aside className="hidden w-64 shrink-0 border-r border-white/5 bg-[#071d23]/90 px-5 py-7 lg:block">
 
           <div className="mb-12">
-  <Image
-    src="/logo.jpg"
-    alt="AquaSentinel Labs"
-    width={420}
-    height={130}
-    priority
-    className="h-auto w-full max-w-[210px]"
-  />
-</div>
+            <Image
+              src="/logo.jpg"
+              alt="AquaSentinel Labs"
+              width={420}
+              height={130}
+              priority
+              className="h-auto w-full max-w-[210px]"
+            />
+          </div>
 
           <nav className="space-y-2">
 
@@ -152,10 +153,13 @@ export default function Home() {
               Overview
             </p>
 
-            <button className="flex w-full items-center gap-3 rounded-xl bg-[#00b8a9]/10 px-3 py-3 text-sm font-medium text-[#27e0d0]">
+            <a
+              href="/"
+              className="flex w-full items-center gap-3 rounded-xl bg-[#00b8a9]/10 px-3 py-3 text-sm font-medium text-[#27e0d0]"
+            >
               <span>◉</span>
               Dashboard
-            </button>
+            </a>
 
             <a
               href="/ponds"
@@ -217,19 +221,31 @@ export default function Home() {
         <section className="flex-1 px-5 py-7 sm:px-8 lg:px-10">
 
           {/* Top bar */}
-          <header className="mb-10 flex items-center justify-between">
+          <header className="mb-6 flex items-center justify-between">
 
-            <div className="flex items-center lg:hidden">
-  <Image
-    src="/logo.jg"
-    alt="AquaSentinel Labs"
-    width={420}
-    height={130}
-    priority
-    className="h-auto w-[190px]"
-  />
-</div>
+            {/* Mobile logo + hamburger */}
+            <div className="flex items-center gap-3 lg:hidden">
 
+              <button
+                onClick={() => setMenuOpen(!menuOpen)}
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-xl text-white transition hover:bg-white/10"
+                aria-label="Toggle navigation menu"
+              >
+                {menuOpen ? "✕" : "☰"}
+              </button>
+
+              <Image
+                src="/logo.jpg"
+                alt="AquaSentinel Labs"
+                width={420}
+                height={130}
+                priority
+                className="h-auto w-[150px] sm:w-[180px]"
+              />
+
+            </div>
+
+            {/* Farm information */}
             <div className="ml-auto flex items-center gap-4">
 
               <div className="hidden text-right sm:block">
@@ -249,6 +265,80 @@ export default function Home() {
             </div>
 
           </header>
+
+          {/* Mobile navigation */}
+          {menuOpen && (
+            <div className="mb-8 rounded-2xl border border-white/10 bg-[#071d23] p-3 shadow-2xl lg:hidden">
+
+              <nav className="space-y-1">
+
+                <a
+                  href="/"
+                  onClick={() => setMenuOpen(false)}
+                  className="flex items-center gap-3 rounded-xl bg-[#00b8a9]/10 px-4 py-3 text-sm font-medium text-[#27e0d0]"
+                >
+                  <span>◉</span>
+                  Dashboard
+                </a>
+
+                <a
+                  href="/ponds"
+                  onClick={() => setMenuOpen(false)}
+                  className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm text-slate-400 transition hover:bg-white/5 hover:text-white"
+                >
+                  <span>◌</span>
+                  Ponds
+                </a>
+
+                <a
+                  href="/insights"
+                  onClick={() => setMenuOpen(false)}
+                  className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm text-slate-400 transition hover:bg-white/5 hover:text-white"
+                >
+                  <span>⌁</span>
+                  Insights
+                </a>
+
+                <div className="my-2 border-t border-white/5" />
+
+                <a
+                  href="/alerts"
+                  onClick={() => setMenuOpen(false)}
+                  className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm text-slate-400 transition hover:bg-white/5 hover:text-white"
+                >
+                  <span>◈</span>
+                  Alerts
+                </a>
+
+                <a
+                  href="/history"
+                  onClick={() => setMenuOpen(false)}
+                  className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm text-slate-400 transition hover:bg-white/5 hover:text-white"
+                >
+                  <span>◷</span>
+                  History
+                </a>
+
+              </nav>
+
+              <div className="mt-4 rounded-xl border border-[#00b8a9]/10 bg-[#00b8a9]/5 p-4">
+
+                <div className="flex items-center gap-2">
+                  <span className="h-2 w-2 animate-pulse rounded-full bg-[#27e0d0]" />
+
+                  <span className="text-xs font-medium text-[#27e0d0]">
+                    SENTINEL ACTIVE
+                  </span>
+                </div>
+
+                <p className="mt-2 text-xs leading-5 text-slate-500">
+                  Continuous monitoring is active.
+                </p>
+
+              </div>
+
+            </div>
+          )}
 
           {/* Hero */}
           <div className="mb-9">
@@ -799,4 +889,3 @@ function MetricCard({
     </div>
   );
 }
-
