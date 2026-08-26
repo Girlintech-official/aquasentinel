@@ -19,7 +19,7 @@ export default function HistoryPage() {
     async function loadHistory() {
       try {
         const response = await fetch(
-          "https://aquasentinel-production-3814.up.railway.app/water-readings"
+          "https://aquasentinel-api-q232.onrender.com/water-readings"
         );
 
         const data = await response.json();

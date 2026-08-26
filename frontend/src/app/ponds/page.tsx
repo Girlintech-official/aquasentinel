@@ -18,7 +18,7 @@ export default function PondsPage() {
   useEffect(() => {
     async function loadPonds() {
       try {
-        const response = await fetch("https://aquasentinel-production-3814.up.railway.app/ponds");
+        const response = await fetch("https://aquasentinel-api-q232.onrender.com/ponds");
         const data = await response.json();
 
         setPonds(data);

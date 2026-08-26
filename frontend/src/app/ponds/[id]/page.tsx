@@ -60,10 +60,10 @@ export default function PondPage() {
       try {
         const [pondsRes, waterRes, fishRes, riskRes] =
           await Promise.all([
-            fetch("https://aquasentinel-production-3814.up.railway.app/ponds"),
-            fetch(`https://aquasentinel-production-3814.up.railway.app/water-readings?pond_id=${id}`),
-            fetch("https://aquasentinel-production-3814.up.railway.app/fish-observations"),
-            fetch("https://aquasentinel-production-3814.up.railway.app/risk-assessments"),
+            fetch("https://aquasentinel-api-q232.onrender.com/ponds"),
+            fetch(`https://aquasentinel-api-q232.onrender.com/water-readings?pond_id=${id}`),
+            fetch("https://aquasentinel-api-q232.onrender.com/fish-observations"),
+            fetch("https://aquasentinel-api-q232.onrender.com/risk-assessments"),
           ]);
 
         const ponds = await pondsRes.json();

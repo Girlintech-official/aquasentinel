@@ -53,13 +53,13 @@ export default function InsightsPage() {
           fishResponse,
         ] = await Promise.all([
           fetch(
-            "https://aquasentinel-production-3814.up.railway.app/risk-assessments"
+            "https://aquasentinel-api-q232.onrender.com/risk-assessments"
           ),
           fetch(
-            "https://aquasentinel-production-3814.up.railway.app/water-readings"
+            "https://aquasentinel-api-q232.onrender.com/water-readings"
           ),
           fetch(
-            "https://aquasentinel-production-3814.up.railway.app/fish-observations"
+            "https://aquasentinel-api-q232.onrender.com/fish-observations"
           ),
         ]);
 

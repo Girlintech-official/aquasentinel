@@ -19,7 +19,7 @@ export default function AlertsPage() {
     async function loadAlerts() {
       try {
         const response = await fetch(
-          "https://aquasentinel-production-3814.up.railway.app/risk-assessments"
+          "https://aquasentinel-api-q232.onrender.com/risk-assessments"
         );
 
         const data = await response.json();
