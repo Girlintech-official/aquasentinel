@@ -21,6 +21,7 @@ type Pond = {
 
 type WaterReading = {
   id: number;
+  pond_id: number;
   sensor_id: number;
   temperature: number;
   ph: number;
@@ -37,6 +38,8 @@ type RiskAssessment = {
   risk_score: number;
   contributing_factors: string;
 };
+
+
 
 export default function PondPage() {
   const params = useParams();
