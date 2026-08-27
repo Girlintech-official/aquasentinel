@@ -118,6 +118,7 @@ export default function PondPage() {
 
       const ponds = await pondsRes.json();
       const waterData = await waterRes.json();
+      console.log("RAW WATER DATA:", waterData);
 
      console.log("Water data for pond", id, waterData);
       const fishData = await fishRes.json();
@@ -190,6 +191,7 @@ export default function PondPage() {
 
 
       setChartData(formattedChartData);
+      console.log("CHART DATA:", formattedChartData);
 
 
     } catch(error){
