@@ -2,6 +2,9 @@
 
 import Image from "next/image";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import router from "next/dist/shared/lib/router/router";
+import Link from "next/link";
 
 type WaterReading = {
   id: number;
@@ -30,12 +33,34 @@ type RiskAssessment = {
 };
 
 export default function Home() {
+   const router = useRouter();
+
   const [water, setWater] = useState<WaterReading | null>(null);
   const [fish, setFish] = useState<FishObservation | null>(null);
   const [risk, setRisk] = useState<RiskAssessment | null>(null);
 
   const [greeting, setGreeting] = useState("Good afternoon.");
   const [menuOpen, setMenuOpen] = useState(false);
+
+  useEffect(() => {
+  const checkAuth = () => {
+    const token = localStorage.getItem("aquasentinel_token");
+
+    console.log("CHECK TOKEN:", token);
+
+    if (!token) {
+      router.replace("/login");
+    }
+  };
+
+  checkAuth();
+
+  window.addEventListener("storage", checkAuth);
+
+  return () => {
+    window.removeEventListener("storage", checkAuth);
+  };
+}, [router]);
 
   useEffect(() => {
     function updateGreeting() {
@@ -60,11 +85,30 @@ export default function Home() {
   useEffect(() => {
     async function loadData() {
       try {
-        const [waterRes, fishRes, riskRes] = await Promise.all([
-          fetch("https://aquasentinel-api-q232.onrender.com/water-readings"),
-          fetch("https://aquasentinel-api-q232.onrender.com/fish-observations"),
-          fetch("https://aquasentinel-api-q232.onrender.com/risk-assessments"),
-        ]);
+        
+        const token = localStorage.getItem("aquasentinel_token");
+
+if (!token) {
+  console.error("No token found");
+  return;
+}
+
+const headers: HeadersInit = {
+  Authorization: `Bearer ${token}`,
+};
+
+
+const [waterRes, fishRes, riskRes] = await Promise.all([
+  fetch("https://aquasentinel-api-q232.onrender.com/water-readings", {
+    headers,
+}),
+fetch("https://aquasentinel-api-q232.onrender.com/fish-observations", {
+  headers,
+}),
+fetch("https://aquasentinel-api-q232.onrender.com/risk-assessments", {
+  headers,
+}),
+]);
 
         const waterData = await waterRes.json();
         const fishData = await fishRes.json();
@@ -153,49 +197,49 @@ export default function Home() {
               Overview
             </p>
 
-            <a
+            <Link
               href="/"
               className="flex w-full items-center gap-3 rounded-xl bg-[#00b8a9]/10 px-3 py-3 text-sm font-medium text-[#27e0d0]"
             >
               <span>◉</span>
               Dashboard
-            </a>
+            </Link>
 
-            <a
+            <Link
               href="/ponds"
               className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-sm text-slate-400 transition hover:bg-white/5 hover:text-white"
             >
               <span>◌</span>
               Ponds
-            </a>
+            </Link>
 
-            <a
+            <Link
               href="/insights"
               className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-sm text-slate-400 transition hover:bg-white/5 hover:text-white"
             >
               <span>⌁</span>
               Insights
-            </a>
+            </Link>
 
             <p className="mb-3 mt-8 px-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-600">
               Monitoring
             </p>
 
-            <a
+            <Link
               href="/alerts"
               className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-sm text-slate-400 transition hover:bg-white/5 hover:text-white"
             >
               <span>◈</span>
               Alerts
-            </a>
+            </Link>
 
-            <a
+            <Link
               href="/history"
               className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-sm text-slate-400 transition hover:bg-white/5 hover:text-white"
             >
               <span>◷</span>
               History
-            </a>
+            </Link>
 
           </nav>
 
@@ -258,9 +302,16 @@ export default function Home() {
                 </p>
               </div>
 
-              <div className="flex h-10 w-10 items-center justify-center rounded-full border border-[#27e0d0]/20 bg-[#27e0d0]/10 text-sm font-semibold text-[#27e0d0]">
-                S
-              </div>
+             <button
+   onClick={() => {
+    localStorage.removeItem("aquasentinel_token");
+    router.replace("/login");
+  }}
+  className="flex h-10 w-10 items-center justify-center rounded-full border border-[#27e0d0]/20 bg-[#27e0d0]/10 text-sm font-semibold text-[#27e0d0]"
+  title="Logout"
+>
+  S
+</button>
 
             </div>
 
@@ -272,52 +323,52 @@ export default function Home() {
 
               <nav className="space-y-1">
 
-                <a
+                <Link
                   href="/"
                   onClick={() => setMenuOpen(false)}
                   className="flex items-center gap-3 rounded-xl bg-[#00b8a9]/10 px-4 py-3 text-sm font-medium text-[#27e0d0]"
                 >
                   <span>◉</span>
                   Dashboard
-                </a>
+                </Link>
 
-                <a
+                <Link
                   href="/ponds"
                   onClick={() => setMenuOpen(false)}
                   className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm text-slate-400 transition hover:bg-white/5 hover:text-white"
                 >
                   <span>◌</span>
                   Ponds
-                </a>
+                </Link>
 
-                <a
+                <Link
                   href="/insights"
                   onClick={() => setMenuOpen(false)}
                   className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm text-slate-400 transition hover:bg-white/5 hover:text-white"
                 >
                   <span>⌁</span>
                   Insights
-                </a>
+                </Link>
 
                 <div className="my-2 border-t border-white/5" />
 
-                <a
+                <Link
                   href="/alerts"
                   onClick={() => setMenuOpen(false)}
                   className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm text-slate-400 transition hover:bg-white/5 hover:text-white"
                 >
                   <span>◈</span>
                   Alerts
-                </a>
+                </Link>
 
-                <a
+                <Link
                   href="/history"
                   onClick={() => setMenuOpen(false)}
                   className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm text-slate-400 transition hover:bg-white/5 hover:text-white"
                 >
                   <span>◷</span>
                   History
-                </a>
+                </Link>
 
               </nav>
 
