@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 type Alert = {
   id: number;
@@ -15,38 +16,73 @@ export default function AlertsPage() {
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const router = useRouter();
+
   useEffect(() => {
-    async function loadAlerts() {
-      try {
-        const token = localStorage.getItem(
-  "aquasentinel_token"
-);
+  async function loadAlerts() {
+    try {
+      const token = localStorage.getItem(
+        "aquasentinel_token"
+      );
 
-const response = await fetch(
-  "https://aquasentinel-api-q232.onrender.com/alerts",
-  {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  }
-);
-
-        const data = await response.json();
-
-        setAlerts(data);
-      } catch (error) {
-        console.error("Failed to load alerts:", error);
-      } finally {
-        setLoading(false);
+      if (!token) {
+        router.replace("/login");
+        return;
       }
+
+      const response = await fetch(
+        "https://aquasentinel-api-q232.onrender.com/alerts",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.status === 401) {
+        localStorage.removeItem(
+          "aquasentinel_token"
+        );
+
+        router.replace("/login");
+        return;
+      }
+
+      if (!response.ok) {
+        throw new Error(
+          "Failed to load alerts"
+        );
+      }
+
+      const data = await response.json();
+
+      setAlerts(data);
+
+    } catch (error) {
+      console.error(
+        "Failed to load alerts:",
+        error
+      );
+    } finally {
+      setLoading(false);
     }
+  }
 
-    loadAlerts();
 
-    const interval = setInterval(loadAlerts, 10000);
+  loadAlerts();
 
-    return () => clearInterval(interval);
-  }, []);
+
+  const interval = setInterval(
+    loadAlerts,
+    10000
+  );
+
+
+  return () =>
+    clearInterval(interval);
+
+
+}, [router]);
 
   return (
     <main className="min-h-screen bg-[#032f35] px-6 py-10 text-white">

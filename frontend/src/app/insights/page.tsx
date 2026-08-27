@@ -1,5 +1,6 @@
 "use client";
-
+import router from "next/dist/shared/lib/router/router";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
   LineChart,
@@ -40,6 +41,8 @@ type FishObservation = {
 };
 
 export default function InsightsPage() {
+    const router = useRouter();
+
   const [risks, setRisks] = useState<Risk[]>([]);
   const [readings, setReadings] = useState<Reading[]>([]);
   const [fish, setFish] = useState<FishObservation | null>(null);
@@ -52,9 +55,9 @@ export default function InsightsPage() {
       );
 
       if (!token) {
-        console.error("No authentication token found");
-        return;
-      }
+       router.replace("/login");
+      return;
+}
 
       const headers = {
         Authorization: `Bearer ${token}`,

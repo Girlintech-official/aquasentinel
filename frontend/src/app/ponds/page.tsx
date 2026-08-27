@@ -16,21 +16,59 @@ export default function PondsPage() {
   const router = useRouter();
 
   useEffect(() => {
-    async function loadPonds() {
-      try {
-        const response = await fetch("https://aquasentinel-api-q232.onrender.com/ponds");
-        const data = await response.json();
+  async function loadPonds() {
+    try {
+      const token = localStorage.getItem(
+        "aquasentinel_token"
+      );
 
-        setPonds(data);
-      } catch (error) {
-        console.error("Failed to load ponds:", error);
-      } finally {
-        setLoading(false);
+      if (!token) {
+        router.replace("/login");
+        return;
       }
-    }
 
-    loadPonds();
-  }, []);
+      const response = await fetch(
+        "https://aquasentinel-api-q232.onrender.com/ponds",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.status === 401) {
+        localStorage.removeItem(
+          "aquasentinel_token"
+        );
+
+        router.replace("/login");
+        return;
+      }
+
+      if (!response.ok) {
+        throw new Error(
+          "Failed to load ponds"
+        );
+      }
+
+      const data = await response.json();
+
+      setPonds(data);
+
+    } catch (error) {
+      console.error(
+        "Failed to load ponds:",
+        error
+      );
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  loadPonds();
+
+}, [router]);
+  
 
   return (
     <main className="min-h-screen bg-[#032f35] px-6 py-10 text-white">
