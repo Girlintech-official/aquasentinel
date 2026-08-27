@@ -136,11 +136,14 @@ def create_water_reading(reading: WaterReadingCreate):
             result = cur.fetchone()
             conn.commit()
 
+         # Run AquaSentinel risk analysis automatically
+        run_risk_engine()
+
         return {
-            "message": "Water reading saved successfully",
-            "id": result[0],
-            "recorded_at": result[1],
-        }
+    "message": "Water reading saved and risk analysis completed",
+    "id": result[0],
+    "recorded_at": result[1],
+}
 
     except Exception as e:
         conn.rollback()
