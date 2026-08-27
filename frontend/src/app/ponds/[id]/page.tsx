@@ -56,53 +56,162 @@ export default function PondPage() {
   
 
   useEffect(() => {
-    async function loadData() {
-      try {
-        const [pondsRes, waterRes, fishRes, riskRes] =
-          await Promise.all([
-            fetch("https://aquasentinel-api-q232.onrender.com/ponds"),
-            fetch(`https://aquasentinel-api-q232.onrender.com/water-readings?pond_id=${id}`),
-            fetch("https://aquasentinel-api-q232.onrender.com/fish-observations"),
-            fetch("https://aquasentinel-api-q232.onrender.com/risk-assessments"),
-          ]);
+  async function loadData() {
+    try {
 
-        const ponds = await pondsRes.json();
-        const waterData = await waterRes.json();
-        const formattedChartData = waterData
-  .slice()
-  .reverse()
-  .map((reading: WaterReading) => ({
-    time: new Date(reading.recorded_at).toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
-    }),
-    temperature: reading.temperature,
-    oxygen: reading.dissolved_oxygen,
-  }));
+      const token = localStorage.getItem(
+        "aquasentinel_token"
+      );
 
-setChartData(formattedChartData);
-        const fishData = await fishRes.json();
-        const riskData = await riskRes.json();
-
-        const selectedPond = ponds.find(
-          (item: Pond) => item.id.toString() === id
-        );
-
-        setPond(selectedPond || null);
-        setWater(waterData[0] || null);
-        setFish(fishData[0] || null);
-        setRisk(riskData[0] || null);
-      } catch (error) {
-        console.error("Failed to load pond intelligence:", error);
+      if (!token) {
+        console.error("No token found");
+        return;
       }
+
+
+      const headers = {
+        Authorization: `Bearer ${token}`,
+      };
+
+
+      const [
+        pondsRes,
+        waterRes,
+        fishRes,
+        riskRes
+      ] = await Promise.all([
+
+        fetch(
+          "https://aquasentinel-api-q232.onrender.com/ponds",
+          {
+            headers,
+          }
+        ),
+
+        fetch(
+          "https://aquasentinel-api-q232.onrender.com/water-readings",
+          {
+            headers,
+          }
+        ),
+
+        fetch(
+          "https://aquasentinel-api-q232.onrender.com/fish-observations",
+          {
+            headers,
+          }
+        ),
+
+        fetch(
+          "https://aquasentinel-api-q232.onrender.com/risk-assessments",
+          {
+            headers,
+          }
+        ),
+
+      ]);
+
+
+
+      const ponds = await pondsRes.json();
+      const waterData = await waterRes.json();
+      const fishData = await fishRes.json();
+      const riskData = await riskRes.json();
+
+
+
+      const selectedPond = ponds.find(
+        (item: Pond) =>
+          item.id.toString() === id
+      );
+
+
+      const pondWater = waterData.filter(
+        (item: WaterReading) =>
+          item.pond_id?.toString() === id
+      );
+
+
+      const pondFish = fishData.filter(
+        (item: any) =>
+          item.pond_id?.toString() === id
+      );
+
+
+      const pondRisk = riskData.filter(
+        (item: any) =>
+          item.pond_id?.toString() === id
+      );
+
+
+
+      setPond(selectedPond || null);
+
+
+      setWater(
+        pondWater[0] || waterData[0] || null
+      );
+
+
+      setFish(
+        pondFish[0] || fishData[0] || null
+      );
+
+
+      setRisk(
+        pondRisk[0] || riskData[0] || null
+      );
+
+
+
+      const formattedChartData =
+        pondWater
+        .slice()
+        .reverse()
+        .map((reading: WaterReading) => ({
+          time: new Date(
+            reading.recorded_at
+          ).toLocaleTimeString([], {
+            hour:"2-digit",
+            minute:"2-digit",
+          }),
+
+          temperature:
+            reading.temperature,
+
+          oxygen:
+            reading.dissolved_oxygen,
+        }));
+
+
+      setChartData(formattedChartData);
+
+
+    } catch(error){
+
+      console.error(
+        "Failed to load pond intelligence:",
+        error
+      );
+
     }
+  }
 
-    loadData();
 
-    const interval = setInterval(loadData, 10000);
+  loadData();
 
-    return () => clearInterval(interval);
-  }, [id]);
+
+  const interval = setInterval(
+    loadData,
+    10000
+  );
+
+
+  return () =>
+    clearInterval(interval);
+
+
+}, [id]);
 
   if (!pond) {
     return (
