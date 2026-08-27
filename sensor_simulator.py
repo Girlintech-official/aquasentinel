@@ -3,7 +3,7 @@ import time
 import requests
 
 
-AAPI_URL = "https://aquasentinel-api-q232.onrender.com/sensor-readings"
+API_URL = "https://aquasentinel-api-q232.onrender.com/sensor-readings"
 SENSOR_KEY = "AS_SENSOR_a83f5d91c7e248b9b1f0e72d6c4a"
 
 
