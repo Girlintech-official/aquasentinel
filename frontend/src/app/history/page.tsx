@@ -18,9 +18,18 @@ export default function HistoryPage() {
   useEffect(() => {
     async function loadHistory() {
       try {
-        const response = await fetch(
-          "https://aquasentinel-api-q232.onrender.com/water-readings"
-        );
+        const token = localStorage.getItem(
+  "aquasentinel_token"
+);
+
+const response = await fetch(
+  "https://aquasentinel-api-q232.onrender.com/water-readings",
+  {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  }
+);
 
         const data = await response.json();
 

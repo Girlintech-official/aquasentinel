@@ -18,9 +18,18 @@ export default function AlertsPage() {
   useEffect(() => {
     async function loadAlerts() {
       try {
-        const response = await fetch(
-          "https://aquasentinel-api-q232.onrender.com/risk-assessments"
-        );
+        const token = localStorage.getItem(
+  "aquasentinel_token"
+);
+
+const response = await fetch(
+  "https://aquasentinel-api-q232.onrender.com/alerts",
+  {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  }
+);
 
         const data = await response.json();
 

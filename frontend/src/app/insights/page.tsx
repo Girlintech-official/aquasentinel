@@ -45,48 +45,93 @@ export default function InsightsPage() {
   const [fish, setFish] = useState<FishObservation | null>(null);
 
   useEffect(() => {
-    async function loadInsights() {
-      try {
-        const [
-          riskResponse,
-          waterResponse,
-          fishResponse,
-        ] = await Promise.all([
-          fetch(
-            "https://aquasentinel-api-q232.onrender.com/risk-assessments"
-          ),
-          fetch(
-            "https://aquasentinel-api-q232.onrender.com/water-readings"
-          ),
-          fetch(
-            "https://aquasentinel-api-q232.onrender.com/fish-observations"
-          ),
-        ]);
+  async function loadInsights() {
+    try {
+      const token = localStorage.getItem(
+        "aquasentinel_token"
+      );
 
-        const riskData = await riskResponse.json();
-        const waterData = await waterResponse.json();
-        const fishData = await fishResponse.json();
-
-        setRisks(riskData || []);
-        setReadings(waterData || []);
-        setFish(fishData[0] || null);
-      } catch (error) {
-        console.error(
-          "Failed to load intelligence:",
-          error
-        );
+      if (!token) {
+        console.error("No authentication token found");
+        return;
       }
+
+      const headers = {
+        Authorization: `Bearer ${token}`,
+      };
+
+      const [
+        riskResponse,
+        waterResponse,
+        fishResponse,
+      ] = await Promise.all([
+        fetch(
+          "https://aquasentinel-api-q232.onrender.com/risk-assessments",
+          {
+            headers,
+          }
+        ),
+
+        fetch(
+          "https://aquasentinel-api-q232.onrender.com/water-readings",
+          {
+            headers,
+          }
+        ),
+
+        fetch(
+          "https://aquasentinel-api-q232.onrender.com/fish-observations",
+          {
+            headers,
+          }
+        ),
+      ]);
+
+
+      if (!riskResponse.ok) {
+        throw new Error("Failed to load risk assessments");
+      }
+
+      if (!waterResponse.ok) {
+        throw new Error("Failed to load water readings");
+      }
+
+      if (!fishResponse.ok) {
+        throw new Error("Failed to load fish observations");
+      }
+
+
+      const riskData = await riskResponse.json();
+      const waterData = await waterResponse.json();
+      const fishData = await fishResponse.json();
+
+
+      setRisks(riskData || []);
+      setReadings(waterData || []);
+      setFish(fishData[0] || null);
+
+
+    } catch (error) {
+      console.error(
+        "Failed to load intelligence:",
+        error
+      );
     }
+  }
 
-    loadInsights();
 
-    const interval = setInterval(
-      loadInsights,
-      10000
-    );
+  loadInsights();
 
-    return () => clearInterval(interval);
-  }, []);
+
+  const interval = setInterval(
+    loadInsights,
+    10000
+  );
+
+
+  return () => clearInterval(interval);
+
+}, []);
 
   const risk = risks[0] || null;
   const reading = readings[0] || null;
