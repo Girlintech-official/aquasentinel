@@ -1,4 +1,5 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 from risk_engine import main as run_risk_engine
 from fastapi.staticfiles import StaticFiles
@@ -14,6 +15,12 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+class WaterReadingCreate(BaseModel):
+    sensor_id: int
+    temperature: float
+    ph: float
+    dissolved_oxygen: float
 
 
 @app.get("/dashboard")
@@ -100,6 +107,50 @@ def get_water_readings(pond_id: int | None = None):
         }
         for row in readings
     ]
+
+@app.post("/water-readings")
+def create_water_reading(reading: WaterReadingCreate):
+    conn = get_connection()
+
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                INSERT INTO water_readings (
+                    sensor_id,
+                    temperature,
+                    ph,
+                    dissolved_oxygen
+                )
+                VALUES (%s, %s, %s, %s)
+                RETURNING id, recorded_at;
+                """,
+                (
+                    reading.sensor_id,
+                    reading.temperature,
+                    reading.ph,
+                    reading.dissolved_oxygen,
+                ),
+            )
+
+            result = cur.fetchone()
+            conn.commit()
+
+        return {
+            "message": "Water reading saved successfully",
+            "id": result[0],
+            "recorded_at": result[1],
+        }
+
+    except Exception as e:
+        conn.rollback()
+        raise HTTPException(
+            status_code=500,
+            detail=str(e),
+        )
+
+    finally:
+        conn.close()
 
 @app.get("/fish-observations")
 def get_fish_observations():
