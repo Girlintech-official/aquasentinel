@@ -92,11 +92,11 @@ export default function PondPage() {
         ),
 
         fetch(
-          "https://aquasentinel-api-q232.onrender.com/water-readings",
-          {
-            headers,
-          }
-        ),
+  `https://aquasentinel-api-q232.onrender.com/water-readings?pond_id=${id}`,
+  {
+    headers,
+  }
+),
 
         fetch(
           "https://aquasentinel-api-q232.onrender.com/fish-observations",
@@ -118,6 +118,8 @@ export default function PondPage() {
 
       const ponds = await pondsRes.json();
       const waterData = await waterRes.json();
+
+     console.log("Water data for pond", id, waterData);
       const fishData = await fishRes.json();
       const riskData = await riskRes.json();
 
