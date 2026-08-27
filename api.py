@@ -7,7 +7,8 @@ from fastapi.responses import FileResponse
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from datetime import datetime, timedelta
-
+from fastapi import Header
+import secrets
 
 import os
 
@@ -104,10 +105,34 @@ def create_access_token(data: dict):
         algorithm=ALGORITHM
     )
 
+def verify_sensor_key(
+    authorization: str = Header(...)
+):
+
+    if not authorization.startswith("Sensor "):
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid sensor authentication"
+        )
+
+    key = authorization.replace(
+        "Sensor ",
+        ""
+    )
+
+
+    if key != os.getenv("SENSOR_API_KEY"):
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid sensor key"
+        )
+
+    return True
 
 def get_current_user(
     token: str = Depends(oauth2_scheme)
 ):
+    print("TOKEN RECEIVED:", token[:50])
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
@@ -501,6 +526,53 @@ def create_water_reading(
     finally:
         conn.close()
 
+@app.post("/sensor-readings")
+def create_sensor_reading(
+    reading: WaterReadingCreate,
+    sensor: bool = Depends(verify_sensor_key)
+):
+
+    conn = get_connection()
+
+    try:
+        with conn.cursor() as cur:
+
+            cur.execute(
+                """
+                INSERT INTO water_readings (
+                    sensor_id,
+                    temperature,
+                    ph,
+                    dissolved_oxygen
+                )
+                VALUES (%s,%s,%s,%s)
+                RETURNING id, recorded_at;
+                """,
+                (
+                    reading.sensor_id,
+                    reading.temperature,
+                    reading.ph,
+                    reading.dissolved_oxygen
+                )
+            )
+
+            result = cur.fetchone()
+
+            conn.commit()
+
+
+        run_risk_engine()
+
+
+        return {
+            "message": "Sensor reading accepted",
+            "id": result[0],
+            "recorded_at": result[1]
+        }
+
+
+    finally:
+        conn.close()
 
 # =========================
 # Fish observations

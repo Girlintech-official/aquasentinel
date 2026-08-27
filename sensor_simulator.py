@@ -3,10 +3,15 @@ import time
 import requests
 
 
-API_URL = "https://aquasentinel-api-q232.onrender.com/water-readings"
+AAPI_URL = "https://aquasentinel-api-q232.onrender.com/sensor-readings"
+SENSOR_KEY = "AS_SENSOR_a83f5d91c7e248b9b1f0e72d6c4a"
+
+
+HEADERS = {
+    "Authorization": f"Sensor {SENSOR_KEY}"
+}
 
 SENSOR_ID = 1
-
 
 def generate_normal_reading():
     return {
@@ -60,6 +65,7 @@ def send_reading(scenario, reading):
             API_URL,
             json=reading,
             timeout=30,
+            headers=HEADERS
         )
 
         response.raise_for_status()
@@ -89,3 +95,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+    
