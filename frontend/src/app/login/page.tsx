@@ -25,7 +25,7 @@ export default function LoginPage() {
       formData.append("password", password);
 
       const response = await fetch(
-        "http://127.0.0.1:8000/login",
+        "https://aquasentinel-api-q232.onrender.com/login",
         {
           method: "POST",
           headers: {
