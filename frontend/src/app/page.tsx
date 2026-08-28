@@ -26,9 +26,13 @@ type FishObservation = {
 };
 
 type RiskAssessment = {
+  id: number;
+  pond_id: number;
   risk_level: string;
   risk_score: number;
   contributing_factors: string;
+  ml_anomaly: boolean;
+  ml_anomaly_score: number | null;
   assessed_at: string;
 };
 
@@ -588,6 +592,122 @@ fetch("https://aquasentinel-api-q232.onrender.com/risk-assessments", {
                 </div>
 
               </div>
+
+              {/* AI / ML Intelligence */}
+<section className="mt-5">
+
+  <div className="rounded-3xl border border-[#27e0d0]/10 bg-[#06434a] p-7">
+
+    <div className="flex items-start justify-between">
+
+      <div>
+
+        <p className="text-xs font-medium uppercase tracking-[0.18em] text-[#27e0d0]">
+          AI / ML INTELLIGENCE
+        </p>
+
+        <h2 className="mt-2 text-xl font-semibold">
+          Anomaly detection
+        </h2>
+
+        <p className="mt-2 max-w-xl text-sm leading-6 text-slate-500">
+          AquaSentinel uses machine learning to identify water-quality
+          patterns that differ from the pond's observed baseline.
+        </p>
+
+      </div>
+
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#27e0d0]/10 text-[#27e0d0]">
+        AI
+      </div>
+
+    </div>
+
+    <div className="mt-7 grid gap-4 sm:grid-cols-2">
+
+      {/* ML Detection */}
+      <div className="rounded-2xl bg-white/[0.03] p-5">
+
+        <p className="text-xs uppercase tracking-[0.12em] text-slate-500">
+          ML anomaly detection
+        </p>
+
+        <div className="mt-4 flex items-center gap-3">
+
+          <div
+            className={`flex h-10 w-10 items-center justify-center rounded-full ${
+              risk?.ml_anomaly
+                ? "bg-red-400/10 text-red-300"
+                : "bg-emerald-400/10 text-emerald-300"
+            }`}
+          >
+            {risk?.ml_anomaly ? "!" : "✓"}
+          </div>
+
+          <div>
+
+            <p className="text-lg font-semibold">
+              {risk?.ml_anomaly
+                ? "Anomaly detected"
+                : "Normal pattern"}
+            </p>
+
+            <p className="mt-1 text-xs text-slate-500">
+              {risk?.ml_anomaly
+                ? "The model detected an unusual water-quality pattern."
+                : "The model found no significant anomaly in the latest reading."}
+            </p>
+
+          </div>
+
+        </div>
+
+      </div>
+
+      {/* ML Score */}
+      <div className="rounded-2xl bg-white/[0.03] p-5">
+
+        <p className="text-xs uppercase tracking-[0.12em] text-slate-500">
+          Anomaly score
+        </p>
+
+        <p className="mt-4 text-3xl font-semibold">
+          {risk?.ml_anomaly_score !== null &&
+          risk?.ml_anomaly_score !== undefined
+            ? risk.ml_anomaly_score.toFixed(4)
+            : "--"}
+        </p>
+
+        <p className="mt-2 text-xs leading-5 text-slate-500">
+          Lower values indicate observations that are more unusual
+          relative to the model's learned baseline.
+        </p>
+
+      </div>
+
+    </div>
+
+    {/* AI explanation */}
+    <div className="mt-5 rounded-2xl border border-[#27e0d0]/10 bg-[#27e0d0]/5 p-5">
+
+      <p className="text-xs uppercase tracking-[0.12em] text-[#27e0d0]">
+        How Sentinel is reasoning
+      </p>
+
+      <p className="mt-3 text-sm leading-6 text-slate-400">
+
+        The machine-learning model evaluates temperature, pH and
+        dissolved oxygen together to identify patterns that differ
+        from healthy observations. This signal is combined with
+        rule-based and trend analysis to produce the final risk score.
+
+      </p>
+
+    </div>
+
+  </div>
+
+</section>
 
               {/* Risk score */}
               <div className="flex items-end justify-between">
