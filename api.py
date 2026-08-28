@@ -634,6 +634,8 @@ def get_risk_assessments(
                 risk_level,
                 risk_score,
                 contributing_factors,
+                ml_anomaly,
+                ml_anomaly_score,
                 assessed_at
             FROM risk_assessments
             ORDER BY assessed_at DESC;
@@ -654,11 +656,16 @@ def get_risk_assessments(
                 else None
             ),
             "contributing_factors": assessment[4],
-            "assessed_at": assessment[5]
+            "ml_anomaly": assessment[5],
+            "ml_anomaly_score": (
+                float(assessment[6])
+                if assessment[6] is not None
+                else None
+            ),
+            "assessed_at": assessment[7]
         }
         for assessment in assessments
     ]
-
 
 # =========================
 # Alerts
