@@ -453,7 +453,7 @@ def main():
                     ml_model
                 )
 
-                ml_anomaly = ml_result["is_anomaly"]
+                ml_anomaly = bool(ml_result["is_anomaly"])
                 ml_anomaly_score = ml_result["anomaly_score"]
                 
                 print("DEBUG ML VALUES:")
@@ -574,6 +574,13 @@ def main():
                         "behaviour appear normal"
                     )
 
+                print()
+                print("DEBUG BEFORE INSERT")
+                print(f"ml_anomaly = {ml_anomaly!r}")
+                print(f"ml_anomaly_score = {ml_score!r}")
+                print(f"score = {score!r}")
+                print(f"risk_level = {risk_level!r}")
+
                 # ---------------------------------------------
                 # Store assessment
                 # ---------------------------------------------
@@ -595,7 +602,7 @@ def main():
                     score,
                     contributing_factors,
                     ml_anomaly,
-                    ml_anomaly_score
+                    ml_score
                 ))
 
                 assessment_id = cur.fetchone()[0]
