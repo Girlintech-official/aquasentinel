@@ -673,38 +673,124 @@ def get_risk_assessments(
 
 @app.get("/alerts")
 def get_alerts(
+    pond_id: int | None = None,
+    alert_level: str | None = None,
+    limit: int = 50,
     current_user: dict = Depends(get_current_user)
 ):
+    """
+    Return recent AquaSentinel alerts.
+
+    Optional filters:
+    - pond_id: only alerts for a specific pond
+    - alert_level: High, Moderate, Critical, etc.
+    - limit: maximum number of alerts to return
+
+    Read/unread state is intentionally not stored here yet because the
+    current alerts table does not contain a read/acknowledged column.
+    """
+
+    # Keep API usage bounded.
+    limit = max(1, min(limit, 100))
+
     conn = get_connection()
 
-    with conn.cursor() as cur:
-        cur.execute("""
-            SELECT
-                id,
-                pond_id,
-                risk_assessment_id,
-                alert_level,
-                message,
-                sent_at
-            FROM alerts
-            ORDER BY sent_at DESC;
-        """)
+    try:
+        with conn.cursor() as cur:
 
-        alerts = cur.fetchall()
+            conditions = []
+            params = []
 
-    conn.close()
+            if pond_id is not None:
+                conditions.append("pond_id = %s")
+                params.append(pond_id)
 
-    return [
-        {
-            "id": alert[0],
-            "pond_id": alert[1],
-            "risk_assessment_id": alert[2],
-            "alert_level": alert[3],
-            "message": alert[4],
-            "sent_at": alert[5]
+            if alert_level:
+                conditions.append("LOWER(alert_level) = LOWER(%s)")
+                params.append(alert_level)
+
+            where_clause = ""
+
+            if conditions:
+                where_clause = "WHERE " + " AND ".join(conditions)
+
+            query = f"""
+                SELECT
+                    id,
+                    pond_id,
+                    risk_assessment_id,
+                    alert_level,
+                    message,
+                    sent_at
+                FROM alerts
+                {where_clause}
+                ORDER BY sent_at DESC
+                LIMIT %s;
+            """
+
+            params.append(limit)
+
+            cur.execute(query, tuple(params))
+            alerts = cur.fetchall()
+
+        return [
+            {
+                "id": alert[0],
+                "pond_id": alert[1],
+                "risk_assessment_id": alert[2],
+                "alert_level": alert[3],
+                "message": alert[4],
+                "sent_at": alert[5],
+                "notification_status": "available"
+            }
+            for alert in alerts
+        ]
+
+    finally:
+        conn.close()
+
+
+@app.get("/alerts/summary")
+def get_alert_summary(
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Return a lightweight summary for the dashboard notification bell.
+
+    This does not pretend to calculate unread state. It reports the
+    number of stored alerts by severity.
+    """
+
+    conn = get_connection()
+
+    try:
+        with conn.cursor() as cur:
+            cur.execute("""
+                SELECT
+                    COUNT(*) AS total,
+                    COUNT(*) FILTER (
+                        WHERE LOWER(alert_level) = 'high'
+                    ) AS high,
+                    COUNT(*) FILTER (
+                        WHERE LOWER(alert_level) = 'moderate'
+                    ) AS moderate,
+                    COUNT(*) FILTER (
+                        WHERE LOWER(alert_level) = 'critical'
+                    ) AS critical
+                FROM alerts;
+            """)
+
+            summary = cur.fetchone()
+
+        return {
+            "total": summary[0],
+            "high": summary[1],
+            "moderate": summary[2],
+            "critical": summary[3]
         }
-        for alert in alerts
-    ]
+
+    finally:
+        conn.close()
 
 
 # =========================

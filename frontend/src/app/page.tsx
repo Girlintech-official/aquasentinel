@@ -3,7 +3,6 @@
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import router from "next/dist/shared/lib/router/router";
 import Link from "next/link";
 
 type WaterReading = {
@@ -36,12 +35,24 @@ type RiskAssessment = {
   assessed_at: string;
 };
 
+type Alert = {
+  id: number;
+  pond_id: number;
+  risk_assessment_id: number | null;
+  alert_level: string;
+  message: string;
+  sent_at: string;
+};
+
 export default function Home() {
    const router = useRouter();
 
   const [water, setWater] = useState<WaterReading | null>(null);
   const [fish, setFish] = useState<FishObservation | null>(null);
   const [risk, setRisk] = useState<RiskAssessment | null>(null);
+  const [alerts, setAlerts] = useState<Alert[]>([]);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [readAlertIds, setReadAlertIds] = useState<number[]>([]);
 
   const [greeting, setGreeting] = useState("Good afternoon.");
   const [menuOpen, setMenuOpen] = useState(false);
@@ -87,6 +98,17 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
+    try {
+      const stored = localStorage.getItem("aquasentinel_read_alerts");
+      if (stored) {
+        setReadAlertIds(JSON.parse(stored));
+      }
+    } catch (error) {
+      console.error("Could not load notification state:", error);
+    }
+  }, []);
+
+  useEffect(() => {
     async function loadData() {
       try {
         
@@ -102,27 +124,32 @@ const headers: HeadersInit = {
 };
 
 
-const [waterRes, fishRes, riskRes] = await Promise.all([
+const [waterRes, fishRes, riskRes, alertsRes] = await Promise.all([
   fetch("https://aquasentinel-api-q232.onrender.com/water-readings", {
     headers,
-}),
-fetch("https://aquasentinel-api-q232.onrender.com/fish-observations", {
-  headers,
-}),
-fetch("https://aquasentinel-api-q232.onrender.com/risk-assessments", {
-  headers,
-}),
+  }),
+  fetch("https://aquasentinel-api-q232.onrender.com/fish-observations", {
+    headers,
+  }),
+  fetch("https://aquasentinel-api-q232.onrender.com/risk-assessments", {
+    headers,
+  }),
+  fetch("https://aquasentinel-api-q232.onrender.com/alerts", {
+    headers,
+  }),
 ]);
 
         const waterData = await waterRes.json();
         const fishData = await fishRes.json();
         const riskData = await riskRes.json();
+        const alertsData = alertsRes.ok ? await alertsRes.json() : [];
 
         const latestRisk = riskData[0] || null;
 
         setWater(waterData[0] || null);
         setFish(fishData[0] || null);
         setRisk(latestRisk);
+        setAlerts(Array.isArray(alertsData) ? alertsData : []);
       } catch (error) {
         console.error("AquaSentinel data error:", error);
       }
@@ -169,6 +196,48 @@ fetch("https://aquasentinel-api-q232.onrender.com/risk-assessments", {
   const currentRisk =
     riskStyles[riskLevel as keyof typeof riskStyles] ||
     riskStyles.Low;
+
+  const unreadAlerts = alerts.filter(
+    (alert) => !readAlertIds.includes(alert.id)
+  );
+
+  const markAlertAsRead = (alertId: number) => {
+    setReadAlertIds((current) => {
+      const updated = current.includes(alertId)
+        ? current
+        : [...current, alertId];
+
+      localStorage.setItem(
+        "aquasentinel_read_alerts",
+        JSON.stringify(updated)
+      );
+
+      return updated;
+    });
+  };
+
+  const markAllAlertsAsRead = () => {
+    const allIds = alerts.map((alert) => alert.id);
+    setReadAlertIds(allIds);
+    localStorage.setItem(
+      "aquasentinel_read_alerts",
+      JSON.stringify(allIds)
+    );
+  };
+
+  const alertLevelClass = (level: string) => {
+    const normalized = level.toLowerCase();
+
+    if (normalized === "critical" || normalized === "high") {
+      return "border-red-400/20 bg-red-400/10 text-red-300";
+    }
+
+    if (normalized === "moderate" || normalized === "medium") {
+      return "border-amber-400/20 bg-amber-400/10 text-amber-300";
+    }
+
+    return "border-[#27e0d0]/20 bg-[#27e0d0]/10 text-[#27e0d0]";
+  };
 
   return (
     <main className="min-h-screen bg-[#022b30] text-white">
@@ -294,7 +363,122 @@ fetch("https://aquasentinel-api-q232.onrender.com/risk-assessments", {
             </div>
 
             {/* Farm information */}
-            <div className="ml-auto flex items-center gap-4">
+            <div className="ml-auto flex items-center gap-3">
+
+              {/* Notifications */}
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setNotificationsOpen(!notificationsOpen)}
+                  className="relative flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-lg text-slate-300 transition hover:border-[#27e0d0]/20 hover:bg-[#27e0d0]/10 hover:text-[#27e0d0]"
+                  aria-label="Open notifications"
+                  aria-expanded={notificationsOpen}
+                  title="Notifications"
+                >
+                  <span>♢</span>
+
+                  {unreadAlerts.length > 0 && (
+                    <span className="absolute -right-1 -top-1 flex min-h-5 min-w-5 items-center justify-center rounded-full border-2 border-[#071d23] bg-red-400 px-1 text-[9px] font-bold text-white">
+                      {unreadAlerts.length > 9 ? "9+" : unreadAlerts.length}
+                    </span>
+                  )}
+                </button>
+
+                {notificationsOpen && (
+                  <div className="absolute right-0 top-12 z-50 w-[min(92vw,380px)] overflow-hidden rounded-2xl border border-white/10 bg-[#071d23] shadow-2xl">
+                    <div className="flex items-center justify-between border-b border-white/5 px-4 py-4">
+                      <div>
+                        <p className="text-sm font-semibold text-white">
+                          Notifications
+                        </p>
+                        <p className="mt-1 text-xs text-slate-500">
+                          {unreadAlerts.length > 0
+                            ? `${unreadAlerts.length} unread alert${unreadAlerts.length === 1 ? "" : "s"}`
+                            : "You're all caught up"}
+                        </p>
+                      </div>
+
+                      {unreadAlerts.length > 0 && (
+                        <button
+                          type="button"
+                          onClick={markAllAlertsAsRead}
+                          className="text-xs font-medium text-[#27e0d0] transition hover:text-white"
+                        >
+                          Mark all read
+                        </button>
+                      )}
+                    </div>
+
+                    <div className="max-h-[420px] overflow-y-auto">
+                      {alerts.length === 0 ? (
+                        <div className="px-5 py-8 text-center">
+                          <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-[#27e0d0]/10 text-[#27e0d0]">
+                            ✓
+                          </div>
+                          <p className="mt-3 text-sm font-medium text-slate-300">
+                            No alerts
+                          </p>
+                          <p className="mt-1 text-xs leading-5 text-slate-500">
+                            AquaSentinel has not recorded any alerts for your
+                            account.
+                          </p>
+                        </div>
+                      ) : (
+                        alerts.slice(0, 8).map((alert) => {
+                          const isUnread = !readAlertIds.includes(alert.id);
+
+                          return (
+                            <button
+                              key={alert.id}
+                              type="button"
+                              onClick={() => markAlertAsRead(alert.id)}
+                              className={`w-full border-b border-white/5 px-4 py-4 text-left transition hover:bg-white/[0.03] ${
+                                isUnread ? "bg-white/[0.02]" : ""
+                              }`}
+                            >
+                              <div className="flex items-start gap-3">
+                                <span
+                                  className={`mt-0.5 rounded-full border px-2 py-1 text-[9px] font-semibold uppercase ${alertLevelClass(
+                                    alert.alert_level
+                                  )}`}
+                                >
+                                  {alert.alert_level}
+                                </span>
+
+                                {isUnread && (
+                                  <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[#27e0d0]" />
+                                )}
+
+                                <div className="min-w-0 flex-1">
+                                  <p className="text-xs font-medium text-slate-300">
+                                    Pond {alert.pond_id}
+                                  </p>
+                                  <p className="mt-1 text-sm leading-5 text-slate-400">
+                                    {alert.message}
+                                  </p>
+                                  <p className="mt-2 text-[10px] text-slate-600">
+                                    {new Date(alert.sent_at).toLocaleString()}
+                                  </p>
+                                </div>
+                              </div>
+                            </button>
+                          );
+                        })
+                      )}
+                    </div>
+
+                    <div className="border-t border-white/5 p-3">
+                      <Link
+                        href="/alerts"
+                        onClick={() => setNotificationsOpen(false)}
+                        className="flex w-full items-center justify-center rounded-xl bg-white/[0.03] px-4 py-3 text-xs font-medium text-slate-400 transition hover:bg-white/[0.06] hover:text-white"
+                      >
+                        View all alerts →
+                      </Link>
+                    </div>
+                  </div>
+                )}
+              </div>
 
               <div className="hidden text-right sm:block">
                 <p className="text-sm font-medium">

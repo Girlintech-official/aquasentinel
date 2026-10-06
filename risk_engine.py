@@ -4,10 +4,14 @@ import numpy as np
 
 from dotenv import load_dotenv
 from sklearn.ensemble import IsolationForest
+
 from ml_anomaly_detector import (
     train_model,
     detect_anomaly
 )
+
+from notification_service import dispatch_notification
+
 load_dotenv()
 
 
@@ -38,21 +42,15 @@ def assess_risk(
 
     if temperature < 20 or temperature > 34:
         score += 30
-        factors.append(
-            "Severely abnormal water temperature"
-        )
+        factors.append("Severely abnormal water temperature")
 
     elif temperature < 22 or temperature > 32:
         score += 20
-        factors.append(
-            "Moderately abnormal water temperature"
-        )
+        factors.append("Moderately abnormal water temperature")
 
     elif temperature < 24 or temperature > 30:
         score += 10
-        factors.append(
-            "Slightly abnormal water temperature"
-        )
+        factors.append("Slightly abnormal water temperature")
 
     # -------------------------
     # pH
@@ -60,21 +58,15 @@ def assess_risk(
 
     if ph < 5.5 or ph > 9.5:
         score += 30
-        factors.append(
-            "Severely abnormal pH"
-        )
+        factors.append("Severely abnormal pH")
 
     elif ph < 6.0 or ph > 9.0:
         score += 20
-        factors.append(
-            "Moderately abnormal pH"
-        )
+        factors.append("Moderately abnormal pH")
 
     elif ph < 6.5 or ph > 8.5:
         score += 10
-        factors.append(
-            "Slightly abnormal pH"
-        )
+        factors.append("Slightly abnormal pH")
 
     # -------------------------
     # Dissolved Oxygen
@@ -82,21 +74,15 @@ def assess_risk(
 
     if dissolved_oxygen < 3:
         score += 35
-        factors.append(
-            "Critically low dissolved oxygen"
-        )
+        factors.append("Critically low dissolved oxygen")
 
     elif dissolved_oxygen < 4:
         score += 25
-        factors.append(
-            "Low dissolved oxygen"
-        )
+        factors.append("Low dissolved oxygen")
 
     elif dissolved_oxygen < 5:
         score += 15
-        factors.append(
-            "Reduced dissolved oxygen"
-        )
+        factors.append("Reduced dissolved oxygen")
 
     # -------------------------
     # Fish Behaviour
@@ -116,9 +102,7 @@ def assess_risk(
 
     elif activity == "low":
         score += 15
-        factors.append(
-            "Reduced fish activity"
-        )
+        factors.append("Reduced fish activity")
 
     return score, factors
 
@@ -144,20 +128,9 @@ def calculate_features(readings):
         "dissolved_oxygen": oxygen,
     }
 
-    temperatures = [
-        float(row[0])
-        for row in readings
-    ]
-
-    ph_values = [
-        float(row[1])
-        for row in readings
-    ]
-
-    oxygen_values = [
-        float(row[2])
-        for row in readings
-    ]
+    temperatures = [float(row[0]) for row in readings]
+    ph_values = [float(row[1]) for row in readings]
+    oxygen_values = [float(row[2]) for row in readings]
 
     features["temperature_average"] = (
         sum(temperatures) / len(temperatures)
@@ -176,7 +149,6 @@ def calculate_features(readings):
     # -------------------------
 
     if len(readings) >= 2:
-
         previous = readings[1]
 
         features["temperature_change"] = (
@@ -192,7 +164,6 @@ def calculate_features(readings):
         )
 
     else:
-
         features["temperature_change"] = 0
         features["ph_change"] = 0
         features["oxygen_change"] = 0
@@ -231,35 +202,22 @@ def assess_trends(features):
     score = 0
     factors = []
 
-    # Oxygen falling
     if features["oxygen_trend"] == "falling":
-
         score += 10
+        factors.append("Dissolved oxygen is declining")
 
-        factors.append(
-            "Dissolved oxygen is declining"
-        )
-
-    # Oxygen below recent average
     if (
         features["dissolved_oxygen"]
         < features["oxygen_average"] - 0.5
     ):
-
         score += 10
-
         factors.append(
             "Dissolved oxygen is below its recent average"
         )
 
-    # Temperature increasing
     if features["temperature_trend"] == "rising":
-
         score += 5
-
-        factors.append(
-            "Water temperature is increasing"
-        )
+        factors.append("Water temperature is increasing")
 
     return score, factors
 
@@ -273,9 +231,7 @@ def load_healthy_training_data(pond_id):
     conn = get_connection()
 
     try:
-
         with conn.cursor() as cur:
-
             cur.execute("""
                 SELECT
                     w.temperature,
@@ -302,7 +258,6 @@ def train_ml_model(pond_id):
     rows = load_healthy_training_data(pond_id)
 
     if len(rows) < 20:
-
         return None, len(rows)
 
     X = np.array([
@@ -337,7 +292,6 @@ def detect_ml_anomaly(
 ):
 
     if model is None:
-
         return False, None
 
     X = np.array([[
@@ -347,13 +301,94 @@ def detect_ml_anomaly(
     ]])
 
     prediction = model.predict(X)[0]
-
     score = model.decision_function(X)[0]
 
     return (
         prediction == -1,
         round(float(score), 4)
     )
+
+
+# ============================================================
+# DASHBOARD ALERT / NOTIFICATION BRIDGE
+# ============================================================
+
+def create_alert_if_needed(
+    cur,
+    pond_id,
+    assessment_id,
+    risk_level,
+    contributing_factors
+):
+    """
+    Store a dashboard alert for Moderate or High risk.
+
+    The current database schema does not yet contain notification
+    delivery fields, so this function intentionally stores the
+    event in the existing alerts table. SMS, push and voice
+    delivery can be attached to this same event later.
+
+    Alerts are deduplicated for the same pond + risk level for
+    10 minutes so the monitoring cycle does not flood the
+    dashboard with identical alerts.
+    """
+
+    if risk_level not in ("Moderate", "High"):
+        return False
+
+    if risk_level == "High":
+        alert_message = (
+            f"High stress risk detected in pond {pond_id}. "
+            f"Factors: {contributing_factors}"
+        )
+    else:
+        alert_message = (
+            f"Moderate stress risk detected in pond {pond_id}. "
+            f"Factors: {contributing_factors}"
+        )
+
+    cur.execute("""
+        SELECT id
+        FROM alerts
+        WHERE pond_id = %s
+          AND alert_level = %s
+          AND sent_at >= CURRENT_TIMESTAMP - INTERVAL '10 minutes'
+        ORDER BY sent_at DESC
+        LIMIT 1;
+    """, (pond_id, risk_level))
+
+    existing_alert = cur.fetchone()
+
+    if existing_alert:
+        return False
+
+    cur.execute("""
+        INSERT INTO alerts
+        (
+            pond_id,
+            risk_assessment_id,
+            alert_level,
+            message
+        )
+        VALUES (%s, %s, %s, %s)
+        RETURNING id;
+    """, (
+        pond_id,
+        assessment_id,
+        risk_level,
+        alert_message
+    ))
+
+    alert_id = cur.fetchone()[0]
+
+    print(
+        f"🔔 Dashboard alert created: "
+        f"alert_id={alert_id}, "
+        f"pond={pond_id}, "
+        f"level={risk_level}"
+    )
+
+    return True
 
 
 # ============================================================
@@ -364,8 +399,11 @@ def main():
 
     conn = get_connection()
 
-    try:
+    # Notifications are held here until the database transaction
+    # has successfully committed.
+    pending_notifications = []
 
+    try:
         with conn.cursor() as cur:
 
             # ------------------------------------------------
@@ -384,11 +422,7 @@ def main():
             ponds = cur.fetchall()
 
             if not ponds:
-
-                print(
-                    "No pond monitoring data found."
-                )
-
+                print("No pond monitoring data found.")
                 return
 
             # =================================================
@@ -420,58 +454,26 @@ def main():
                 readings = cur.fetchall()
 
                 if not readings:
-
                     continue
 
                 # ---------------------------------------------
                 # Feature engineering
                 # ---------------------------------------------
 
-                features = calculate_features(
-                    readings
-                )
-
-                # ---------------------------------------------
-                # ML anomaly detection
-                # ---------------------------------------------
-
-                X = np.array([
-                    [
-                        float(row[0]),
-                        float(row[1]),
-                        float(row[2])
-                    ]
-                    for row in readings
-                ], dtype=float)
-
-                ml_model = train_model(X)
-
-                ml_result = detect_anomaly(
-                    features["temperature"],
-                    features["ph"],
-                    features["dissolved_oxygen"],
-                    ml_model
-                )
-
-                ml_anomaly = bool(ml_result["is_anomaly"])
-                ml_anomaly_score = ml_result["anomaly_score"]
-                
-                print("DEBUG ML VALUES:")
-                print("ml_anomaly =", ml_anomaly)
-                print("ml_anomaly_score =", ml_anomaly_score)
+                features = calculate_features(readings)
 
                 # ---------------------------------------------
                 # Fish behaviour
                 # ---------------------------------------------
 
                 cur.execute("""
-                    SELECT
-                        activity_level
-                    FROM fish_observations
-                    WHERE pond_id = %s
-                    ORDER BY observed_at DESC
-                    LIMIT 1;
-                """, (pond_id,))
+    SELECT
+        activity_level
+    FROM fish_observations
+    WHERE pond_id = %s
+    ORDER BY observed_at DESC
+    LIMIT 1;
+""", (pond_id,))
 
                 fish = cur.fetchone()
 
@@ -496,40 +498,30 @@ def main():
                 # Trend intelligence
                 # ---------------------------------------------
 
-                trend_score, trend_factors = (
-                    assess_trends(features)
+                trend_score, trend_factors = assess_trends(
+                    features
                 )
 
-                score = (
-                    rule_score +
-                    trend_score
-                )
-
-                factors.extend(
-                    trend_factors
-                )
+                score = rule_score + trend_score
+                factors.extend(trend_factors)
 
                 # ---------------------------------------------
                 # ML intelligence
                 # ---------------------------------------------
 
-                ml_model, training_count = (
-                    train_ml_model(pond_id)
+                ml_model, training_count = train_ml_model(
+                    pond_id
                 )
 
-                ml_anomaly, ml_score = (
-                    detect_ml_anomaly(
-                        features["temperature"],
-                        features["ph"],
-                        features["dissolved_oxygen"],
-                        ml_model
-                    )
+                ml_anomaly, ml_score = detect_ml_anomaly(
+                    features["temperature"],
+                    features["ph"],
+                    features["dissolved_oxygen"],
+                    ml_model
                 )
 
                 if ml_anomaly:
-
                     score += 10
-
                     factors.append(
                         "ML detected an unusual "
                         "water-quality pattern"
@@ -546,15 +538,12 @@ def main():
                 # ---------------------------------------------
 
                 if score >= 50:
-
                     risk_level = "High"
 
                 elif score >= 10:
-
                     risk_level = "Moderate"
 
                 else:
-
                     risk_level = "Low"
 
                 # ---------------------------------------------
@@ -562,28 +551,20 @@ def main():
                 # ---------------------------------------------
 
                 if factors:
-
-                    contributing_factors = (
-                        ", ".join(factors)
+                    contributing_factors = ", ".join(
+                        factors
                     )
 
                 else:
-
                     contributing_factors = (
                         "Water parameters and fish "
                         "behaviour appear normal"
                     )
 
-                print()
-                print("DEBUG BEFORE INSERT")
-                print(f"ml_anomaly = {ml_anomaly!r}")
-                print(f"ml_anomaly_score = {ml_score!r}")
-                print(f"score = {score!r}")
-                print(f"risk_level = {risk_level!r}")
-
                 # ---------------------------------------------
                 # Store assessment
                 # ---------------------------------------------
+
                 cur.execute("""
                     INSERT INTO risk_assessments
                     (
@@ -608,33 +589,28 @@ def main():
                 assessment_id = cur.fetchone()[0]
 
                 # ---------------------------------------------
-                # High-risk alert
+                # Dashboard notification event
                 # ---------------------------------------------
 
-                if risk_level == "High":
+                alert_created = create_alert_if_needed(
+                    cur=cur,
+                    pond_id=pond_id,
+                    assessment_id=assessment_id,
+                    risk_level=risk_level,
+                    contributing_factors=contributing_factors
+                )
 
-                    alert_message = (
-                        f"High stress risk detected "
-                        f"in pond {pond_id}. "
-                        f"Factors: "
-                        f"{contributing_factors}"
-                    )
-
-                    cur.execute("""
-                        INSERT INTO alerts
-                        (
-                            pond_id,
-                            risk_assessment_id,
-                            alert_level,
-                            message
-                        )
-                        VALUES (%s, %s, %s, %s);
-                    """, (
-                        pond_id,
-                        assessment_id,
-                        "High",
-                        alert_message
-                    ))
+                if (
+                    alert_created
+                    and risk_level in ("Moderate", "High")
+                ):
+                    pending_notifications.append({
+                        "pond_id": pond_id,
+                        "risk_level": risk_level,
+                        "risk_score": float(score),
+                        "contributing_factors":
+                            contributing_factors,
+                    })
 
                 # ---------------------------------------------
                 # Console output
@@ -661,7 +637,8 @@ def main():
                 )
 
                 print(
-                    f"ML anomaly: {ml_anomaly}"
+                    f"ML anomaly: "
+                    f"{ml_anomaly}"
                 )
 
                 print(
@@ -685,11 +662,13 @@ def main():
                 )
 
                 print(
-                    f"Risk: {risk_level}"
+                    f"Risk: "
+                    f"{risk_level}"
                 )
 
                 print(
-                    f"Score: {score}"
+                    f"Score: "
+                    f"{score}"
                 )
 
                 print(
@@ -697,7 +676,19 @@ def main():
                     f"{contributing_factors}"
                 )
 
+            # ------------------------------------------------
+            # Commit database transaction first
+            # ------------------------------------------------
+
             conn.commit()
+
+            # ------------------------------------------------
+            # Deliver external notifications only after
+            # successful database commit
+            # ------------------------------------------------
+
+            for event in pending_notifications:
+                dispatch_notification(**event)
 
             print()
             print(
@@ -706,15 +697,16 @@ def main():
             )
 
     except Exception:
-
         conn.rollback()
-
         raise
 
     finally:
-
         conn.close()
 
+
+# ============================================================
+# ENTRY POINT
+# ============================================================
 
 if __name__ == "__main__":
     main()
