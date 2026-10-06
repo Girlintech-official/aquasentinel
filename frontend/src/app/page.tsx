@@ -375,7 +375,21 @@ const [waterRes, fishRes, riskRes, alertsRes] = await Promise.all([
                   aria-expanded={notificationsOpen}
                   title="Notifications"
                 >
-                  <span>♢</span>
+                  <svg
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  strokeWidth="1.8"
+  className="h-5 w-5"
+  aria-hidden="true"
+>
+  <path
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    d="M15 17H9m10-2.5c-1.2-1.1-2-2.7-2-4.5V8a5 5 0 0 0-10 0v2c0 1.8-.8 3.4-2 4.5-.5.5-.1 1.5.6 1.5h12.8c.7 0 1.1-1 .6-1.5ZM10 20h4"
+  />
+</svg>
 
                   {unreadAlerts.length > 0 && (
                     <span className="absolute -right-1 -top-1 flex min-h-5 min-w-5 items-center justify-center rounded-full border-2 border-[#071d23] bg-red-400 px-1 text-[9px] font-bold text-white">
