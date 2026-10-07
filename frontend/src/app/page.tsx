@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
@@ -45,7 +45,7 @@ type Alert = {
 };
 
 export default function Home() {
-   const router = useRouter();
+  const router = useRouter();
 
   const [water, setWater] = useState<WaterReading | null>(null);
   const [fish, setFish] = useState<FishObservation | null>(null);
@@ -57,25 +57,29 @@ export default function Home() {
   const [greeting, setGreeting] = useState("Good afternoon.");
   const [menuOpen, setMenuOpen] = useState(false);
 
+  // Audio / notification tracking
+  const previousAlertIds = useRef<number[] | null>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
+
   useEffect(() => {
-  const checkAuth = () => {
-    const token = localStorage.getItem("aquasentinel_token");
+    const checkAuth = () => {
+      const token = localStorage.getItem("aquasentinel_token");
 
-    console.log("CHECK TOKEN:", token);
+      console.log("CHECK TOKEN:", token);
 
-    if (!token) {
-      router.replace("/login");
-    }
-  };
+      if (!token) {
+        router.replace("/login");
+      }
+    };
 
-  checkAuth();
+    checkAuth();
 
-  window.addEventListener("storage", checkAuth);
+    window.addEventListener("storage", checkAuth);
 
-  return () => {
-    window.removeEventListener("storage", checkAuth);
-  };
-}, [router]);
+    return () => {
+      window.removeEventListener("storage", checkAuth);
+    };
+  }, [router]);
 
   useEffect(() => {
     function updateGreeting() {
@@ -100,6 +104,7 @@ export default function Home() {
   useEffect(() => {
     try {
       const stored = localStorage.getItem("aquasentinel_read_alerts");
+
       if (stored) {
         setReadAlertIds(JSON.parse(stored));
       }
@@ -108,61 +113,256 @@ export default function Home() {
     }
   }, []);
 
+  /*
+   * Enable browser audio after the user interacts with the dashboard.
+   */
+  useEffect(() => {
+    const enableAudio = () => {
+      if (typeof window === "undefined") return;
+
+      const AudioContextClass =
+        window.AudioContext ||
+        (
+          window as typeof window & {
+            webkitAudioContext?: typeof AudioContext;
+          }
+        ).webkitAudioContext;
+
+      if (!AudioContextClass) return;
+
+      if (!audioContextRef.current) {
+        audioContextRef.current = new AudioContextClass();
+      }
+
+      if (audioContextRef.current.state === "suspended") {
+        audioContextRef.current.resume().catch(() => {});
+      }
+    };
+
+    window.addEventListener("click", enableAudio, { once: true });
+
+    return () => {
+      window.removeEventListener("click", enableAudio);
+    };
+  }, []);
+
+  /*
+   * Audible alert.
+   *
+   * Moderate = two short beeps
+   * High/Critical = three stronger beeps
+   */
+  const playAlertSound = (level: string) => {
+    if (typeof window === "undefined") return;
+
+    const AudioContextClass =
+      window.AudioContext ||
+      (
+        window as typeof window & {
+          webkitAudioContext?: typeof AudioContext;
+        }
+      ).webkitAudioContext;
+
+    if (!AudioContextClass) return;
+
+    if (!audioContextRef.current) {
+      audioContextRef.current = new AudioContextClass();
+    }
+
+    const audioContext = audioContextRef.current;
+
+    if (audioContext.state === "suspended") {
+      audioContext.resume().catch(() => {});
+    }
+
+    const normalizedLevel = level.toLowerCase();
+
+    const isHigh =
+      normalizedLevel === "high" ||
+      normalizedLevel === "critical";
+
+    const beepCount = isHigh ? 3 : 2;
+    const frequency = isHigh ? 880 : 660;
+
+    for (let i = 0; i < beepCount; i++) {
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+
+      oscillator.type = "sine";
+      oscillator.frequency.value = frequency;
+
+      const startTime =
+        audioContext.currentTime + i * 0.18;
+
+      const endTime = startTime + 0.11;
+
+      gainNode.gain.setValueAtTime(
+        0.0001,
+        startTime
+      );
+
+      gainNode.gain.exponentialRampToValueAtTime(
+        0.18,
+        startTime + 0.01
+      );
+
+      gainNode.gain.exponentialRampToValueAtTime(
+        0.0001,
+        endTime
+      );
+
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+
+      oscillator.start(startTime);
+      oscillator.stop(endTime);
+    }
+  };
+
+  /*
+   * Load dashboard data and monitor for new alerts.
+   */
   useEffect(() => {
     async function loadData() {
       try {
-        
-        const token = localStorage.getItem("aquasentinel_token");
+        const token = localStorage.getItem(
+          "aquasentinel_token"
+        );
 
-if (!token) {
-  console.error("No token found");
-  return;
-}
+        if (!token) {
+          console.error("No token found");
+          return;
+        }
 
-const headers: HeadersInit = {
-  Authorization: `Bearer ${token}`,
-};
+        const headers: HeadersInit = {
+          Authorization: `Bearer ${token}`,
+        };
 
+        const [
+          waterRes,
+          fishRes,
+          riskRes,
+          alertsRes,
+        ] = await Promise.all([
+          fetch(
+            "https://aquasentinel-api-q232.onrender.com/water-readings",
+            { headers }
+          ),
 
-const [waterRes, fishRes, riskRes, alertsRes] = await Promise.all([
-  fetch("https://aquasentinel-api-q232.onrender.com/water-readings", {
-    headers,
-  }),
-  fetch("https://aquasentinel-api-q232.onrender.com/fish-observations", {
-    headers,
-  }),
-  fetch("https://aquasentinel-api-q232.onrender.com/risk-assessments", {
-    headers,
-  }),
-  fetch("https://aquasentinel-api-q232.onrender.com/alerts", {
-    headers,
-  }),
-]);
+          fetch(
+            "https://aquasentinel-api-q232.onrender.com/fish-observations",
+            { headers }
+          ),
+
+          fetch(
+            "https://aquasentinel-api-q232.onrender.com/risk-assessments",
+            { headers }
+          ),
+
+          fetch(
+            "https://aquasentinel-api-q232.onrender.com/alerts",
+            { headers }
+          ),
+        ]);
 
         const waterData = await waterRes.json();
         const fishData = await fishRes.json();
         const riskData = await riskRes.json();
-        const alertsData = alertsRes.ok ? await alertsRes.json() : [];
+
+        const alertsData = alertsRes.ok
+          ? await alertsRes.json()
+          : [];
 
         const latestRisk = riskData[0] || null;
 
         setWater(waterData[0] || null);
         setFish(fishData[0] || null);
         setRisk(latestRisk);
-        setAlerts(Array.isArray(alertsData) ? alertsData : []);
+
+        const nextAlerts: Alert[] = Array.isArray(
+          alertsData
+        )
+          ? alertsData
+          : [];
+
+        const nextAlertIds = nextAlerts.map(
+          (alert) => alert.id
+        );
+
+        /*
+         * Do not play sounds for alerts that already existed
+         * when the dashboard first loaded.
+         */
+        if (previousAlertIds.current !== null) {
+          const newAlerts = nextAlerts.filter(
+            (alert) =>
+              !previousAlertIds.current!.includes(
+                alert.id
+              )
+          );
+
+          const newRiskAlerts = newAlerts.filter(
+            (alert) => {
+              const level =
+                alert.alert_level.toLowerCase();
+
+              return (
+                level === "moderate" ||
+                level === "medium" ||
+                level === "high" ||
+                level === "critical"
+              );
+            }
+          );
+
+          if (newRiskAlerts.length > 0) {
+            /*
+             * If several alerts arrive at once,
+             * prioritize High/Critical.
+             */
+            const highestPriorityAlert =
+              newRiskAlerts.find((alert) => {
+                const level =
+                  alert.alert_level.toLowerCase();
+
+                return (
+                  level === "high" ||
+                  level === "critical"
+                );
+              }) || newRiskAlerts[0];
+
+            playAlertSound(
+              highestPriorityAlert.alert_level
+            );
+          }
+        }
+
+        previousAlertIds.current = nextAlertIds;
+
+        setAlerts(nextAlerts);
       } catch (error) {
-        console.error("AquaSentinel data error:", error);
+        console.error(
+          "AquaSentinel data error:",
+          error
+        );
       }
     }
 
     loadData();
 
-    const interval = setInterval(loadData, 10000);
+    /*
+     * AquaSentinel checks for new alerts every 10 seconds.
+     */
+    const interval = setInterval(
+      loadData,
+      10000
+    );
 
     return () => clearInterval(interval);
   }, []);
 
-  const riskLevel = risk?.risk_level || "Low";
+  const riskLevel =
+    risk?.risk_level || "Low";
 
   const riskStyles = {
     Low: {
@@ -171,7 +371,8 @@ const [waterRes, fishRes, riskRes, alertsRes] = await Promise.all([
       glow:
         "shadow-[0_0_50px_rgba(52,211,153,0.08)]",
       icon: "✓",
-      message: "Conditions look healthy",
+      message:
+        "Conditions look healthy",
     },
 
     Moderate: {
@@ -180,7 +381,8 @@ const [waterRes, fishRes, riskRes, alertsRes] = await Promise.all([
       glow:
         "shadow-[0_0_50px_rgba(251,191,36,0.08)]",
       icon: "!",
-      message: "Potential stress detected",
+      message:
+        "Potential stress detected",
     },
 
     High: {
@@ -189,19 +391,24 @@ const [waterRes, fishRes, riskRes, alertsRes] = await Promise.all([
       glow:
         "shadow-[0_0_50px_rgba(248,113,113,0.10)]",
       icon: "!",
-      message: "Potentially harmful conditions detected",
+      message:
+        "Potentially harmful conditions detected",
     },
   };
 
   const currentRisk =
-    riskStyles[riskLevel as keyof typeof riskStyles] ||
-    riskStyles.Low;
+    riskStyles[
+      riskLevel as keyof typeof riskStyles
+    ] || riskStyles.Low;
 
   const unreadAlerts = alerts.filter(
-    (alert) => !readAlertIds.includes(alert.id)
+    (alert) =>
+      !readAlertIds.includes(alert.id)
   );
 
-  const markAlertAsRead = (alertId: number) => {
+  const markAlertAsRead = (
+    alertId: number
+  ) => {
     setReadAlertIds((current) => {
       const updated = current.includes(alertId)
         ? current
@@ -217,22 +424,35 @@ const [waterRes, fishRes, riskRes, alertsRes] = await Promise.all([
   };
 
   const markAllAlertsAsRead = () => {
-    const allIds = alerts.map((alert) => alert.id);
+    const allIds = alerts.map(
+      (alert) => alert.id
+    );
+
     setReadAlertIds(allIds);
+
     localStorage.setItem(
       "aquasentinel_read_alerts",
       JSON.stringify(allIds)
     );
   };
 
-  const alertLevelClass = (level: string) => {
-    const normalized = level.toLowerCase();
+  const alertLevelClass = (
+    level: string
+  ) => {
+    const normalized =
+      level.toLowerCase();
 
-    if (normalized === "critical" || normalized === "high") {
+    if (
+      normalized === "critical" ||
+      normalized === "high"
+    ) {
       return "border-red-400/20 bg-red-400/10 text-red-300";
     }
 
-    if (normalized === "moderate" || normalized === "medium") {
+    if (
+      normalized === "moderate" ||
+      normalized === "medium"
+    ) {
       return "border-amber-400/20 bg-amber-400/10 text-amber-300";
     }
 
@@ -245,6 +465,7 @@ const [waterRes, fishRes, riskRes, alertsRes] = await Promise.all([
       {/* Ambient background */}
       <div className="pointer-events-none fixed inset-0 overflow-hidden">
         <div className="absolute -left-40 -top-40 h-96 w-96 rounded-full bg-[#00b8a9]/10 blur-3xl" />
+
         <div className="absolute right-0 top-1/3 h-96 w-96 rounded-full bg-[#27e0d0]/5 blur-3xl" />
       </div>
 
@@ -319,11 +540,13 @@ const [waterRes, fishRes, riskRes, alertsRes] = await Promise.all([
           <div className="mt-16 rounded-2xl border border-[#00b8a9]/10 bg-[#00b8a9]/5 p-4">
 
             <div className="mb-2 flex items-center gap-2">
+
               <span className="h-2 w-2 animate-pulse rounded-full bg-[#27e0d0]" />
 
               <span className="text-xs font-medium text-[#27e0d0]">
                 SENTINEL ACTIVE
               </span>
+
             </div>
 
             <p className="text-xs leading-5 text-slate-500">
@@ -344,7 +567,9 @@ const [waterRes, fishRes, riskRes, alertsRes] = await Promise.all([
             <div className="flex items-center gap-3 lg:hidden">
 
               <button
-                onClick={() => setMenuOpen(!menuOpen)}
+                onClick={() =>
+                  setMenuOpen(!menuOpen)
+                }
                 className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-xl text-white transition hover:bg-white/10"
                 aria-label="Toggle navigation menu"
               >
@@ -367,134 +592,197 @@ const [waterRes, fishRes, riskRes, alertsRes] = await Promise.all([
 
               {/* Notifications */}
               <div className="relative">
+
                 <button
                   type="button"
-                  onClick={() => setNotificationsOpen(!notificationsOpen)}
+                  onClick={() =>
+                    setNotificationsOpen(
+                      !notificationsOpen
+                    )
+                  }
                   className="relative flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-lg text-slate-300 transition hover:border-[#27e0d0]/20 hover:bg-[#27e0d0]/10 hover:text-[#27e0d0]"
                   aria-label="Open notifications"
-                  aria-expanded={notificationsOpen}
+                  aria-expanded={
+                    notificationsOpen
+                  }
                   title="Notifications"
                 >
+
                   <svg
-  xmlns="http://www.w3.org/2000/svg"
-  viewBox="0 0 24 24"
-  fill="none"
-  stroke="currentColor"
-  strokeWidth="1.8"
-  className="h-5 w-5"
-  aria-hidden="true"
->
-  <path
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    d="M15 17H9m10-2.5c-1.2-1.1-2-2.7-2-4.5V8a5 5 0 0 0-10 0v2c0 1.8-.8 3.4-2 4.5-.5.5-.1 1.5.6 1.5h12.8c.7 0 1.1-1 .6-1.5ZM10 20h4"
-  />
-</svg>
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                    className="h-5 w-5"
+                    aria-hidden="true"
+                  >
+
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M15 17H9m10-2.5c-1.2-1.1-2-2.7-2-4.5V8a5 5 0 0 0-10 0v2c0 1.8-.8 3.4-2 4.5-.5.5-.1 1.5.6 1.5h12.8c.7 0 1.1-1 .6-1.5ZM10 20h4"
+                    />
+
+                  </svg>
 
                   {unreadAlerts.length > 0 && (
                     <span className="absolute -right-1 -top-1 flex min-h-5 min-w-5 items-center justify-center rounded-full border-2 border-[#071d23] bg-red-400 px-1 text-[9px] font-bold text-white">
-                      {unreadAlerts.length > 9 ? "9+" : unreadAlerts.length}
+                      {unreadAlerts.length > 9
+                        ? "9+"
+                        : unreadAlerts.length}
                     </span>
                   )}
+
                 </button>
 
                 {notificationsOpen && (
                   <div className="absolute right-0 top-12 z-50 w-[min(92vw,380px)] overflow-hidden rounded-2xl border border-white/10 bg-[#071d23] shadow-2xl">
+
                     <div className="flex items-center justify-between border-b border-white/5 px-4 py-4">
+
                       <div>
+
                         <p className="text-sm font-semibold text-white">
                           Notifications
                         </p>
+
                         <p className="mt-1 text-xs text-slate-500">
+
                           {unreadAlerts.length > 0
-                            ? `${unreadAlerts.length} unread alert${unreadAlerts.length === 1 ? "" : "s"}`
+                            ? `${unreadAlerts.length} unread alert${
+                                unreadAlerts.length === 1
+                                  ? ""
+                                  : "s"
+                              }`
                             : "You're all caught up"}
+
                         </p>
+
                       </div>
 
                       {unreadAlerts.length > 0 && (
                         <button
                           type="button"
-                          onClick={markAllAlertsAsRead}
+                          onClick={
+                            markAllAlertsAsRead
+                          }
                           className="text-xs font-medium text-[#27e0d0] transition hover:text-white"
                         >
                           Mark all read
                         </button>
                       )}
+
                     </div>
 
                     <div className="max-h-[420px] overflow-y-auto">
+
                       {alerts.length === 0 ? (
                         <div className="px-5 py-8 text-center">
+
                           <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-[#27e0d0]/10 text-[#27e0d0]">
                             ✓
                           </div>
+
                           <p className="mt-3 text-sm font-medium text-slate-300">
                             No alerts
                           </p>
+
                           <p className="mt-1 text-xs leading-5 text-slate-500">
-                            AquaSentinel has not recorded any alerts for your
-                            account.
+                            AquaSentinel has not recorded any alerts for your account.
                           </p>
+
                         </div>
                       ) : (
-                        alerts.slice(0, 8).map((alert) => {
-                          const isUnread = !readAlertIds.includes(alert.id);
 
-                          return (
-                            <button
-                              key={alert.id}
-                              type="button"
-                              onClick={() => markAlertAsRead(alert.id)}
-                              className={`w-full border-b border-white/5 px-4 py-4 text-left transition hover:bg-white/[0.03] ${
-                                isUnread ? "bg-white/[0.02]" : ""
-                              }`}
-                            >
-                              <div className="flex items-start gap-3">
-                                <span
-                                  className={`mt-0.5 rounded-full border px-2 py-1 text-[9px] font-semibold uppercase ${alertLevelClass(
-                                    alert.alert_level
-                                  )}`}
-                                >
-                                  {alert.alert_level}
-                                </span>
+                        alerts
+                          .slice(0, 8)
+                          .map((alert) => {
 
-                                {isUnread && (
-                                  <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[#27e0d0]" />
-                                )}
+                            const isUnread =
+                              !readAlertIds.includes(
+                                alert.id
+                              );
 
-                                <div className="min-w-0 flex-1">
-                                  <p className="text-xs font-medium text-slate-300">
-                                    Pond {alert.pond_id}
-                                  </p>
-                                  <p className="mt-1 text-sm leading-5 text-slate-400">
-                                    {alert.message}
-                                  </p>
-                                  <p className="mt-2 text-[10px] text-slate-600">
-                                    {new Date(alert.sent_at).toLocaleString()}
-                                  </p>
+                            return (
+                              <button
+                                key={alert.id}
+                                type="button"
+                                onClick={() =>
+                                  markAlertAsRead(
+                                    alert.id
+                                  )
+                                }
+                                className={`w-full border-b border-white/5 px-4 py-4 text-left transition hover:bg-white/[0.03] ${
+                                  isUnread
+                                    ? "bg-white/[0.02]"
+                                    : ""
+                                }`}
+                              >
+
+                                <div className="flex items-start gap-3">
+
+                                  <span
+                                    className={`mt-0.5 rounded-full border px-2 py-1 text-[9px] font-semibold uppercase ${alertLevelClass(
+                                      alert.alert_level
+                                    )}`}
+                                  >
+                                    {alert.alert_level}
+                                  </span>
+
+                                  {isUnread && (
+                                    <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[#27e0d0]" />
+                                  )}
+
+                                  <div className="min-w-0 flex-1">
+
+                                    <p className="text-xs font-medium text-slate-300">
+                                      Pond{" "}
+                                      {alert.pond_id}
+                                    </p>
+
+                                    <p className="mt-1 text-sm leading-5 text-slate-400">
+                                      {alert.message}
+                                    </p>
+
+                                    <p className="mt-2 text-[10px] text-slate-600">
+                                      {new Date(
+                                        alert.sent_at
+                                      ).toLocaleString()}
+                                    </p>
+
+                                  </div>
+
                                 </div>
-                              </div>
-                            </button>
-                          );
-                        })
+
+                              </button>
+                            );
+                          })
                       )}
+
                     </div>
 
                     <div className="border-t border-white/5 p-3">
+
                       <Link
                         href="/alerts"
-                        onClick={() => setNotificationsOpen(false)}
+                        onClick={() =>
+                          setNotificationsOpen(false)
+                        }
                         className="flex w-full items-center justify-center rounded-xl bg-white/[0.03] px-4 py-3 text-xs font-medium text-slate-400 transition hover:bg-white/[0.06] hover:text-white"
                       >
                         View all alerts →
                       </Link>
+
                     </div>
+
                   </div>
                 )}
+
               </div>
 
               <div className="hidden text-right sm:block">
+
                 <p className="text-sm font-medium">
                   Saha Aqua Farm
                 </p>
@@ -502,18 +790,22 @@ const [waterRes, fishRes, riskRes, alertsRes] = await Promise.all([
                 <p className="text-xs text-slate-500">
                   Gurugu, Tamale
                 </p>
+
               </div>
 
-             <button
-   onClick={() => {
-    localStorage.removeItem("aquasentinel_token");
-    router.replace("/login");
-  }}
-  className="flex h-10 w-10 items-center justify-center rounded-full border border-[#27e0d0]/20 bg-[#27e0d0]/10 text-sm font-semibold text-[#27e0d0]"
-  title="Logout"
->
-  S
-</button>
+              <button
+                onClick={() => {
+                  localStorage.removeItem(
+                    "aquasentinel_token"
+                  );
+
+                  router.replace("/login");
+                }}
+                className="flex h-10 w-10 items-center justify-center rounded-full border border-[#27e0d0]/20 bg-[#27e0d0]/10 text-sm font-semibold text-[#27e0d0]"
+                title="Logout"
+              >
+                S
+              </button>
 
             </div>
 
@@ -527,7 +819,9 @@ const [waterRes, fishRes, riskRes, alertsRes] = await Promise.all([
 
                 <Link
                   href="/"
-                  onClick={() => setMenuOpen(false)}
+                  onClick={() =>
+                    setMenuOpen(false)
+                  }
                   className="flex items-center gap-3 rounded-xl bg-[#00b8a9]/10 px-4 py-3 text-sm font-medium text-[#27e0d0]"
                 >
                   <span>◉</span>
@@ -536,7 +830,9 @@ const [waterRes, fishRes, riskRes, alertsRes] = await Promise.all([
 
                 <Link
                   href="/ponds"
-                  onClick={() => setMenuOpen(false)}
+                  onClick={() =>
+                    setMenuOpen(false)
+                  }
                   className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm text-slate-400 transition hover:bg-white/5 hover:text-white"
                 >
                   <span>◌</span>
@@ -545,7 +841,9 @@ const [waterRes, fishRes, riskRes, alertsRes] = await Promise.all([
 
                 <Link
                   href="/insights"
-                  onClick={() => setMenuOpen(false)}
+                  onClick={() =>
+                    setMenuOpen(false)
+                  }
                   className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm text-slate-400 transition hover:bg-white/5 hover:text-white"
                 >
                   <span>⌁</span>
@@ -556,7 +854,9 @@ const [waterRes, fishRes, riskRes, alertsRes] = await Promise.all([
 
                 <Link
                   href="/alerts"
-                  onClick={() => setMenuOpen(false)}
+                  onClick={() =>
+                    setMenuOpen(false)
+                  }
                   className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm text-slate-400 transition hover:bg-white/5 hover:text-white"
                 >
                   <span>◈</span>
@@ -565,7 +865,9 @@ const [waterRes, fishRes, riskRes, alertsRes] = await Promise.all([
 
                 <Link
                   href="/history"
-                  onClick={() => setMenuOpen(false)}
+                  onClick={() =>
+                    setMenuOpen(false)
+                  }
                   className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm text-slate-400 transition hover:bg-white/5 hover:text-white"
                 >
                   <span>◷</span>
@@ -577,11 +879,13 @@ const [waterRes, fishRes, riskRes, alertsRes] = await Promise.all([
               <div className="mt-4 rounded-xl border border-[#00b8a9]/10 bg-[#00b8a9]/5 p-4">
 
                 <div className="flex items-center gap-2">
+
                   <span className="h-2 w-2 animate-pulse rounded-full bg-[#27e0d0]" />
 
                   <span className="text-xs font-medium text-[#27e0d0]">
                     SENTINEL ACTIVE
                   </span>
+
                 </div>
 
                 <p className="mt-2 text-xs leading-5 text-slate-500">
@@ -605,8 +909,7 @@ const [waterRes, fishRes, riskRes, alertsRes] = await Promise.all([
             </h1>
 
             <p className="mt-2 max-w-xl text-sm leading-6 text-slate-400">
-              Your ponds are being monitored continuously. Here is the latest
-              picture of your aquaculture environment.
+              Your ponds are being monitored continuously. Here is the latest picture of your aquaculture environment.
             </p>
 
           </div>
@@ -616,7 +919,11 @@ const [waterRes, fishRes, riskRes, alertsRes] = await Promise.all([
 
             <MetricCard
               label="Temperature"
-              value={water ? `${water.temperature}°` : "--"}
+              value={
+                water
+                  ? `${water.temperature}°`
+                  : "--"
+              }
               unit="C"
               detail="Water temperature"
               icon="◉"
@@ -624,7 +931,11 @@ const [waterRes, fishRes, riskRes, alertsRes] = await Promise.all([
 
             <MetricCard
               label="pH Balance"
-              value={water ? water.ph.toString() : "--"}
+              value={
+                water
+                  ? water.ph.toString()
+                  : "--"
+              }
               unit=""
               detail="Water acidity"
               icon="◌"
@@ -674,8 +985,7 @@ const [waterRes, fishRes, riskRes, alertsRes] = await Promise.all([
                   </h2>
 
                   <p className="mt-2 max-w-xl text-sm text-slate-500">
-                    Biological signals provide another layer of insight
-                    beyond water quality measurements.
+                    Biological signals provide another layer of insight beyond water quality measurements.
                   </p>
 
                 </div>
@@ -748,10 +1058,13 @@ const [waterRes, fishRes, riskRes, alertsRes] = await Promise.all([
                   {fish?.observed_at
                     ? new Date(
                         fish.observed_at
-                      ).toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })
+                      ).toLocaleTimeString(
+                        [],
+                        {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        }
+                      )
                     : "--"}
                 </p>
 
@@ -792,120 +1105,118 @@ const [waterRes, fishRes, riskRes, alertsRes] = await Promise.all([
               </div>
 
               {/* AI / ML Intelligence */}
-<section className="mt-5">
+              <section className="mt-5">
 
-  <div className="rounded-3xl border border-[#27e0d0]/10 bg-[#06434a] p-7">
+                <div className="rounded-3xl border border-[#27e0d0]/10 bg-[#06434a] p-7">
 
-    <div className="flex items-start justify-between">
+                  <div className="flex items-start justify-between">
 
-      <div>
+                    <div>
 
-        <p className="text-xs font-medium uppercase tracking-[0.18em] text-[#27e0d0]">
-          AI / ML INTELLIGENCE
-        </p>
+                      <p className="text-xs font-medium uppercase tracking-[0.18em] text-[#27e0d0]">
+                        AI / ML INTELLIGENCE
+                      </p>
 
-        <h2 className="mt-2 text-xl font-semibold">
-          Anomaly detection
-        </h2>
+                      <h2 className="mt-2 text-xl font-semibold">
+                        Anomaly detection
+                      </h2>
 
-        <p className="mt-2 max-w-xl text-sm leading-6 text-slate-500">
-          AquaSentinel uses machine learning to identify water-quality
-          patterns that differ from the pond's observed baseline.
-        </p>
+                      <p className="mt-2 max-w-xl text-sm leading-6 text-slate-500">
+                        AquaSentinel uses machine learning to identify water-quality patterns that differ from the pond's observed baseline.
+                      </p>
 
-      </div>
+                    </div>
 
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#27e0d0]/10 text-[#27e0d0]">
-        AI
-      </div>
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#27e0d0]/10 text-[#27e0d0]">
+                      AI
+                    </div>
 
-    </div>
+                  </div>
 
-    <div className="mt-7 grid gap-4 sm:grid-cols-2">
+                  <div className="mt-7 grid gap-4 sm:grid-cols-2">
 
-      {/* ML Detection */}
-      <div className="rounded-2xl bg-white/[0.03] p-5">
+                    {/* ML Detection */}
+                    <div className="rounded-2xl bg-white/[0.03] p-5">
 
-        <p className="text-xs uppercase tracking-[0.12em] text-slate-500">
-          ML anomaly detection
-        </p>
+                      <p className="text-xs uppercase tracking-[0.12em] text-slate-500">
+                        ML anomaly detection
+                      </p>
 
-        <div className="mt-4 flex items-center gap-3">
+                      <div className="mt-4 flex items-center gap-3">
 
-          <div
-            className={`flex h-10 w-10 items-center justify-center rounded-full ${
-              risk?.ml_anomaly
-                ? "bg-red-400/10 text-red-300"
-                : "bg-emerald-400/10 text-emerald-300"
-            }`}
-          >
-            {risk?.ml_anomaly ? "!" : "✓"}
-          </div>
+                        <div
+                          className={`flex h-10 w-10 items-center justify-center rounded-full ${
+                            risk?.ml_anomaly
+                              ? "bg-red-400/10 text-red-300"
+                              : "bg-emerald-400/10 text-emerald-300"
+                          }`}
+                        >
+                          {risk?.ml_anomaly
+                            ? "!"
+                            : "✓"}
+                        </div>
 
-          <div>
+                        <div>
 
-            <p className="text-lg font-semibold">
-              {risk?.ml_anomaly
-                ? "Anomaly detected"
-                : "Normal pattern"}
-            </p>
+                          <p className="text-lg font-semibold">
+                            {risk?.ml_anomaly
+                              ? "Anomaly detected"
+                              : "Normal pattern"}
+                          </p>
 
-            <p className="mt-1 text-xs text-slate-500">
-              {risk?.ml_anomaly
-                ? "The model detected an unusual water-quality pattern."
-                : "The model found no significant anomaly in the latest reading."}
-            </p>
+                          <p className="mt-1 text-xs text-slate-500">
+                            {risk?.ml_anomaly
+                              ? "The model detected an unusual water-quality pattern."
+                              : "The model found no significant anomaly in the latest reading."}
+                          </p>
 
-          </div>
+                        </div>
 
-        </div>
+                      </div>
 
-      </div>
+                    </div>
 
-      {/* ML Score */}
-      <div className="rounded-2xl bg-white/[0.03] p-5">
+                    {/* ML Score */}
+                    <div className="rounded-2xl bg-white/[0.03] p-5">
 
-        <p className="text-xs uppercase tracking-[0.12em] text-slate-500">
-          Anomaly score
-        </p>
+                      <p className="text-xs uppercase tracking-[0.12em] text-slate-500">
+                        Anomaly score
+                      </p>
 
-        <p className="mt-4 text-3xl font-semibold">
-          {risk?.ml_anomaly_score !== null &&
-          risk?.ml_anomaly_score !== undefined
-            ? risk.ml_anomaly_score.toFixed(4)
-            : "--"}
-        </p>
+                      <p className="mt-4 text-3xl font-semibold">
+                        {risk?.ml_anomaly_score !== null &&
+                        risk?.ml_anomaly_score !==
+                          undefined
+                          ? risk.ml_anomaly_score.toFixed(
+                              4
+                            )
+                          : "--"}
+                      </p>
 
-        <p className="mt-2 text-xs leading-5 text-slate-500">
-          Lower values indicate observations that are more unusual
-          relative to the model's learned baseline.
-        </p>
+                      <p className="mt-2 text-xs leading-5 text-slate-500">
+                        Lower values indicate observations that are more unusual relative to the model's learned baseline.
+                      </p>
 
-      </div>
+                    </div>
 
-    </div>
+                  </div>
 
-    {/* AI explanation */}
-    <div className="mt-5 rounded-2xl border border-[#27e0d0]/10 bg-[#27e0d0]/5 p-5">
+                  {/* AI explanation */}
+                  <div className="mt-5 rounded-2xl border border-[#27e0d0]/10 bg-[#27e0d0]/5 p-5">
 
-      <p className="text-xs uppercase tracking-[0.12em] text-[#27e0d0]">
-        How Sentinel is reasoning
-      </p>
+                    <p className="text-xs uppercase tracking-[0.12em] text-[#27e0d0]">
+                      How Sentinel is reasoning
+                    </p>
 
-      <p className="mt-3 text-sm leading-6 text-slate-400">
+                    <p className="mt-3 text-sm leading-6 text-slate-400">
+                      The machine-learning model evaluates temperature, pH and dissolved oxygen together to identify patterns that differ from healthy observations. This signal is combined with rule-based and trend analysis to produce the final risk score.
+                    </p>
 
-        The machine-learning model evaluates temperature, pH and
-        dissolved oxygen together to identify patterns that differ
-        from healthy observations. This signal is combined with
-        rule-based and trend analysis to produce the final risk score.
+                  </div>
 
-      </p>
+                </div>
 
-    </div>
-
-  </div>
-
-</section>
+              </section>
 
               {/* Risk score */}
               <div className="flex items-end justify-between">
@@ -932,10 +1243,13 @@ const [waterRes, fishRes, riskRes, alertsRes] = await Promise.all([
                     {risk?.assessed_at
                       ? new Date(
                           risk.assessed_at
-                        ).toLocaleTimeString([], {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })
+                        ).toLocaleTimeString(
+                          [],
+                          {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          }
+                        )
                       : "--"}
                   </p>
 
@@ -952,7 +1266,8 @@ const [waterRes, fishRes, riskRes, alertsRes] = await Promise.all([
                     className={`h-full rounded-full transition-all duration-700 ${
                       riskLevel === "High"
                         ? "bg-red-400"
-                        : riskLevel === "Moderate"
+                        : riskLevel ===
+                          "Moderate"
                         ? "bg-amber-400"
                         : "bg-emerald-400"
                     }`}
@@ -1136,7 +1451,8 @@ const [waterRes, fishRes, riskRes, alertsRes] = await Promise.all([
                 </div>
 
                 <div className="rounded-full bg-emerald-400/10 px-3 py-1 text-xs text-emerald-300">
-                  {fish?.activity_level || "Unknown"}
+                  {fish?.activity_level ||
+                    "Unknown"}
                 </div>
 
               </div>
@@ -1150,7 +1466,8 @@ const [waterRes, fishRes, riskRes, alertsRes] = await Promise.all([
                   </p>
 
                   <p className="mt-2 text-sm font-medium">
-                    {fish?.activity_level || "--"}
+                    {fish?.activity_level ||
+                      "--"}
                   </p>
 
                 </div>
@@ -1162,7 +1479,8 @@ const [waterRes, fishRes, riskRes, alertsRes] = await Promise.all([
                   </p>
 
                   <p className="mt-2 text-sm font-medium">
-                    {fish?.feeding_response || "--"}
+                    {fish?.feeding_response ||
+                      "--"}
                   </p>
 
                 </div>
@@ -1195,8 +1513,7 @@ const [waterRes, fishRes, riskRes, alertsRes] = await Promise.all([
           </section>
 
           <footer className="mt-10 border-t border-white/5 pt-6 text-xs text-slate-600">
-            AquaSentinel • Multimodal Early-Warning Intelligence for African
-            Aquaculture
+            AquaSentinel • Multimodal Early-Warning Intelligence for African Aquaculture
           </footer>
 
         </section>
@@ -1258,6 +1575,3 @@ function MetricCard({
     </div>
   );
 }
-
-
-
