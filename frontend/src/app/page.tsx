@@ -47,25 +47,62 @@ type Alert = {
 export default function Home() {
   const router = useRouter();
 
-  const [water, setWater] = useState<WaterReading | null>(null);
-  const [fish, setFish] = useState<FishObservation | null>(null);
-  const [risk, setRisk] = useState<RiskAssessment | null>(null);
-  const [alerts, setAlerts] = useState<Alert[]>([]);
-  const [notificationsOpen, setNotificationsOpen] = useState(false);
-  const [readAlertIds, setReadAlertIds] = useState<number[]>([]);
+  const [water, setWater] =
+    useState<WaterReading | null>(null);
 
-  const [greeting, setGreeting] = useState("Good afternoon.");
-  const [menuOpen, setMenuOpen] = useState(false);
+  const [fish, setFish] =
+    useState<FishObservation | null>(null);
 
-  // Audio / notification tracking
-  const previousAlertIds = useRef<number[] | null>(null);
-  const audioContextRef = useRef<AudioContext | null>(null);
+  const [risk, setRisk] =
+    useState<RiskAssessment | null>(null);
 
+  const [alerts, setAlerts] =
+    useState<Alert[]>([]);
+
+  const [notificationsOpen, setNotificationsOpen] =
+    useState(false);
+
+  const [readAlertIds, setReadAlertIds] =
+    useState<number[]>([]);
+
+  const [greeting, setGreeting] =
+    useState("Good afternoon.");
+
+  const [menuOpen, setMenuOpen] =
+    useState(false);
+
+  /*
+   * Tracks alert IDs between polling cycles.
+   *
+   * null means the dashboard has not completed
+   * its first alert check yet.
+   */
+  const previousAlertIds =
+    useRef<number[] | null>(null);
+
+  /*
+   * Tracks the latest risk assessment ID so that
+   * a new risk assessment can create a notification
+   * even when the backend /alerts endpoint has not
+   * created an alert yet.
+   */
+  const previousRiskId =
+    useRef<number | null>(null);
+
+  /*
+   * Browser audio context.
+   */
+  const audioContextRef =
+    useRef<AudioContext | null>(null);
+
+  /*
+   * Authentication
+   */
   useEffect(() => {
     const checkAuth = () => {
-      const token = localStorage.getItem("aquasentinel_token");
-
-      console.log("CHECK TOKEN:", token);
+      const token = localStorage.getItem(
+        "aquasentinel_token"
+      );
 
       if (!token) {
         router.replace("/login");
@@ -74,13 +111,22 @@ export default function Home() {
 
     checkAuth();
 
-    window.addEventListener("storage", checkAuth);
+    window.addEventListener(
+      "storage",
+      checkAuth
+    );
 
     return () => {
-      window.removeEventListener("storage", checkAuth);
+      window.removeEventListener(
+        "storage",
+        checkAuth
+      );
     };
   }, [router]);
 
+  /*
+   * Greeting
+   */
   useEffect(() => {
     function updateGreeting() {
       const hour = new Date().getHours();
@@ -96,29 +142,55 @@ export default function Home() {
 
     updateGreeting();
 
-    const greetingInterval = setInterval(updateGreeting, 60000);
+    const greetingInterval =
+      setInterval(
+        updateGreeting,
+        60000
+      );
 
-    return () => clearInterval(greetingInterval);
+    return () =>
+      clearInterval(
+        greetingInterval
+      );
   }, []);
 
+  /*
+   * Load previously read notifications.
+   */
   useEffect(() => {
     try {
-      const stored = localStorage.getItem("aquasentinel_read_alerts");
+      const stored =
+        localStorage.getItem(
+          "aquasentinel_read_alerts"
+        );
 
       if (stored) {
-        setReadAlertIds(JSON.parse(stored));
+        const parsed =
+          JSON.parse(stored);
+
+        if (Array.isArray(parsed)) {
+          setReadAlertIds(parsed);
+        }
       }
     } catch (error) {
-      console.error("Could not load notification state:", error);
+      console.error(
+        "Could not load notification state:",
+        error
+      );
     }
   }, []);
 
   /*
-   * Enable browser audio after the user interacts with the dashboard.
+   * Enable browser audio after the user
+   * interacts with the dashboard.
    */
   useEffect(() => {
     const enableAudio = () => {
-      if (typeof window === "undefined") return;
+      if (
+        typeof window === "undefined"
+      ) {
+        return;
+      }
 
       const AudioContextClass =
         window.AudioContext ||
@@ -128,32 +200,55 @@ export default function Home() {
           }
         ).webkitAudioContext;
 
-      if (!AudioContextClass) return;
-
-      if (!audioContextRef.current) {
-        audioContextRef.current = new AudioContextClass();
+      if (!AudioContextClass) {
+        return;
       }
 
-      if (audioContextRef.current.state === "suspended") {
-        audioContextRef.current.resume().catch(() => {});
+      if (
+        !audioContextRef.current
+      ) {
+        audioContextRef.current =
+          new AudioContextClass();
+      }
+
+      if (
+        audioContextRef.current.state ===
+        "suspended"
+      ) {
+        audioContextRef.current
+          .resume()
+          .catch(() => {});
       }
     };
 
-    window.addEventListener("click", enableAudio, { once: true });
+    window.addEventListener(
+      "click",
+      enableAudio,
+      { once: true }
+    );
 
     return () => {
-      window.removeEventListener("click", enableAudio);
+      window.removeEventListener(
+        "click",
+        enableAudio
+      );
     };
   }, []);
 
   /*
    * Audible alert.
    *
-   * Moderate = two short beeps
-   * High/Critical = three stronger beeps
+   * Moderate / Medium = 2 beeps
+   * High / Critical = 3 beeps
    */
-  const playAlertSound = (level: string) => {
-    if (typeof window === "undefined") return;
+  const playAlertSound = (
+    level: string
+  ) => {
+    if (
+      typeof window === "undefined"
+    ) {
+      return;
+    }
 
     const AudioContextClass =
       window.AudioContext ||
@@ -163,38 +258,64 @@ export default function Home() {
         }
       ).webkitAudioContext;
 
-    if (!AudioContextClass) return;
-
-    if (!audioContextRef.current) {
-      audioContextRef.current = new AudioContextClass();
+    if (!AudioContextClass) {
+      return;
     }
 
-    const audioContext = audioContextRef.current;
-
-    if (audioContext.state === "suspended") {
-      audioContext.resume().catch(() => {});
+    if (
+      !audioContextRef.current
+    ) {
+      audioContextRef.current =
+        new AudioContextClass();
     }
 
-    const normalizedLevel = level.toLowerCase();
+    const audioContext =
+      audioContextRef.current;
+
+    if (
+      audioContext.state ===
+      "suspended"
+    ) {
+      audioContext
+        .resume()
+        .catch(() => {});
+    }
+
+    const normalizedLevel =
+      level.toLowerCase().trim();
 
     const isHigh =
       normalizedLevel === "high" ||
       normalizedLevel === "critical";
 
-    const beepCount = isHigh ? 3 : 2;
-    const frequency = isHigh ? 880 : 660;
+    const beepCount =
+      isHigh ? 3 : 2;
 
-    for (let i = 0; i < beepCount; i++) {
-      const oscillator = audioContext.createOscillator();
-      const gainNode = audioContext.createGain();
+    const frequency =
+      isHigh ? 880 : 660;
+
+    for (
+      let i = 0;
+      i < beepCount;
+      i++
+    ) {
+      const oscillator =
+        audioContext.createOscillator();
+
+      const gainNode =
+        audioContext.createGain();
 
       oscillator.type = "sine";
-      oscillator.frequency.value = frequency;
+
+      oscillator.frequency.value =
+        frequency;
 
       const startTime =
-        audioContext.currentTime + i * 0.18;
+        audioContext.currentTime +
+        i * 0.18;
 
-      const endTime = startTime + 0.11;
+      const endTime =
+        startTime + 0.11;
 
       gainNode.gain.setValueAtTime(
         0.0001,
@@ -211,26 +332,39 @@ export default function Home() {
         endTime
       );
 
-      oscillator.connect(gainNode);
-      gainNode.connect(audioContext.destination);
+      oscillator.connect(
+        gainNode
+      );
 
-      oscillator.start(startTime);
-      oscillator.stop(endTime);
+      gainNode.connect(
+        audioContext.destination
+      );
+
+      oscillator.start(
+        startTime
+      );
+
+      oscillator.stop(
+        endTime
+      );
     }
   };
 
   /*
-   * Load dashboard data and monitor for new alerts.
+   * Dashboard data + notification monitoring.
    */
   useEffect(() => {
     async function loadData() {
       try {
-        const token = localStorage.getItem(
-          "aquasentinel_token"
-        );
+        const token =
+          localStorage.getItem(
+            "aquasentinel_token"
+          );
 
         if (!token) {
-          console.error("No token found");
+          console.error(
+            "No token found"
+          );
           return;
         }
 
@@ -265,71 +399,232 @@ export default function Home() {
           ),
         ]);
 
-        const waterData = await waterRes.json();
-        const fishData = await fishRes.json();
-        const riskData = await riskRes.json();
+        const waterData =
+          await waterRes.json();
 
-        const alertsData = alertsRes.ok
-          ? await alertsRes.json()
-          : [];
+        const fishData =
+          await fishRes.json();
 
-        const latestRisk = riskData[0] || null;
+        const riskData =
+          await riskRes.json();
 
-        setWater(waterData[0] || null);
-        setFish(fishData[0] || null);
-        setRisk(latestRisk);
-
-        const nextAlerts: Alert[] = Array.isArray(
-          alertsData
-        )
-          ? alertsData
-          : [];
-
-        const nextAlertIds = nextAlerts.map(
-          (alert) => alert.id
-        );
+        const alertsData =
+          alertsRes.ok
+            ? await alertsRes.json()
+            : [];
 
         /*
-         * Do not play sounds for alerts that already existed
-         * when the dashboard first loaded.
+         * Get latest risk assessment.
          */
-        if (previousAlertIds.current !== null) {
-          const newAlerts = nextAlerts.filter(
-            (alert) =>
-              !previousAlertIds.current!.includes(
-                alert.id
+        const latestRisk: RiskAssessment | null =
+          Array.isArray(riskData)
+            ? riskData[0] || null
+            : null;
+
+        /*
+         * Update dashboard data.
+         */
+        setWater(
+          Array.isArray(waterData)
+            ? waterData[0] || null
+            : null
+        );
+
+        setFish(
+          Array.isArray(fishData)
+            ? fishData[0] || null
+            : null
+        );
+
+        setRisk(latestRisk);
+
+        /*
+         * Start with real backend alerts.
+         */
+        let nextAlerts: Alert[] =
+          Array.isArray(alertsData)
+            ? alertsData
+            : [];
+
+        /*
+         * ------------------------------------------------
+         * IMPORTANT NOTIFICATION FIX
+         * ------------------------------------------------
+         *
+         * If the latest risk is Moderate/Medium/High/
+         * Critical but the backend has not yet created
+         * an alert for that risk assessment, create a
+         * temporary dashboard notification.
+         *
+         * The ID is negative so it cannot collide with
+         * a real database alert ID.
+         */
+        if (latestRisk) {
+          const normalizedRisk =
+            latestRisk.risk_level
+              .toLowerCase()
+              .trim();
+
+          const isRiskAlert =
+            normalizedRisk ===
+              "moderate" ||
+            normalizedRisk ===
+              "medium" ||
+            normalizedRisk ===
+              "high" ||
+            normalizedRisk ===
+              "critical";
+
+          const alreadyHasRiskAlert =
+            nextAlerts.some(
+              (alert) =>
+                alert.risk_assessment_id ===
+                latestRisk.id
+            );
+
+          if (
+            isRiskAlert &&
+            !alreadyHasRiskAlert
+          ) {
+            const localRiskAlert: Alert =
+              {
+                /*
+                 * Stable ID for this specific
+                 * risk assessment.
+                 */
+                id: -latestRisk.id,
+
+                pond_id:
+                  latestRisk.pond_id,
+
+                risk_assessment_id:
+                  latestRisk.id,
+
+                alert_level:
+                  latestRisk.risk_level,
+
+                message:
+                  latestRisk.contributing_factors ||
+                  `AquaSentinel detected ${latestRisk.risk_level.toLowerCase()} risk conditions.`,
+
+                sent_at:
+                  latestRisk.assessed_at,
+              };
+
+            nextAlerts = [
+              localRiskAlert,
+              ...nextAlerts,
+            ];
+          }
+        }
+
+        /*
+         * Remove duplicate alert IDs.
+         */
+        const uniqueAlerts =
+          Array.from(
+            new Map(
+              nextAlerts.map(
+                (alert) => [
+                  alert.id,
+                  alert,
+                ]
               )
+            ).values()
           );
 
-          const newRiskAlerts = newAlerts.filter(
-            (alert) => {
-              const level =
-                alert.alert_level.toLowerCase();
+        /*
+         * Newest notifications first.
+         */
+        uniqueAlerts.sort(
+          (a, b) =>
+            new Date(
+              b.sent_at
+            ).getTime() -
+            new Date(
+              a.sent_at
+            ).getTime()
+        );
 
-              return (
-                level === "moderate" ||
-                level === "medium" ||
-                level === "high" ||
-                level === "critical"
-              );
-            }
+        nextAlerts =
+          uniqueAlerts;
+
+        /*
+         * IDs currently returned by the
+         * notification system.
+         */
+        const nextAlertIds =
+          nextAlerts.map(
+            (alert) => alert.id
           );
 
-          if (newRiskAlerts.length > 0) {
-            /*
-             * If several alerts arrive at once,
-             * prioritize High/Critical.
-             */
-            const highestPriorityAlert =
-              newRiskAlerts.find((alert) => {
+        /*
+         * ------------------------------------------------
+         * SOUND DETECTION
+         * ------------------------------------------------
+         *
+         * We only make a sound after the first
+         * dashboard load.
+         *
+         * Existing alerts on page load do NOT beep.
+         */
+        if (
+          previousAlertIds.current !==
+          null
+        ) {
+          const newAlerts =
+            nextAlerts.filter(
+              (alert) =>
+                !previousAlertIds.current!.includes(
+                  alert.id
+                )
+            );
+
+          const newRiskAlerts =
+            newAlerts.filter(
+              (alert) => {
                 const level =
-                  alert.alert_level.toLowerCase();
+                  alert.alert_level
+                    .toLowerCase()
+                    .trim();
 
                 return (
-                  level === "high" ||
-                  level === "critical"
+                  level ===
+                    "moderate" ||
+                  level ===
+                    "medium" ||
+                  level ===
+                    "high" ||
+                  level ===
+                    "critical"
                 );
-              }) || newRiskAlerts[0];
+              }
+            );
+
+          if (
+            newRiskAlerts.length >
+            0
+          ) {
+            /*
+             * High/Critical gets priority.
+             */
+            const highestPriorityAlert =
+              newRiskAlerts.find(
+                (alert) => {
+                  const level =
+                    alert.alert_level
+                      .toLowerCase()
+                      .trim();
+
+                  return (
+                    level ===
+                      "high" ||
+                    level ===
+                      "critical"
+                  );
+                }
+              ) ||
+              newRiskAlerts[0];
 
             playAlertSound(
               highestPriorityAlert.alert_level
@@ -337,9 +632,28 @@ export default function Home() {
           }
         }
 
-        previousAlertIds.current = nextAlertIds;
+        /*
+         * Remember IDs for the next
+         * 10-second check.
+         */
+        previousAlertIds.current =
+          nextAlertIds;
 
+        /*
+         * Update notifications.
+         *
+         * THIS is what makes the red number
+         * appear on the bell.
+         */
         setAlerts(nextAlerts);
+
+        /*
+         * Remember the latest risk assessment.
+         */
+        if (latestRisk) {
+          previousRiskId.current =
+            latestRisk.id;
+        }
       } catch (error) {
         console.error(
           "AquaSentinel data error:",
@@ -348,29 +662,45 @@ export default function Home() {
       }
     }
 
+    /*
+     * Initial load.
+     */
     loadData();
 
     /*
-     * AquaSentinel checks for new alerts every 10 seconds.
+     * Check every 10 seconds.
      */
-    const interval = setInterval(
-      loadData,
-      10000
-    );
+    const interval =
+      setInterval(
+        loadData,
+        10000
+      );
 
-    return () => clearInterval(interval);
+    return () =>
+      clearInterval(
+        interval
+      );
   }, []);
 
+  /*
+   * Current risk level.
+   */
   const riskLevel =
     risk?.risk_level || "Low";
 
+  /*
+   * Risk styling.
+   */
   const riskStyles = {
     Low: {
       badge:
         "bg-emerald-400/10 text-emerald-300 border-emerald-400/20",
+
       glow:
         "shadow-[0_0_50px_rgba(52,211,153,0.08)]",
+
       icon: "✓",
+
       message:
         "Conditions look healthy",
     },
@@ -378,9 +708,12 @@ export default function Home() {
     Moderate: {
       badge:
         "bg-amber-400/10 text-amber-300 border-amber-400/20",
+
       glow:
         "shadow-[0_0_50px_rgba(251,191,36,0.08)]",
+
       icon: "!",
+
       message:
         "Potential stress detected",
     },
@@ -388,9 +721,12 @@ export default function Home() {
     High: {
       badge:
         "bg-red-400/10 text-red-300 border-red-400/20",
+
       glow:
         "shadow-[0_0_50px_rgba(248,113,113,0.10)]",
+
       icon: "!",
+
       message:
         "Potentially harmful conditions detected",
     },
@@ -401,57 +737,141 @@ export default function Home() {
       riskLevel as keyof typeof riskStyles
     ] || riskStyles.Low;
 
-  const unreadAlerts = alerts.filter(
-    (alert) =>
-      !readAlertIds.includes(alert.id)
-  );
+  /*
+   * ONLY Moderate/Medium/High/Critical
+   * are counted as notification alerts.
+   */
+  const unreadAlerts =
+    alerts.filter(
+      (alert) => {
+        const level =
+          alert.alert_level
+            .toLowerCase()
+            .trim();
 
+        const isRiskAlert =
+          level === "moderate" ||
+          level === "medium" ||
+          level === "high" ||
+          level === "critical";
+
+        return (
+          isRiskAlert &&
+          !readAlertIds.includes(
+            alert.id
+          )
+        );
+      }
+    );
+
+  /*
+   * Mark one alert as read.
+   */
   const markAlertAsRead = (
     alertId: number
   ) => {
-    setReadAlertIds((current) => {
-      const updated = current.includes(alertId)
-        ? current
-        : [...current, alertId];
+    setReadAlertIds(
+      (current) => {
+        const updated =
+          current.includes(
+            alertId
+          )
+            ? current
+            : [
+                ...current,
+                alertId,
+              ];
 
-      localStorage.setItem(
-        "aquasentinel_read_alerts",
-        JSON.stringify(updated)
+        localStorage.setItem(
+          "aquasentinel_read_alerts",
+          JSON.stringify(
+            updated
+          )
+        );
+
+        return updated;
+      }
+    );
+  };
+
+  /*
+   * Mark all current risk alerts as read.
+   */
+  const markAllAlertsAsRead =
+    () => {
+      setReadAlertIds(
+        (current) => {
+          const riskAlertIds =
+            alerts
+              .filter(
+                (alert) => {
+                  const level =
+                    alert.alert_level
+                      .toLowerCase()
+                      .trim();
+
+                  return (
+                    level ===
+                      "moderate" ||
+                    level ===
+                      "medium" ||
+                    level ===
+                      "high" ||
+                    level ===
+                      "critical"
+                  );
+                }
+              )
+              .map(
+                (alert) =>
+                  alert.id
+              );
+
+          const updated =
+            Array.from(
+              new Set([
+                ...current,
+                ...riskAlertIds,
+              ])
+            );
+
+          localStorage.setItem(
+            "aquasentinel_read_alerts",
+            JSON.stringify(
+              updated
+            )
+          );
+
+          return updated;
+        }
       );
+    };
 
-      return updated;
-    });
-  };
-
-  const markAllAlertsAsRead = () => {
-    const allIds = alerts.map(
-      (alert) => alert.id
-    );
-
-    setReadAlertIds(allIds);
-
-    localStorage.setItem(
-      "aquasentinel_read_alerts",
-      JSON.stringify(allIds)
-    );
-  };
-
+  /*
+   * Alert badge styling.
+   */
   const alertLevelClass = (
     level: string
   ) => {
     const normalized =
-      level.toLowerCase();
+      level
+        .toLowerCase()
+        .trim();
 
     if (
-      normalized === "critical" ||
-      normalized === "high"
+      normalized ===
+        "critical" ||
+      normalized ===
+        "high"
     ) {
       return "border-red-400/20 bg-red-400/10 text-red-300";
     }
 
     if (
-      normalized === "moderate" ||
-      normalized === "medium"
+      normalized ===
+        "moderate" ||
+      normalized ===
+        "medium"
     ) {
       return "border-amber-400/20 bg-amber-400/10 text-amber-300";
     }
@@ -464,9 +884,11 @@ export default function Home() {
 
       {/* Ambient background */}
       <div className="pointer-events-none fixed inset-0 overflow-hidden">
+
         <div className="absolute -left-40 -top-40 h-96 w-96 rounded-full bg-[#00b8a9]/10 blur-3xl" />
 
         <div className="absolute right-0 top-1/3 h-96 w-96 rounded-full bg-[#27e0d0]/5 blur-3xl" />
+
       </div>
 
       <div className="relative flex min-h-screen">
@@ -475,6 +897,7 @@ export default function Home() {
         <aside className="hidden w-64 shrink-0 border-r border-white/5 bg-[#071d23]/90 px-5 py-7 lg:block">
 
           <div className="mb-12">
+
             <Image
               src="/logo.jpg"
               alt="AquaSentinel Labs"
@@ -483,6 +906,7 @@ export default function Home() {
               priority
               className="h-auto w-full max-w-[210px]"
             />
+
           </div>
 
           <nav className="space-y-2">
@@ -568,12 +992,16 @@ export default function Home() {
 
               <button
                 onClick={() =>
-                  setMenuOpen(!menuOpen)
+                  setMenuOpen(
+                    !menuOpen
+                  )
                 }
                 className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-xl text-white transition hover:bg-white/10"
                 aria-label="Toggle navigation menu"
               >
-                {menuOpen ? "✕" : "☰"}
+                {menuOpen
+                  ? "✕"
+                  : "☰"}
               </button>
 
               <Image
@@ -626,9 +1054,12 @@ export default function Home() {
 
                   </svg>
 
-                  {unreadAlerts.length > 0 && (
+                  {/* RED UNREAD COUNT */}
+                  {unreadAlerts.length >
+                    0 && (
                     <span className="absolute -right-1 -top-1 flex min-h-5 min-w-5 items-center justify-center rounded-full border-2 border-[#071d23] bg-red-400 px-1 text-[9px] font-bold text-white">
-                      {unreadAlerts.length > 9
+                      {unreadAlerts.length >
+                      9
                         ? "9+"
                         : unreadAlerts.length}
                     </span>
@@ -649,9 +1080,11 @@ export default function Home() {
 
                         <p className="mt-1 text-xs text-slate-500">
 
-                          {unreadAlerts.length > 0
+                          {unreadAlerts.length >
+                          0
                             ? `${unreadAlerts.length} unread alert${
-                                unreadAlerts.length === 1
+                                unreadAlerts.length ===
+                                1
                                   ? ""
                                   : "s"
                               }`
@@ -661,7 +1094,8 @@ export default function Home() {
 
                       </div>
 
-                      {unreadAlerts.length > 0 && (
+                      {unreadAlerts.length >
+                        0 && (
                         <button
                           type="button"
                           onClick={
@@ -677,7 +1111,26 @@ export default function Home() {
 
                     <div className="max-h-[420px] overflow-y-auto">
 
-                      {alerts.length === 0 ? (
+                      {alerts.filter(
+                        (alert) => {
+                          const level =
+                            alert.alert_level
+                              .toLowerCase()
+                              .trim();
+
+                          return (
+                            level ===
+                              "moderate" ||
+                            level ===
+                              "medium" ||
+                            level ===
+                              "high" ||
+                            level ===
+                              "critical"
+                          );
+                        }
+                      ).length ===
+                      0 ? (
                         <div className="px-5 py-8 text-center">
 
                           <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-[#27e0d0]/10 text-[#27e0d0]">
@@ -689,75 +1142,109 @@ export default function Home() {
                           </p>
 
                           <p className="mt-1 text-xs leading-5 text-slate-500">
-                            AquaSentinel has not recorded any alerts for your account.
+                            AquaSentinel has not recorded any active risk alerts for your account.
                           </p>
 
                         </div>
                       ) : (
 
                         alerts
-                          .slice(0, 8)
-                          .map((alert) => {
+                          .filter(
+                            (alert) => {
+                              const level =
+                                alert.alert_level
+                                  .toLowerCase()
+                                  .trim();
 
-                            const isUnread =
-                              !readAlertIds.includes(
-                                alert.id
+                              return (
+                                level ===
+                                  "moderate" ||
+                                level ===
+                                  "medium" ||
+                                level ===
+                                  "high" ||
+                                level ===
+                                  "critical"
                               );
+                            }
+                          )
+                          .slice(
+                            0,
+                            8
+                          )
+                          .map(
+                            (
+                              alert
+                            ) => {
 
-                            return (
-                              <button
-                                key={alert.id}
-                                type="button"
-                                onClick={() =>
-                                  markAlertAsRead(
+                              const isUnread =
+                                !readAlertIds.includes(
+                                  alert.id
+                                );
+
+                              return (
+                                <button
+                                  key={
                                     alert.id
-                                  )
-                                }
-                                className={`w-full border-b border-white/5 px-4 py-4 text-left transition hover:bg-white/[0.03] ${
-                                  isUnread
-                                    ? "bg-white/[0.02]"
-                                    : ""
-                                }`}
-                              >
+                                  }
+                                  type="button"
+                                  onClick={() =>
+                                    markAlertAsRead(
+                                      alert.id
+                                    )
+                                  }
+                                  className={`w-full border-b border-white/5 px-4 py-4 text-left transition hover:bg-white/[0.03] ${
+                                    isUnread
+                                      ? "bg-white/[0.02]"
+                                      : ""
+                                  }`}
+                                >
 
-                                <div className="flex items-start gap-3">
+                                  <div className="flex items-start gap-3">
 
-                                  <span
-                                    className={`mt-0.5 rounded-full border px-2 py-1 text-[9px] font-semibold uppercase ${alertLevelClass(
-                                      alert.alert_level
-                                    )}`}
-                                  >
-                                    {alert.alert_level}
-                                  </span>
+                                    <span
+                                      className={`mt-0.5 rounded-full border px-2 py-1 text-[9px] font-semibold uppercase ${alertLevelClass(
+                                        alert.alert_level
+                                      )}`}
+                                    >
+                                      {
+                                        alert.alert_level
+                                      }
+                                    </span>
 
-                                  {isUnread && (
-                                    <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[#27e0d0]" />
-                                  )}
+                                    {isUnread && (
+                                      <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[#27e0d0]" />
+                                    )}
 
-                                  <div className="min-w-0 flex-1">
+                                    <div className="min-w-0 flex-1">
 
-                                    <p className="text-xs font-medium text-slate-300">
-                                      Pond{" "}
-                                      {alert.pond_id}
-                                    </p>
+                                      <p className="text-xs font-medium text-slate-300">
+                                        Pond{" "}
+                                        {
+                                          alert.pond_id
+                                        }
+                                      </p>
 
-                                    <p className="mt-1 text-sm leading-5 text-slate-400">
-                                      {alert.message}
-                                    </p>
+                                      <p className="mt-1 text-sm leading-5 text-slate-400">
+                                        {
+                                          alert.message
+                                        }
+                                      </p>
 
-                                    <p className="mt-2 text-[10px] text-slate-600">
-                                      {new Date(
-                                        alert.sent_at
-                                      ).toLocaleString()}
-                                    </p>
+                                      <p className="mt-2 text-[10px] text-slate-600">
+                                        {new Date(
+                                          alert.sent_at
+                                        ).toLocaleString()}
+                                      </p>
+
+                                    </div>
 
                                   </div>
 
-                                </div>
-
-                              </button>
-                            );
-                          })
+                                </button>
+                              );
+                            }
+                          )
                       )}
 
                     </div>
@@ -767,7 +1254,9 @@ export default function Home() {
                       <Link
                         href="/alerts"
                         onClick={() =>
-                          setNotificationsOpen(false)
+                          setNotificationsOpen(
+                            false
+                          )
                         }
                         className="flex w-full items-center justify-center rounded-xl bg-white/[0.03] px-4 py-3 text-xs font-medium text-slate-400 transition hover:bg-white/[0.06] hover:text-white"
                       >
@@ -799,7 +1288,9 @@ export default function Home() {
                     "aquasentinel_token"
                   );
 
-                  router.replace("/login");
+                  router.replace(
+                    "/login"
+                  );
                 }}
                 className="flex h-10 w-10 items-center justify-center rounded-full border border-[#27e0d0]/20 bg-[#27e0d0]/10 text-sm font-semibold text-[#27e0d0]"
                 title="Logout"
@@ -820,7 +1311,9 @@ export default function Home() {
                 <Link
                   href="/"
                   onClick={() =>
-                    setMenuOpen(false)
+                    setMenuOpen(
+                      false
+                    )
                   }
                   className="flex items-center gap-3 rounded-xl bg-[#00b8a9]/10 px-4 py-3 text-sm font-medium text-[#27e0d0]"
                 >
@@ -831,7 +1324,9 @@ export default function Home() {
                 <Link
                   href="/ponds"
                   onClick={() =>
-                    setMenuOpen(false)
+                    setMenuOpen(
+                      false
+                    )
                   }
                   className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm text-slate-400 transition hover:bg-white/5 hover:text-white"
                 >
@@ -842,7 +1337,9 @@ export default function Home() {
                 <Link
                   href="/insights"
                   onClick={() =>
-                    setMenuOpen(false)
+                    setMenuOpen(
+                      false
+                    )
                   }
                   className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm text-slate-400 transition hover:bg-white/5 hover:text-white"
                 >
@@ -855,7 +1352,9 @@ export default function Home() {
                 <Link
                   href="/alerts"
                   onClick={() =>
-                    setMenuOpen(false)
+                    setMenuOpen(
+                      false
+                    )
                   }
                   className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm text-slate-400 transition hover:bg-white/5 hover:text-white"
                 >
@@ -866,7 +1365,9 @@ export default function Home() {
                 <Link
                   href="/history"
                   onClick={() =>
-                    setMenuOpen(false)
+                    setMenuOpen(
+                      false
+                    )
                   }
                   className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm text-slate-400 transition hover:bg-white/5 hover:text-white"
                 >
@@ -1005,7 +1506,8 @@ export default function Home() {
                   </p>
 
                   <p className="mt-3 text-lg font-semibold">
-                    {fish?.activity_level || "--"}
+                    {fish?.activity_level ||
+                      "--"}
                   </p>
 
                 </div>
@@ -1017,7 +1519,8 @@ export default function Home() {
                   </p>
 
                   <p className="mt-3 text-lg font-semibold">
-                    {fish?.feeding_response || "--"}
+                    {fish?.feeding_response ||
+                      "--"}
                   </p>
 
                 </div>
@@ -1029,7 +1532,8 @@ export default function Home() {
                   </p>
 
                   <p className="mt-3 text-lg font-semibold">
-                    {fish?.fish_count ?? "--"}
+                    {fish?.fish_count ??
+                      "--"}
                   </p>
 
                 </div>
@@ -1041,7 +1545,8 @@ export default function Home() {
                   </p>
 
                   <p className="mt-3 text-lg font-semibold">
-                    {fish?.unusual_behaviour || "--"}
+                    {fish?.unusual_behaviour ||
+                      "--"}
                   </p>
 
                 </div>
@@ -1184,7 +1689,8 @@ export default function Home() {
                       </p>
 
                       <p className="mt-4 text-3xl font-semibold">
-                        {risk?.ml_anomaly_score !== null &&
+                        {risk?.ml_anomaly_score !==
+                          null &&
                         risk?.ml_anomaly_score !==
                           undefined
                           ? risk.ml_anomaly_score.toFixed(
@@ -1228,7 +1734,8 @@ export default function Home() {
                   </p>
 
                   <p className="mt-2 text-5xl font-semibold tracking-tight">
-                    {risk?.risk_score ?? 0}
+                    {risk?.risk_score ??
+                      0}
                   </p>
 
                 </div>
@@ -1264,7 +1771,8 @@ export default function Home() {
 
                   <div
                     className={`h-full rounded-full transition-all duration-700 ${
-                      riskLevel === "High"
+                      riskLevel ===
+                      "High"
                         ? "bg-red-400"
                         : riskLevel ===
                           "Moderate"
@@ -1273,7 +1781,8 @@ export default function Home() {
                     }`}
                     style={{
                       width: `${Math.min(
-                        risk?.risk_score ?? 0,
+                        risk?.risk_score ??
+                          0,
                         100
                       )}%`,
                     }}
@@ -1288,10 +1797,12 @@ export default function Home() {
               </div>
 
               {/* Attention banner */}
-              {riskLevel !== "Low" && (
+              {riskLevel !==
+                "Low" && (
                 <div
                   className={`mt-6 rounded-2xl border px-5 py-4 ${
-                    riskLevel === "High"
+                    riskLevel ===
+                    "High"
                       ? "border-red-400/20 bg-red-400/10"
                       : "border-amber-400/20 bg-amber-400/10"
                   }`}
@@ -1301,7 +1812,8 @@ export default function Home() {
 
                     <div
                       className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full font-bold ${
-                        riskLevel === "High"
+                        riskLevel ===
+                        "High"
                           ? "bg-red-400/10 text-red-300"
                           : "bg-amber-400/10 text-amber-300"
                       }`}
@@ -1312,7 +1824,8 @@ export default function Home() {
                     <div>
 
                       <p className="font-semibold">
-                        {riskLevel === "High"
+                        {riskLevel ===
+                        "High"
                           ? "Potentially harmful conditions detected"
                           : "Potential stress detected"}
                       </p>
@@ -1517,7 +2030,9 @@ export default function Home() {
           </footer>
 
         </section>
+
       </div>
+
     </main>
   );
 }
