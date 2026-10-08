@@ -94,7 +94,8 @@ const translations = {
     hero: {
       badge: "EARLY-WARNING INTELLIGENCE",
       title: "Good evening",
-      monitoring: "Sentinel is continuously monitoring your aquaculture environment.",
+      monitoring:
+        "Sentinel is continuously monitoring your aquaculture environment.",
       farm: "Saha Aqua Farm",
       location: "Gurugu, Tamale",
     },
@@ -117,16 +118,19 @@ const translations = {
       normal: "Normal",
       observed: "Observed",
       noneObserved: "None observed",
-      monitoring: "Sentinel is monitoring fish behaviour for early signs of stress.",
+      monitoring:
+        "Sentinel is monitoring fish behaviour for early signs of stress.",
     },
 
     risk: {
       title: "Risk Intelligence",
-      subtitle: "Sentinel's current assessment of your pond conditions.",
+      subtitle:
+        "Sentinel's current assessment of your pond conditions.",
       riskLevel: "Risk Level",
       riskScore: "Risk Score",
       contributingFactors: "Contributing Factors",
-      noFactors: "No significant contributing factors detected.",
+      noFactors:
+        "No significant contributing factors detected.",
       attention:
         "Sentinel has detected a condition that may require your attention.",
       healthy:
@@ -159,17 +163,21 @@ const translations = {
       noAlerts: "No alerts at the moment.",
       notification: "Notification",
       riskAlert: "Risk Alert",
+
       temperatureHigh:
         "Water temperature is higher than the recommended range.",
       temperatureLow:
         "Water temperature is lower than the recommended range.",
-      phHigh: "pH level is higher than the recommended range.",
-      phLow: "pH level is lower than the recommended range.",
+      phHigh:
+        "pH level is higher than the recommended range.",
+      phLow:
+        "pH level is lower than the recommended range.",
       oxygenHigh:
         "Dissolved oxygen is higher than the expected operating range.",
       oxygenLow:
         "Dissolved oxygen is lower than the recommended range.",
-      unusualFishBehaviour: "Unusual fish behaviour has been detected.",
+      unusualFishBehaviour:
+        "Unusual fish behaviour has been detected.",
       poorFeeding:
         "Fish feeding response appears to be lower than expected.",
       anomaly:
@@ -177,6 +185,16 @@ const translations = {
       attention: "The pond requires attention.",
       normal:
         "Pond conditions are currently within the expected range.",
+
+      /* VOICE */
+      readAloud: "Read alert aloud",
+      stopVoice: "Stop voice",
+      voiceUnavailable:
+        "A voice for this language is not available on this device.",
+      voiceUnsupported:
+        "Voice reading is not supported by this browser.",
+      voiceError:
+        "Unable to read this alert aloud.",
     },
 
     factors: {
@@ -188,6 +206,13 @@ const translations = {
       unusual_behaviour: "Unusual behaviour",
       ml_anomaly: "Machine-learning anomaly",
       water_quality: "Water quality",
+    },
+
+    voice: {
+      prefix: "AquaSentinel alert.",
+      detected: "risk detected in",
+      action:
+        "Please check the pond conditions and take corrective action.",
     },
 
     footer:
@@ -261,11 +286,13 @@ const translations = {
 
     risk: {
       title: "Ɔhaw Nimdeɛ",
-      subtitle: "Sentinel hwɛbea a ɛwɔ w’atarɛ ho mprempren.",
+      subtitle:
+        "Sentinel hwɛbea a ɛwɔ w’atarɛ ho mprempren.",
       riskLevel: "Ɔhaw Gyinabea",
       riskScore: "Ɔhaw Nkyerɛkyerɛ",
       contributingFactors: "Nneɛma a Ɛde Ɔhaw No Ba",
-      noFactors: "Wɔnhu ade titiriw biara a ɛde ɔhaw ba.",
+      noFactors:
+        "Wɔnhu ade titiriw biara a ɛde ɔhaw ba.",
       attention:
         "Sentinel ahu tebea bi a ebia ɛsɛ sɛ wodi ho dwuma.",
       healthy:
@@ -282,7 +309,8 @@ const translations = {
 
     ml: {
       title: "AI / ML NIMDEƐ",
-      anomalyDetection: "Nsakrae a Ɛnte Sɛnea Ɛsɛ",
+      anomalyDetection:
+        "Nsakrae a Ɛnte Sɛnea Ɛsɛ",
       anomalyDetected: "Wɔahu nsakrae bi",
       noAnomaly: "Wɔnhu nsakrae biara",
       anomalyScore: "Nsakrae Nkyerɛkyerɛ",
@@ -298,10 +326,14 @@ const translations = {
       noAlerts: "Kɔkɔbɔ biara nni hɔ mprempren.",
       notification: "Amanneɛbɔ",
       riskAlert: "Ɔhaw Kɔkɔbɔ",
-      temperatureHigh: "Nsuo no ayɛ hyew sen sɛnea ɛsɛ.",
-      temperatureLow: "Nsuo no ayɛ nwini sen sɛnea ɛsɛ.",
-      phHigh: "pH no akɔ soro sen sɛnea ɛsɛ.",
-      phLow: "pH no akɔ fam sen sɛnea ɛsɛ.",
+      temperatureHigh:
+        "Nsuo no ayɛ hyew sen sɛnea ɛsɛ.",
+      temperatureLow:
+        "Nsuo no ayɛ nwini sen sɛnea ɛsɛ.",
+      phHigh:
+        "pH no akɔ soro sen sɛnea ɛsɛ.",
+      phLow:
+        "pH no akɔ fam sen sɛnea ɛsɛ.",
       oxygenHigh:
         "Oxygen a ɛwɔ nsuo no mu no akɔ soro sen sɛnea wɔhwɛ kwan.",
       oxygenLow:
@@ -312,20 +344,42 @@ const translations = {
         "Mpataa no aduan ho mmuae no sua sen sɛnea ɛsɛ.",
       anomaly:
         "Wɔahu nsakrae bi a ɛnte sɛnea ɛsɛ wɔ atare no mu nsɛm mu.",
-      attention: "Ɛsɛ sɛ wodi atare no ho dwuma.",
+      attention:
+        "Ɛsɛ sɛ wodi atare no ho dwuma.",
       normal:
         "Mprempren atare no tebea no wɔ baabi a ɛsɛ.",
+
+      readAloud: "Kenkan kɔkɔbɔ no kyerɛ me",
+      stopVoice: "Gyae nne no",
+      voiceUnavailable:
+        "Nne a ɛwɔ saa kasa yi mu nni saa afiri yi so.",
+      voiceUnsupported:
+        "Saa browser yi ntumi nkenkan kɔkɔbɔ no wɔ nne so.",
+      voiceError:
+        "Yentumi nkenkan kɔkɔbɔ yi wɔ nne so.",
     },
 
     factors: {
       temperature: "Nsuo hyew",
       ph: "pH",
-      dissolved_oxygen: "Oxygen a ɛwɔ nsuo mu",
+      dissolved_oxygen:
+        "Oxygen a ɛwɔ nsuo mu",
       fish_activity: "Mpataa nneyɛe",
-      feeding_response: "Aduan ho mmuae",
-      unusual_behaviour: "Nneyɛe a ɛnte sɛnea ɛsɛ",
-      ml_anomaly: "Machine-learning nsakrae",
+      feeding_response:
+        "Aduan ho mmuae",
+      unusual_behaviour:
+        "Nneyɛe a ɛnte sɛnea ɛsɛ",
+      ml_anomaly:
+        "Machine-learning nsakrae",
       water_quality: "Nsuo no su",
+    },
+
+    voice: {
+      prefix: "AquaSentinel kɔkɔbɔ.",
+      detected:
+        "Wɔahu ɔhaw wɔ",
+      action:
+        "Yɛsrɛ wo, hwɛ ɔtare no mu nsɛm na yɛ nea ɛsɛ sɛ woyɛ.",
     },
 
     footer:
@@ -351,7 +405,8 @@ const translations = {
       medium: "Haɗari Matsakaici",
       high: "Babban Haɗari",
       critical: "Haɗari Mai Tsanani",
-      attentionRequired: "Ana Bukatar Kulawa",
+      attentionRequired:
+        "Ana Bukatar Kulawa",
       healthy: "Lafiya",
       active: "Aiki",
       detected: "An gano",
@@ -378,40 +433,50 @@ const translations = {
     metrics: {
       temperature: "Zafin Ruwa",
       ph: "Ma'aunin pH",
-      oxygen: "Oxygen da ke cikin Ruwa",
+      oxygen:
+        "Oxygen da ke cikin Ruwa",
       fishActivity: "Ayyukan Kifi",
-      optimal: "Yana cikin iyakar da ta dace",
+      optimal:
+        "Yana cikin iyakar da ta dace",
       attention: "Ana bukatar kulawa",
     },
 
     fish: {
       title: "Halayen Kifi",
       activity: "Matsayin Aiki",
-      feeding: "Martanin Cin Abinci",
-      unusual: "Halin da ba na al'ada ba",
+      feeding:
+        "Martanin Cin Abinci",
+      unusual:
+        "Halin da ba na al'ada ba",
       fishCount: "Adadin Kifi",
       normal: "Al'ada",
       observed: "An lura",
-      noneObserved: "Ba a lura da shi ba",
+      noneObserved:
+        "Ba a lura da shi ba",
       monitoring:
         "Sentinel na sa ido kan halayen kifi domin gano alamun damuwa da wuri.",
     },
 
     risk: {
       title: "Bayanan Haɗari",
-      subtitle: "Binciken Sentinel na halin ruwan rijiyarka a yanzu.",
+      subtitle:
+        "Binciken Sentinel na halin ruwan rijiyarka a yanzu.",
       riskLevel: "Matsayin Haɗari",
       riskScore: "Makin Haɗari",
-      contributingFactors: "Abubuwan da ke haifar da Haɗarin",
-      noFactors: "Ba a gano wani muhimmin abu da ke haifar da haɗari ba.",
+      contributingFactors:
+        "Abubuwan da ke haifar da Haɗarin",
+      noFactors:
+        "Ba a gano wani muhimmin abu da ke haifar da haɗari ba.",
       attention:
         "Sentinel ya gano wani yanayi da zai iya bukatar kulawa.",
       healthy:
         "A halin yanzu yanayin ruwan yana cikin iyakar da ta dace.",
-      reasoningTitle: "Yadda Sentinel ke nazari",
+      reasoningTitle:
+        "Yadda Sentinel ke nazari",
       reasoning:
         "Sentinel na haɗa bayanan ingancin ruwa, halayen kifi da machine-learning domin gano yanayin da zai iya bukatar kulawa.",
-      statusTitle: "Matsayin Sentinel",
+      statusTitle:
+        "Matsayin Sentinel",
       statusHealthy:
         "A halin yanzu ruwan rijiyar yana cikin yanayin da ake tsammani.",
       statusAttention:
@@ -420,10 +485,14 @@ const translations = {
 
     ml: {
       title: "AI / ML INTELLIGENCE",
-      anomalyDetection: "Gano Yanayin da ba na Al'ada ba",
-      anomalyDetected: "An gano yanayin da ba na al'ada ba",
-      noAnomaly: "Ba a gano wani yanayi da ba na al'ada ba",
-      anomalyScore: "Makin Yanayin",
+      anomalyDetection:
+        "Gano Yanayin da ba na Al'ada ba",
+      anomalyDetected:
+        "An gano yanayin da ba na Al'ada ba",
+      noAnomaly:
+        "Ba a gano wani yanayi da ba na Al'ada ba",
+      anomalyScore:
+        "Makin Yanayin",
       explanation:
         "Tsarin machine-learning yana kwatanta bayanan yanzu da tsarin bayanan da aka gani domin gano abubuwan da ba su saba ba.",
     },
@@ -431,11 +500,15 @@ const translations = {
     alerts: {
       title: "Gargadi",
       unread: "ba a karanta ba",
-      markRead: "Alama an karanta",
-      markAllRead: "Alama duka an karanta",
-      noAlerts: "Babu gargadi a yanzu.",
+      markRead:
+        "Alama an karanta",
+      markAllRead:
+        "Alama duka an karanta",
+      noAlerts:
+        "Babu gargadi a yanzu.",
       notification: "Sanarwa",
-      riskAlert: "Gargadin Haɗari",
+      riskAlert:
+        "Gargadin Haɗari",
       temperatureHigh:
         "Zafin ruwan ya fi yadda ya kamata.",
       temperatureLow:
@@ -458,17 +531,43 @@ const translations = {
         "Ana bukatar kulawa da rijiya.",
       normal:
         "A halin yanzu yanayin ruwan rijiya yana cikin iyakar da ta dace.",
+
+      readAloud:
+        "Karanta gargadin da murya",
+      stopVoice:
+        "Dakatar da murya",
+      voiceUnavailable:
+        "Ba a samun muryar wannan harshe a wannan na'urar.",
+      voiceUnsupported:
+        "Wannan browser ba ya tallafawa karanta gargadi da murya.",
+      voiceError:
+        "An kasa karanta wannan gargadi da murya.",
     },
 
     factors: {
       temperature: "Zafin ruwa",
       ph: "pH",
-      dissolved_oxygen: "Oxygen da ke cikin ruwa",
-      fish_activity: "Ayyukan kifi",
-      feeding_response: "Martanin cin abinci",
-      unusual_behaviour: "Halin da ba na al'ada ba",
-      ml_anomaly: "Machine-learning ya gano yanayi",
-      water_quality: "Ingancin ruwa",
+      dissolved_oxygen:
+        "Oxygen da ke cikin ruwa",
+      fish_activity:
+        "Ayyukan kifi",
+      feeding_response:
+        "Martanin cin abinci",
+      unusual_behaviour:
+        "Halin da ba na al'ada ba",
+      ml_anomaly:
+        "Machine-learning ya gano yanayi",
+      water_quality:
+        "Ingancin ruwa",
+    },
+
+    voice: {
+      prefix:
+        "Sanarwar AquaSentinel.",
+      detected:
+        "An gano haɗari a",
+      action:
+        "Da fatan za a duba yanayin ruwan tafkin sannan a dauki matakin da ya dace.",
     },
 
     footer:
@@ -494,7 +593,8 @@ const translations = {
       medium: "Kaɣila Palli Ka",
       high: "Kaɣila Kpema",
       critical: "Kaɣila Kpema Pam",
-      attentionRequired: "A niŋdi pam",
+      attentionRequired:
+        "A niŋdi pam",
       healthy: "A yɛla",
       active: "A niŋdi",
       detected: "Wɔ nyɛli",
@@ -510,7 +610,8 @@ const translations = {
     },
 
     hero: {
-      badge: "KƆKƆBƆ DIN BA NTƐM",
+      badge:
+        "KƆKƆBƆ DIN BA NTƐM",
       title: "N-yɛli",
       monitoring:
         "Sentinel ni nyɛ nɔɔŋu maa yɛli pam pam.",
@@ -521,40 +622,58 @@ const translations = {
     metrics: {
       temperature: "Kɔligu",
       ph: "pH Yuli",
-      oxygen: "Oxygen din be nɔɔŋu ni",
-      fishActivity: "Bihi N-yɛli",
-      optimal: "A be yuli din mali",
-      attention: "A niŋdi pam",
+      oxygen:
+        "Oxygen din be nɔɔŋu ni",
+      fishActivity:
+        "Bihi N-yɛli",
+      optimal:
+        "A be yuli din mali",
+      attention:
+        "A niŋdi pam",
     },
 
     fish: {
       title: "Bihi N-yɛli",
-      activity: "N-yɛli Yuli",
-      feeding: "Diibu N-yɛli",
-      unusual: "N-yɛli din mali yɛli maa",
-      fishCount: "Bihi Dɔɔgu",
+      activity:
+        "N-yɛli Yuli",
+      feeding:
+        "Diibu N-yɛli",
+      unusual:
+        "N-yɛli din mali yɛli maa",
+      fishCount:
+        "Bihi Dɔɔgu",
       normal: "Yuli",
-      observed: "Wɔ nyɛli",
-      noneObserved: "Wɔ ka nyɛli",
+      observed:
+        "Wɔ nyɛli",
+      noneObserved:
+        "Wɔ ka nyɛli",
       monitoring:
         "Sentinel ni nyɛ bihi n-yɛli ka o nyɛli yɛli din niŋ ka bihi maa brɛ.",
     },
 
     risk: {
-      title: "Kaɣila Nimdi",
-      subtitle: "Sentinel ni nyɛ nɔɔŋu maa yuli naa.",
-      riskLevel: "Kaɣila Yuli",
-      riskScore: "Kaɣila Nɔɔŋu",
-      contributingFactors: "N-yɛli din nyɛ ka kaɣila maa",
-      noFactors: "Wɔ ka nyɛli n-yɛli din nyɛ ka kaɣila maa.",
+      title:
+        "Kaɣila Nimdi",
+      subtitle:
+        "Sentinel ni nyɛ nɔɔŋu maa yuli naa.",
+      riskLevel:
+        "Kaɣila Yuli",
+      riskScore:
+        "Kaɣila Nɔɔŋu",
+      contributingFactors:
+        "N-yɛli din nyɛ ka kaɣila maa",
+      noFactors:
+        "Wɔ ka nyɛli n-yɛli din nyɛ ka kaɣila maa.",
       attention:
         "Sentinel nyɛli yɛli din niŋ ka a niŋdi pam.",
       healthy:
         "Nɔɔŋu maa yuli ni be baŋa din mali.",
-      reasoningTitle: "Sɛnti Sentinel ni dihi yɛlima",
+      reasoningTitle:
+        "Sɛnti Sentinel ni dihi yɛlima",
       reasoning:
         "Sentinel ni bohi nɔɔŋu yuli, bihi n-yɛli ne machine-learning ka o nyɛli yɛli din niŋ ka a niŋdi pam.",
-      statusTitle: "Sentinel Yuli",
+      statusTitle:
+        "Sentinel Yuli",
       statusHealthy:
         "Nɔɔŋu maa yuli ni be baŋa din mali.",
       statusAttention:
@@ -563,22 +682,32 @@ const translations = {
 
     ml: {
       title: "AI / ML NIMDI",
-      anomalyDetection: "Yɛli din mali yɛli maa",
-      anomalyDetected: "Wɔ nyɛli yɛli din mali",
-      noAnomaly: "Wɔ ka nyɛli yɛli din mali",
-      anomalyScore: "Yɛli Nɔɔŋu",
+      anomalyDetection:
+        "Yɛli din mali yɛli maa",
+      anomalyDetected:
+        "Wɔ nyɛli yɛli din mali",
+      noAnomaly:
+        "Wɔ ka nyɛli yɛli din mali",
+      anomalyScore:
+        "Yɛli Nɔɔŋu",
       explanation:
         "Machine-learning ni bohi nɔɔŋu maa naa yuli ne yɛli din kaŋa ka o nyɛli yɛli din mali.",
     },
 
     alerts: {
       title: "Kɔkɔbɩ",
-      unread: "ka wɔ karigimi",
-      markRead: "Maali ka wɔ karigimi",
-      markAllRead: "Maali nyɛla ka wɔ karigimi",
-      noAlerts: "Kɔkɔbɩ ka be naa.",
-      notification: "Yɛli",
-      riskAlert: "Kaɣila Kɔkɔbɩ",
+      unread:
+        "ka wɔ karigimi",
+      markRead:
+        "Maali ka wɔ karigimi",
+      markAllRead:
+        "Maali nyɛla ka wɔ karigimi",
+      noAlerts:
+        "Kɔkɔbɩ ka be naa.",
+      notification:
+        "Yɛli",
+      riskAlert:
+        "Kaɣila Kɔkɔbɩ",
       temperatureHigh:
         "Nɔɔŋu maa kɔligu yɛ pam.",
       temperatureLow:
@@ -601,17 +730,43 @@ const translations = {
         "A niŋdi pam ka wɔ yɛli nɔɔŋu maa.",
       normal:
         "Nɔɔŋu maa yɛli ni be yuli din mali.",
+
+      readAloud:
+        "Karigimi kɔkɔbɩ ni yɛlima",
+      stopVoice:
+        "Gya yɛlima",
+      voiceUnavailable:
+        "Nne din be saa kasa ni ka be afiri maa ni.",
+      voiceUnsupported:
+        "Browser maa ka tɔɣsi kɔkɔbɩ karigimi ni yɛlima.",
+      voiceError:
+        "Kɔkɔbɩ maa ka karigimi ni yɛlima.",
     },
 
     factors: {
       temperature: "Kɔligu",
       ph: "pH",
-      dissolved_oxygen: "Oxygen din be nɔɔŋu ni",
-      fish_activity: "Bihi n-yɛli",
-      feeding_response: "Diibu n-yɛli",
-      unusual_behaviour: "N-yɛli din mali yɛli maa",
-      ml_anomaly: "ML n-yɛli",
-      water_quality: "Nɔɔŋu yuli",
+      dissolved_oxygen:
+        "Oxygen din be nɔɔŋu ni",
+      fish_activity:
+        "Bihi n-yɛli",
+      feeding_response:
+        "Diibu n-yɛli",
+      unusual_behaviour:
+        "N-yɛli din mali yɛli maa",
+      ml_anomaly:
+        "ML n-yɛli",
+      water_quality:
+        "Nɔɔŋu yuli",
+    },
+
+    voice: {
+      prefix:
+        "AquaSentinel kɔkɔbɩ.",
+      detected:
+        "Wɔ nyɛli kaɣila wɔ",
+      action:
+        "Pahim ni o yɛlima pam kaŋsim maa, ka di niŋ zaŋsim.",
     },
 
     footer:
@@ -623,18 +778,33 @@ const translations = {
    HELPERS
    ========================================================= */
 
-const normalizeRiskLevel = (level?: string): RiskLevel => {
-  const normalized = (level || "low").toLowerCase().trim();
+const normalizeRiskLevel = (
+  level?: string
+): RiskLevel => {
+  const normalized = (
+    level || "low"
+  )
+    .toLowerCase()
+    .trim();
 
-  if (normalized === "critical") return "Critical";
-  if (normalized === "high") return "High";
-  if (normalized === "moderate") return "Moderate";
-  if (normalized === "medium") return "Medium";
+  if (normalized === "critical")
+    return "Critical";
+
+  if (normalized === "high")
+    return "High";
+
+  if (normalized === "moderate")
+    return "Moderate";
+
+  if (normalized === "medium")
+    return "Medium";
 
   return "Low";
 };
 
-const getRiskPercentage = (level: RiskLevel) => {
+const getRiskPercentage = (
+  level: RiskLevel
+) => {
   switch (level) {
     case "Critical":
       return 100;
@@ -649,8 +819,14 @@ const getRiskPercentage = (level: RiskLevel) => {
   }
 };
 
-const getRiskScore = (score?: number | null) => {
-  if (score === null || score === undefined || Number.isNaN(score)) {
+const getRiskScore = (
+  score?: number | null
+) => {
+  if (
+    score === null ||
+    score === undefined ||
+    Number.isNaN(score)
+  ) {
     return 0;
   }
 
@@ -658,44 +834,66 @@ const getRiskScore = (score?: number | null) => {
     return Math.round(score * 100);
   }
 
-  return Math.min(100, Math.round(score));
+  return Math.min(
+    100,
+    Math.round(score)
+  );
 };
 
-const getRiskColorClass = (level: RiskLevel) => {
+const getRiskColorClass = (
+  level: RiskLevel
+) => {
   switch (level) {
     case "Critical":
       return "border-red-500/40 bg-red-500/10 text-red-300";
+
     case "High":
       return "border-red-400/30 bg-red-400/10 text-red-300";
+
     case "Moderate":
     case "Medium":
       return "border-amber-400/30 bg-amber-400/10 text-amber-300";
+
     default:
       return "border-teal-400/30 bg-teal-400/10 text-teal-300";
   }
 };
 
-const getRiskDotClass = (level: RiskLevel) => {
+const getRiskDotClass = (
+  level: RiskLevel
+) => {
   switch (level) {
     case "Critical":
     case "High":
       return "bg-red-400";
+
     case "Moderate":
     case "Medium":
       return "bg-amber-400";
+
     default:
       return "bg-teal-400";
   }
 };
 
-const getAlertLevelClass = (level?: string) => {
-  const normalized = (level || "").toLowerCase();
+const getAlertLevelClass = (
+  level?: string
+) => {
+  const normalized = (
+    level || ""
+  ).toLowerCase();
 
-  if (normalized === "critical" || normalized === "high") {
+  if (
+    normalized === "critical" ||
+    normalized === "high"
+  ) {
     return "border-red-400/30 bg-red-500/10";
   }
 
-  if (normalized === "moderate" || normalized === "medium") {
+  if (
+    normalized === "moderate" ||
+    normalized === "medium"
+  ) {
     return "border-amber-400/30 bg-amber-500/10";
   }
 
@@ -707,42 +905,66 @@ const getFactorTranslationKey = (
 ): keyof typeof translations.English.factors | null => {
   const value = factor.toLowerCase();
 
-  if (value.includes("temperature")) return "temperature";
-  if (value.includes("dissolved") || value.includes("oxygen")) {
+  if (value.includes("temperature"))
+    return "temperature";
+
+  if (
+    value.includes("dissolved") ||
+    value.includes("oxygen")
+  ) {
     return "dissolved_oxygen";
   }
-  if (value.includes("ph")) return "ph";
-  if (value.includes("fish") && value.includes("activity")) {
+
+  if (value.includes("ph"))
+    return "ph";
+
+  if (
+    value.includes("fish") &&
+    value.includes("activity")
+  ) {
     return "fish_activity";
   }
-  if (value.includes("feeding")) return "feeding_response";
-  if (value.includes("unusual") && value.includes("behaviour")) {
+
+  if (value.includes("feeding"))
+    return "feeding_response";
+
+  if (
+    value.includes("unusual") &&
+    value.includes("behaviour")
+  ) {
     return "unusual_behaviour";
   }
-  if (value.includes("unusual") && value.includes("behavior")) {
+
+  if (
+    value.includes("unusual") &&
+    value.includes("behavior")
+  ) {
     return "unusual_behaviour";
   }
-  if (value.includes("anomaly") || value.includes("machine")) {
+
+  if (
+    value.includes("anomaly") ||
+    value.includes("machine")
+  ) {
     return "ml_anomaly";
   }
-  if (value.includes("water")) return "water_quality";
+
+  if (value.includes("water"))
+    return "water_quality";
 
   return null;
 };
 
-/*
- * Converts the backend alert message into a language-specific
- * farmer-facing message.
- *
- * IMPORTANT:
- * The raw backend English message is never displayed when another
- * language has been selected.
- */
+/* =========================================================
+   ALERT TRANSLATION
+   ========================================================= */
+
 const translateAlertMessage = (
   message: string,
   language: AlertLanguage
 ) => {
-  const t = translations[language].alerts;
+  const t =
+    translations[language].alerts;
 
   if (!message) {
     return t.attention;
@@ -752,74 +974,93 @@ const translateAlertMessage = (
     return message;
   }
 
-  const lower = message.toLowerCase();
+  const lower =
+    message.toLowerCase();
 
   if (
     lower.includes("temperature") &&
-    (lower.includes("high") ||
+    (
+      lower.includes("high") ||
       lower.includes("above") ||
-      lower.includes("higher"))
+      lower.includes("higher")
+    )
   ) {
     return t.temperatureHigh;
   }
 
   if (
     lower.includes("temperature") &&
-    (lower.includes("low") ||
+    (
+      lower.includes("low") ||
       lower.includes("below") ||
-      lower.includes("lower"))
+      lower.includes("lower")
+    )
   ) {
     return t.temperatureLow;
   }
 
   if (
     lower.includes("ph") &&
-    (lower.includes("high") ||
+    (
+      lower.includes("high") ||
       lower.includes("above") ||
-      lower.includes("higher"))
+      lower.includes("higher")
+    )
   ) {
     return t.phHigh;
   }
 
   if (
     lower.includes("ph") &&
-    (lower.includes("low") ||
+    (
+      lower.includes("low") ||
       lower.includes("below") ||
-      lower.includes("lower"))
+      lower.includes("lower")
+    )
   ) {
     return t.phLow;
   }
 
   if (
     lower.includes("dissolved oxygen") &&
-    (lower.includes("high") ||
+    (
+      lower.includes("high") ||
       lower.includes("above") ||
-      lower.includes("higher"))
+      lower.includes("higher")
+    )
   ) {
     return t.oxygenHigh;
   }
 
   if (
     lower.includes("dissolved oxygen") &&
-    (lower.includes("low") ||
+    (
+      lower.includes("low") ||
       lower.includes("below") ||
-      lower.includes("lower"))
+      lower.includes("lower")
+    )
   ) {
     return t.oxygenLow;
   }
 
   if (
-    lower.includes("unusual fish behaviour") ||
-    lower.includes("unusual fish behavior")
+    lower.includes(
+      "unusual fish behaviour"
+    ) ||
+    lower.includes(
+      "unusual fish behavior"
+    )
   ) {
     return t.unusualFishBehaviour;
   }
 
   if (
     lower.includes("feeding") &&
-    (lower.includes("low") ||
+    (
+      lower.includes("low") ||
       lower.includes("poor") ||
-      lower.includes("reduced"))
+      lower.includes("reduced")
+    )
   ) {
     return t.poorFeeding;
   }
@@ -841,32 +1082,52 @@ const translateAlertMessage = (
   return t.attention;
 };
 
+/* =========================================================
+   TIME / DATE
+   ========================================================= */
+
 const getTimeGreeting = (
   language: AlertLanguage
 ): string => {
-  const hour = new Date().getHours();
+  const hour =
+    new Date().getHours();
 
   if (language === "English") {
-    if (hour < 12) return "Good morning";
-    if (hour < 18) return "Good afternoon";
+    if (hour < 12)
+      return "Good morning";
+
+    if (hour < 18)
+      return "Good afternoon";
+
     return "Good evening";
   }
 
   if (language === "Twi") {
-    if (hour < 12) return "Maakye";
-    if (hour < 18) return "Maaha";
+    if (hour < 12)
+      return "Maakye";
+
+    if (hour < 18)
+      return "Maaha";
+
     return "Maadwo";
   }
 
   if (language === "Hausa") {
-    if (hour < 12) return "Barka da safe";
-    if (hour < 18) return "Barka da rana";
+    if (hour < 12)
+      return "Barka da safe";
+
+    if (hour < 18)
+      return "Barka da rana";
+
     return "Barka da yamma";
   }
 
-  // Keep Dagbani greeting conservative.
-  if (hour < 12) return "Anina";
-  if (hour < 18) return "Antuma";
+  if (hour < 12)
+    return "Anina";
+
+  if (hour < 18)
+    return "Antuma";
+
   return "Anihi";
 };
 
@@ -877,22 +1138,130 @@ const formatDate = (
   if (!date) return "";
 
   try {
-    const localeMap: Record<AlertLanguage, string> = {
+    const localeMap: Record<
+      AlertLanguage,
+      string
+    > = {
       English: "en-GH",
       Twi: "ak-GH",
       Hausa: "ha-GH",
       Dagbani: "en-GH",
     };
 
-    return new Intl.DateTimeFormat(localeMap[language], {
-      day: "numeric",
-      month: "short",
-      hour: "numeric",
-      minute: "2-digit",
-    }).format(new Date(date));
+    return new Intl.DateTimeFormat(
+      localeMap[language],
+      {
+        day: "numeric",
+        month: "short",
+        hour: "numeric",
+        minute: "2-digit",
+      }
+    ).format(new Date(date));
   } catch {
     return "";
   }
+};
+
+/* =========================================================
+   VOICE LANGUAGE CONFIGURATION
+   ========================================================= */
+
+/*
+ * These are the language codes we ask the browser to use.
+ *
+ * IMPORTANT:
+ * We intentionally do NOT include English as a fallback
+ * for Twi, Dagbani or Hausa.
+ *
+ * If the device does not have a matching voice, AquaSentinel
+ * will tell the user that voice is unavailable rather than
+ * speaking the alert in English.
+ */
+const speechLanguageMap: Record<
+  AlertLanguage,
+  string[]
+> = {
+  English: [
+    "en-GH",
+    "en-GB",
+    "en-US",
+    "en",
+  ],
+
+  Twi: [
+    "ak-GH",
+    "ak",
+  ],
+
+  Hausa: [
+    "ha-GH",
+    "ha-NG",
+    "ha",
+  ],
+
+  Dagbani: [
+    "dag-GH",
+    "dag",
+  ],
+};
+
+const findVoiceForLanguage = (
+  voices: SpeechSynthesisVoice[],
+  language: AlertLanguage
+) => {
+  const preferredLanguages =
+    speechLanguageMap[language];
+
+  /*
+   * Exact match first.
+   */
+  for (
+    const preferred of preferredLanguages
+  ) {
+    const exact = voices.find(
+      (voice) =>
+        voice.lang.toLowerCase() ===
+        preferred.toLowerCase()
+    );
+
+    if (exact) {
+      return exact;
+    }
+  }
+
+  /*
+   * Then try language prefix.
+   *
+   * Example:
+   * en-GH -> en
+   * ha-NG -> ha
+   */
+  for (
+    const preferred of preferredLanguages
+  ) {
+    const prefix =
+      preferred
+        .toLowerCase()
+        .split("-")[0];
+
+    const matchingVoice =
+      voices.find((voice) =>
+        voice.lang
+          .toLowerCase()
+          .startsWith(`${prefix}-`)
+      ) ||
+      voices.find(
+        (voice) =>
+          voice.lang
+            .toLowerCase() === prefix
+      );
+
+    if (matchingVoice) {
+      return matchingVoice;
+    }
+  }
+
+  return null;
 };
 
 /* =========================================================
@@ -902,36 +1271,103 @@ const formatDate = (
 export default function Home() {
   const router = useRouter();
 
-  const [water, setWater] = useState<WaterReading | null>(null);
-  const [fish, setFish] = useState<FishObservation | null>(null);
-  const [risk, setRisk] = useState<RiskAssessment | null>(null);
-  const [alerts, setAlerts] = useState<Alert[]>([]);
+  const [water, setWater] =
+    useState<WaterReading | null>(
+      null
+    );
 
-  const [notificationsOpen, setNotificationsOpen] =
-    useState(false);
+  const [fish, setFish] =
+    useState<FishObservation | null>(
+      null
+    );
 
-  const [readAlertIds, setReadAlertIds] = useState<number[]>(
-    []
+  const [risk, setRisk] =
+    useState<RiskAssessment | null>(
+      null
+    );
+
+  const [alerts, setAlerts] =
+    useState<Alert[]>([]);
+
+  const [
+    notificationsOpen,
+    setNotificationsOpen,
+  ] = useState(false);
+
+  const [
+    readAlertIds,
+    setReadAlertIds,
+  ] = useState<number[]>([]);
+
+  const [
+    alertLanguage,
+    setAlertLanguage,
+  ] = useState<AlertLanguage>(
+    "English"
   );
 
-  const [alertLanguage, setAlertLanguage] =
-    useState<AlertLanguage>("English");
+  const [
+    menuOpen,
+    setMenuOpen,
+  ] = useState(false);
 
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [
+    loading,
+    setLoading,
+  ] = useState(true);
 
-  const previousAlertIds = useRef<Set<number>>(new Set());
+  /* =======================================================
+     VOICE STATE
+     ======================================================= */
+
+  const [
+    availableVoices,
+    setAvailableVoices,
+  ] = useState<
+    SpeechSynthesisVoice[]
+  >([]);
+
+  const [
+    speakingAlertId,
+    setSpeakingAlertId,
+  ] = useState<number | null>(
+    null
+  );
+
+  const [
+    voiceStatus,
+    setVoiceStatus,
+  ] = useState<string | null>(
+    null
+  );
+
+  const previousAlertIds =
+    useRef<Set<number>>(
+      new Set()
+    );
+
   const audioContextRef =
-    useRef<AudioContext | null>(null);
+    useRef<AudioContext | null>(
+      null
+    );
 
-  const t = translations[alertLanguage];
+  const speechSynthesisRef =
+    useRef<SpeechSynthesis | null>(
+      null
+    );
+
+  const t =
+    translations[alertLanguage];
 
   /* =======================================================
      AUTHENTICATION
      ======================================================= */
 
   useEffect(() => {
-    const token = localStorage.getItem("aquasentinel_token");
+    const token =
+      localStorage.getItem(
+        "aquasentinel_token"
+      );
 
     if (!token) {
       router.push("/login");
@@ -950,19 +1386,28 @@ export default function Home() {
 
     if (
       savedLanguage &&
-      ["English", "Twi", "Dagbani", "Hausa"].includes(
-        savedLanguage
-      )
+      [
+        "English",
+        "Twi",
+        "Dagbani",
+        "Hausa",
+      ].includes(savedLanguage)
     ) {
-      setAlertLanguage(savedLanguage);
+      setAlertLanguage(
+        savedLanguage
+      );
     }
 
     const savedReadAlerts =
-      localStorage.getItem("aquasentinel_read_alerts");
+      localStorage.getItem(
+        "aquasentinel_read_alerts"
+      );
 
     if (savedReadAlerts) {
       try {
-        setReadAlertIds(JSON.parse(savedReadAlerts));
+        setReadAlertIds(
+          JSON.parse(savedReadAlerts)
+        );
       } catch {
         setReadAlertIds([]);
       }
@@ -974,10 +1419,66 @@ export default function Home() {
       "aquasentinel_alert_language",
       alertLanguage
     );
+
+    /*
+     * Stop any current speech when the farmer
+     * changes language.
+     *
+     * This prevents an English alert from
+     * continuing while another language is selected.
+     */
+    if (
+      typeof window !== "undefined" &&
+      "speechSynthesis" in window
+    ) {
+      window.speechSynthesis.cancel();
+      setSpeakingAlertId(null);
+    }
+
+    setVoiceStatus(null);
   }, [alertLanguage]);
 
   /* =======================================================
-     AUDIO
+     VOICE INITIALIZATION
+     ======================================================= */
+
+  useEffect(() => {
+    if (
+      typeof window === "undefined" ||
+      !("speechSynthesis" in window)
+    ) {
+      return;
+    }
+
+    speechSynthesisRef.current =
+      window.speechSynthesis;
+
+    const loadVoices = () => {
+      const voices =
+        window.speechSynthesis.getVoices();
+
+      setAvailableVoices(voices);
+    };
+
+    loadVoices();
+
+    window.speechSynthesis.addEventListener(
+      "voiceschanged",
+      loadVoices
+    );
+
+    return () => {
+      window.speechSynthesis.removeEventListener(
+        "voiceschanged",
+        loadVoices
+      );
+
+      window.speechSynthesis.cancel();
+    };
+  }, []);
+
+  /* =======================================================
+     AUDIO ALERT SOUND
      ======================================================= */
 
   const initializeAudio = () => {
@@ -998,28 +1499,38 @@ export default function Home() {
 
     if (
       audioContextRef.current &&
-      audioContextRef.current.state === "suspended"
+      audioContextRef.current.state ===
+        "suspended"
     ) {
       audioContextRef.current.resume();
     }
   };
 
-  const playAlertSound = (level: string) => {
-    const audioContext = audioContextRef.current;
+  const playAlertSound = (
+    level: string
+  ) => {
+    const audioContext =
+      audioContextRef.current;
 
     if (!audioContext) return;
 
-    const normalized = level.toLowerCase();
+    const normalized =
+      level.toLowerCase();
 
     const beepCount =
-      normalized === "critical" || normalized === "high"
+      normalized === "critical" ||
+      normalized === "high"
         ? 3
         : normalized === "moderate" ||
           normalized === "medium"
         ? 2
         : 1;
 
-    for (let i = 0; i < beepCount; i++) {
+    for (
+      let i = 0;
+      i < beepCount;
+      i++
+    ) {
       const oscillator =
         audioContext.createOscillator();
 
@@ -1027,22 +1538,35 @@ export default function Home() {
         audioContext.createGain();
 
       oscillator.type = "sine";
+
       oscillator.frequency.value =
         normalized === "critical" ||
         normalized === "high"
           ? 880
           : 660;
 
-      gainNode.gain.value = 0.04;
+      gainNode.gain.value =
+        0.04;
 
-      oscillator.connect(gainNode);
-      gainNode.connect(audioContext.destination);
+      oscillator.connect(
+        gainNode
+      );
+
+      gainNode.connect(
+        audioContext.destination
+      );
 
       const startTime =
-        audioContext.currentTime + i * 0.18;
+        audioContext.currentTime +
+        i * 0.18;
 
-      oscillator.start(startTime);
-      oscillator.stop(startTime + 0.1);
+      oscillator.start(
+        startTime
+      );
+
+      oscillator.stop(
+        startTime + 0.1
+      );
     }
   };
 
@@ -1053,215 +1577,286 @@ export default function Home() {
   useEffect(() => {
     let mounted = true;
 
-    const fetchDashboardData = async () => {
-      const token =
-        localStorage.getItem("aquasentinel_token");
-
-      if (!token) return;
-
-      try {
-        const headers = {
-          Authorization: `Bearer ${token}`,
-        };
-
-        const [
-          waterResponse,
-          fishResponse,
-          riskResponse,
-          alertsResponse,
-        ] = await Promise.all([
-          fetch(`${API_BASE}/water-readings`, {
-            headers,
-          }),
-          fetch(`${API_BASE}/fish-observations`, {
-            headers,
-          }),
-          fetch(`${API_BASE}/risk-assessments`, {
-            headers,
-          }),
-          fetch(`${API_BASE}/alerts`, {
-            headers,
-          }),
-        ]);
-
-        if (
-          waterResponse.status === 401 ||
-          fishResponse.status === 401 ||
-          riskResponse.status === 401 ||
-          alertsResponse.status === 401
-        ) {
-          localStorage.removeItem(
+    const fetchDashboardData =
+      async () => {
+        const token =
+          localStorage.getItem(
             "aquasentinel_token"
           );
-          router.push("/login");
-          return;
-        }
 
-        const waterData =
-          waterResponse.ok
-            ? await waterResponse.json()
-            : [];
+        if (!token) return;
 
-        const fishData =
-          fishResponse.ok
-            ? await fishResponse.json()
-            : [];
+        try {
+          const headers = {
+            Authorization: `Bearer ${token}`,
+          };
 
-        const riskData =
-          riskResponse.ok
-            ? await riskResponse.json()
-            : [];
+          const [
+            waterResponse,
+            fishResponse,
+            riskResponse,
+            alertsResponse,
+          ] = await Promise.all([
+            fetch(
+              `${API_BASE}/water-readings`,
+              { headers }
+            ),
 
-        const alertData =
-          alertsResponse.ok
-            ? await alertsResponse.json()
-            : [];
+            fetch(
+              `${API_BASE}/fish-observations`,
+              { headers }
+            ),
 
-        if (!mounted) return;
+            fetch(
+              `${API_BASE}/risk-assessments`,
+              { headers }
+            ),
 
-        const latestWater =
-          Array.isArray(waterData)
-            ? [...waterData].sort(
-                (a, b) =>
-                  new Date(b.recorded_at).getTime() -
-                  new Date(a.recorded_at).getTime()
-              )[0]
-            : null;
+            fetch(
+              `${API_BASE}/alerts`,
+              { headers }
+            ),
+          ]);
 
-        const latestFish =
-          Array.isArray(fishData)
-            ? [...fishData].sort(
-                (a, b) =>
-                  new Date(b.observed_at).getTime() -
-                  new Date(a.observed_at).getTime()
-              )[0]
-            : null;
+          if (
+            waterResponse.status ===
+              401 ||
+            fishResponse.status ===
+              401 ||
+            riskResponse.status ===
+              401 ||
+            alertsResponse.status ===
+              401
+          ) {
+            localStorage.removeItem(
+              "aquasentinel_token"
+            );
 
-        const latestRisk =
-          Array.isArray(riskData)
-            ? [...riskData].sort(
-                (a, b) =>
-                  new Date(b.assessed_at).getTime() -
-                  new Date(a.assessed_at).getTime()
-              )[0]
-            : null;
+            router.push("/login");
+            return;
+          }
 
-        setWater(latestWater || null);
-        setFish(latestFish || null);
-        setRisk(latestRisk || null);
+          const waterData =
+            waterResponse.ok
+              ? await waterResponse.json()
+              : [];
 
-        let backendAlerts: Alert[] =
-          Array.isArray(alertData)
-            ? alertData
-            : [];
+          const fishData =
+            fishResponse.ok
+              ? await fishResponse.json()
+              : [];
 
-        /*
-         * If the backend has not created an alert for the
-         * latest risk assessment yet, create a temporary
-         * dashboard alert.
-         */
-        if (
-          latestRisk &&
-          ["moderate", "medium", "high", "critical"].includes(
-            String(latestRisk.risk_level).toLowerCase()
-          )
-        ) {
-          const existingRiskAlert =
-            backendAlerts.find(
+          const riskData =
+            riskResponse.ok
+              ? await riskResponse.json()
+              : [];
+
+          const alertData =
+            alertsResponse.ok
+              ? await alertsResponse.json()
+              : [];
+
+          if (!mounted) return;
+
+          const latestWater =
+            Array.isArray(waterData)
+              ? [...waterData].sort(
+                  (a, b) =>
+                    new Date(
+                      b.recorded_at
+                    ).getTime() -
+                    new Date(
+                      a.recorded_at
+                    ).getTime()
+                )[0]
+              : null;
+
+          const latestFish =
+            Array.isArray(fishData)
+              ? [...fishData].sort(
+                  (a, b) =>
+                    new Date(
+                      b.observed_at
+                    ).getTime() -
+                    new Date(
+                      a.observed_at
+                    ).getTime()
+                )[0]
+              : null;
+
+          const latestRisk =
+            Array.isArray(riskData)
+              ? [...riskData].sort(
+                  (a, b) =>
+                    new Date(
+                      b.assessed_at
+                    ).getTime() -
+                    new Date(
+                      a.assessed_at
+                    ).getTime()
+                )[0]
+              : null;
+
+          setWater(
+            latestWater || null
+          );
+
+          setFish(
+            latestFish || null
+          );
+
+          setRisk(
+            latestRisk || null
+          );
+
+          let backendAlerts: Alert[] =
+            Array.isArray(alertData)
+              ? alertData
+              : [];
+
+          /*
+           * Temporary dashboard alert when
+           * backend has not created one yet.
+           */
+          if (
+            latestRisk &&
+            [
+              "moderate",
+              "medium",
+              "high",
+              "critical",
+            ].includes(
+              String(
+                latestRisk.risk_level
+              ).toLowerCase()
+            )
+          ) {
+            const existingRiskAlert =
+              backendAlerts.find(
+                (alert) =>
+                  alert.risk_assessment_id ===
+                  latestRisk.id
+              );
+
+            if (
+              !existingRiskAlert
+            ) {
+              const temporaryAlert: Alert =
+                {
+                  id: -latestRisk.id,
+                  pond_id:
+                    latestRisk.pond_id,
+                  risk_assessment_id:
+                    latestRisk.id,
+                  alert_level:
+                    latestRisk.risk_level,
+                  message:
+                    latestRisk.contributing_factors
+                      ? Array.isArray(
+                          latestRisk.contributing_factors
+                        )
+                        ? latestRisk.contributing_factors.join(
+                            ". "
+                          )
+                        : String(
+                            latestRisk.contributing_factors
+                          )
+                      : "Attention required.",
+                  sent_at:
+                    latestRisk.assessed_at,
+                };
+
+              backendAlerts = [
+                temporaryAlert,
+                ...backendAlerts,
+              ];
+            }
+          }
+
+          backendAlerts =
+            backendAlerts.sort(
+              (a, b) =>
+                new Date(
+                  b.sent_at
+                ).getTime() -
+                new Date(
+                  a.sent_at
+                ).getTime()
+            );
+
+          setAlerts(
+            backendAlerts
+          );
+
+          /*
+           * Notify only when a genuinely new
+           * alert appears.
+           */
+          const currentIds =
+            new Set(
+              backendAlerts.map(
+                (alert) =>
+                  alert.id
+              )
+            );
+
+          const newAlerts =
+            backendAlerts.filter(
               (alert) =>
-                alert.risk_assessment_id ===
-                latestRisk.id
+                !previousAlertIds.current.has(
+                  alert.id
+                )
             );
 
-          if (!existingRiskAlert) {
-            const temporaryAlert: Alert = {
-              id: -latestRisk.id,
-              pond_id: latestRisk.pond_id,
-              risk_assessment_id: latestRisk.id,
-              alert_level:
-                latestRisk.risk_level,
-              message:
-                latestRisk.contributing_factors
-                  ? Array.isArray(
-                      latestRisk.contributing_factors
-                    )
-                    ? latestRisk.contributing_factors.join(
-                        ". "
-                      )
-                    : String(
-                        latestRisk.contributing_factors
-                      )
-                  : "Attention required.",
-              sent_at: latestRisk.assessed_at,
-            };
+          if (
+            previousAlertIds.current
+              .size > 0
+          ) {
+            const seriousNewAlert =
+              newAlerts.find(
+                (alert) => {
+                  const level =
+                    alert.alert_level.toLowerCase();
 
-            backendAlerts = [
-              temporaryAlert,
-              ...backendAlerts,
-            ];
+                  return [
+                    "moderate",
+                    "medium",
+                    "high",
+                    "critical",
+                  ].includes(level);
+                }
+              );
+
+            if (
+              seriousNewAlert
+            ) {
+              playAlertSound(
+                seriousNewAlert.alert_level
+              );
+            }
+          }
+
+          previousAlertIds.current =
+            currentIds;
+        } catch (error) {
+          console.error(
+            "Failed to load dashboard data:",
+            error
+          );
+        } finally {
+          if (mounted) {
+            setLoading(false);
           }
         }
-
-        backendAlerts = backendAlerts.sort(
-          (a, b) =>
-            new Date(b.sent_at).getTime() -
-            new Date(a.sent_at).getTime()
-        );
-
-        setAlerts(backendAlerts);
-
-        /*
-         * Notify only when a genuinely new alert appears.
-         */
-        const currentIds = new Set(
-          backendAlerts.map((alert) => alert.id)
-        );
-
-        const newAlerts = backendAlerts.filter(
-          (alert) =>
-            !previousAlertIds.current.has(alert.id)
-        );
-
-        if (previousAlertIds.current.size > 0) {
-          const seriousNewAlert =
-            newAlerts.find((alert) => {
-              const level =
-                alert.alert_level.toLowerCase();
-
-              return [
-                "moderate",
-                "medium",
-                "high",
-                "critical",
-              ].includes(level);
-            });
-
-          if (seriousNewAlert) {
-            playAlertSound(
-              seriousNewAlert.alert_level
-            );
-          }
-        }
-
-        previousAlertIds.current = currentIds;
-      } catch (error) {
-        console.error(
-          "Failed to load dashboard data:",
-          error
-        );
-      } finally {
-        if (mounted) {
-          setLoading(false);
-        }
-      }
-    };
+      };
 
     fetchDashboardData();
 
-    const interval = setInterval(
-      fetchDashboardData,
-      10000
-    );
+    const interval =
+      setInterval(
+        fetchDashboardData,
+        10000
+      );
 
     return () => {
       mounted = false;
@@ -1273,9 +1868,12 @@ export default function Home() {
      LANGUAGE-AWARE VALUES
      ======================================================= */
 
-  const localizedRisk = useMemo(() => {
-    return normalizeRiskLevel(risk?.risk_level);
-  }, [risk?.risk_level]);
+  const localizedRisk =
+    useMemo(() => {
+      return normalizeRiskLevel(
+        risk?.risk_level
+      );
+    }, [risk?.risk_level]);
 
   const localizedRiskLabel =
     t.common[
@@ -1287,88 +1885,65 @@ export default function Home() {
         | "critical"
     ];
 
-  const localizedFactors = useMemo(() => {
-    if (!risk?.contributing_factors) {
-      return [];
-    }
-
-    const rawFactors = Array.isArray(
-      risk.contributing_factors
-    )
-      ? risk.contributing_factors
-      : String(
-          risk.contributing_factors
-        ).split(",");
-
-    return rawFactors
-      .map((factor) => {
-        const key =
-          getFactorTranslationKey(
-            String(factor).trim()
-          );
-
-        return key
-          ? t.factors[key]
-          : String(factor).trim();
-      })
-      .filter(Boolean);
-  }, [risk?.contributing_factors, alertLanguage]);
-
-  const unreadAlerts = alerts.filter(
-    (alert) =>
-      !readAlertIds.includes(alert.id)
-  );
-
-  /* =======================================================
-     ALERT ACTIONS
-     ======================================================= */
-
-  const markAlertAsRead = (id: number) => {
-    setReadAlertIds((previous) => {
-      if (previous.includes(id)) {
-        return previous;
+  const localizedFactors =
+    useMemo(() => {
+      if (
+        !risk?.contributing_factors
+      ) {
+        return [];
       }
 
-      const updated = [...previous, id];
+      const rawFactors =
+        Array.isArray(
+          risk.contributing_factors
+        )
+          ? risk.contributing_factors
+          : String(
+              risk.contributing_factors
+            ).split(",");
 
-      localStorage.setItem(
-        "aquasentinel_read_alerts",
-        JSON.stringify(updated)
+      return rawFactors
+        .map((factor) => {
+          const key =
+            getFactorTranslationKey(
+              String(factor).trim()
+            );
+
+          return key
+            ? t.factors[key]
+            : String(
+                factor
+              ).trim();
+        })
+        .filter(Boolean);
+    }, [
+      risk?.contributing_factors,
+      alertLanguage,
+    ]);
+
+  const unreadAlerts =
+    alerts.filter(
+      (alert) =>
+        !readAlertIds.includes(
+          alert.id
+        )
+    );
+
+  /* =======================================================
+     ALERT PRESENTATION
+     ======================================================= */
+
+  const getAlertPresentation = (
+    alert: Alert
+  ) => {
+    const riskLevel =
+      normalizeRiskLevel(
+        alert.alert_level
       );
-
-      return updated;
-    });
-  };
-
-  const markAllAlertsAsRead = () => {
-    const allIds = alerts.map(
-      (alert) => alert.id
-    );
-
-    setReadAlertIds(allIds);
-
-    localStorage.setItem(
-      "aquasentinel_read_alerts",
-      JSON.stringify(allIds)
-    );
-  };
-
-  /*
-   * This is intentionally language-aware.
-   *
-   * When voice/TTS is added later, call:
-   *
-   * const voiceText = getAlertPresentation(alert).message;
-   *
-   * NEVER pass alert.message directly to TTS.
-   */
-  const getAlertPresentation = (alert: Alert) => {
-    const riskLevel = normalizeRiskLevel(
-      alert.alert_level
-    );
 
     return {
       riskLevel,
+
       riskLabel:
         t.common[
           riskLevel.toLowerCase() as
@@ -1378,13 +1953,22 @@ export default function Home() {
             | "high"
             | "critical"
         ],
-      alertLabel: t.alerts.riskAlert,
-      pondLabel: t.common.pond,
-      detailsLabel: t.common.details,
-      message: translateAlertMessage(
-        alert.message,
-        alertLanguage
-      ),
+
+      alertLabel:
+        t.alerts.riskAlert,
+
+      pondLabel:
+        t.common.pond,
+
+      detailsLabel:
+        t.common.details,
+
+      message:
+        translateAlertMessage(
+          alert.message,
+          alertLanguage
+        ),
+
       date: formatDate(
         alert.sent_at,
         alertLanguage
@@ -1393,43 +1977,291 @@ export default function Home() {
   };
 
   /* =======================================================
+     VOICE TEXT
+     ======================================================= */
+
+  /*
+   * THIS is the exact text that will be spoken.
+   *
+   * It deliberately contains ONLY:
+   *
+   * 1. Alert identification
+   * 2. Risk level
+   * 3. Pond
+   * 4. Detected issue
+   * 5. Recommended action
+   *
+   * It does NOT include dashboard navigation,
+   * metrics, headings, dates or unrelated information.
+   */
+  const getVoiceText = (
+    alert: Alert,
+    language: AlertLanguage
+  ): string => {
+    const presentation =
+      getAlertPresentation(
+        alert
+      );
+
+    const voice =
+      translations[
+        language
+      ].voice;
+
+    const pondName =
+      `${translations[language].common.pond} ${
+        alert.pond_id
+      }`;
+
+    return [
+      voice.prefix,
+
+      `${presentation.riskLabel} ${voice.detected} ${pondName}.`,
+
+      presentation.message,
+
+      voice.action,
+    ]
+      .filter(Boolean)
+      .join(" ");
+  };
+
+  /* =======================================================
+     TEXT TO SPEECH
+     ======================================================= */
+
+  const stopSpeaking = () => {
+    if (
+      typeof window !== "undefined" &&
+      "speechSynthesis" in window
+    ) {
+      window.speechSynthesis.cancel();
+    }
+
+    setSpeakingAlertId(null);
+  };
+
+  const speakAlert = (
+    alert: Alert
+  ) => {
+    if (
+      typeof window ===
+        "undefined" ||
+      !("speechSynthesis" in window)
+    ) {
+      setVoiceStatus(
+        t.alerts.voiceUnsupported
+      );
+
+      return;
+    }
+
+    const speech =
+      window.speechSynthesis;
+
+    /*
+     * If this alert is already being spoken,
+     * clicking the button stops it.
+     */
+    if (
+      speakingAlertId ===
+      alert.id
+    ) {
+      stopSpeaking();
+      return;
+    }
+
+    speech.cancel();
+
+    const voice =
+      findVoiceForLanguage(
+        availableVoices,
+        alertLanguage
+      );
+
+    /*
+     * IMPORTANT:
+     *
+     * We DO NOT fall back to English
+     * when Twi, Dagbani or Hausa has
+     * no available voice.
+     */
+    if (!voice) {
+      setSpeakingAlertId(null);
+
+      setVoiceStatus(
+        t.alerts.voiceUnavailable
+      );
+
+      return;
+    }
+
+    const voiceText =
+      getVoiceText(
+        alert,
+        alertLanguage
+      );
+
+    const utterance =
+      new SpeechSynthesisUtterance(
+        voiceText
+      );
+
+    utterance.voice = voice;
+
+    utterance.lang =
+      voice.lang;
+
+    utterance.rate = 0.9;
+    utterance.pitch = 1;
+    utterance.volume = 1;
+
+    utterance.onstart = () => {
+      setSpeakingAlertId(
+        alert.id
+      );
+
+      setVoiceStatus(null);
+    };
+
+    utterance.onend = () => {
+      setSpeakingAlertId(
+        null
+      );
+    };
+
+    utterance.onerror = (
+      event
+    ) => {
+      console.error(
+        "Speech synthesis error:",
+        event
+      );
+
+      setSpeakingAlertId(
+        null
+      );
+
+      setVoiceStatus(
+        t.alerts.voiceError
+      );
+    };
+
+    speech.speak(
+      utterance
+    );
+  };
+
+  /* =======================================================
+     ALERT ACTIONS
+     ======================================================= */
+
+  const markAlertAsRead = (
+    id: number
+  ) => {
+    setReadAlertIds(
+      (previous) => {
+        if (
+          previous.includes(id)
+        ) {
+          return previous;
+        }
+
+        const updated = [
+          ...previous,
+          id,
+        ];
+
+        localStorage.setItem(
+          "aquasentinel_read_alerts",
+          JSON.stringify(
+            updated
+          )
+        );
+
+        return updated;
+      }
+    );
+  };
+
+  const markAllAlertsAsRead =
+    () => {
+      const allIds =
+        alerts.map(
+          (alert) =>
+            alert.id
+        );
+
+      setReadAlertIds(
+        allIds
+      );
+
+      localStorage.setItem(
+        "aquasentinel_read_alerts",
+        JSON.stringify(
+          allIds
+        )
+      );
+    };
+
+  /* =======================================================
      METRICS
      ======================================================= */
 
   const temperature =
-    water?.temperature ?? null;
+    water?.temperature ??
+    null;
 
-  const ph = water?.ph ?? null;
+  const ph =
+    water?.ph ?? null;
 
   const oxygen =
-    water?.dissolved_oxygen ?? null;
+    water?.dissolved_oxygen ??
+    null;
 
   const activity =
-    fish?.activity_level ?? null;
+    fish?.activity_level ??
+    null;
 
   const temperatureAttention =
     temperature !== null &&
-    (temperature < 24 || temperature > 30);
+    (
+      temperature < 24 ||
+      temperature > 30
+    );
 
   const phAttention =
     ph !== null &&
-    (ph < 6.8 || ph > 8);
+    (
+      ph < 6.8 ||
+      ph > 8
+    );
 
   const oxygenAttention =
     oxygen !== null &&
-    (oxygen < 5 || oxygen > 8);
+    (
+      oxygen < 5 ||
+      oxygen > 8
+    );
 
   const riskPercentage =
-    getRiskPercentage(localizedRisk);
+    getRiskPercentage(
+      localizedRisk
+    );
 
   const numericalRiskScore =
-    getRiskScore(risk?.risk_score);
+    getRiskScore(
+      risk?.risk_score
+    );
 
   const hasAttention =
-    localizedRisk !== "Low";
+    localizedRisk !==
+    "Low";
 
   const anomalyDetected =
-    Boolean(risk?.ml_anomaly);
+    Boolean(
+      risk?.ml_anomaly
+    );
 
   /* =======================================================
      RENDER
@@ -1439,9 +2271,12 @@ export default function Home() {
     <main
       className="min-h-screen text-white"
       style={{
-        background: "#022b30",
+        background:
+          "#022b30",
       }}
-      onClick={initializeAudio}
+      onClick={
+        initializeAudio
+      }
     >
       <div className="flex min-h-screen">
 
@@ -1465,6 +2300,7 @@ export default function Home() {
                 <p className="text-sm font-bold">
                   AquaSentinel
                 </p>
+
                 <p className="text-[10px] uppercase tracking-[0.2em] text-teal-300">
                   Labs
                 </p>
@@ -1476,32 +2312,42 @@ export default function Home() {
 
                 <SidebarLink
                   href="/"
-                  label={t.nav.dashboard}
+                  label={
+                    t.nav.dashboard
+                  }
                   active
                   icon="dashboard"
                 />
 
                 <SidebarLink
                   href="/ponds"
-                  label={t.nav.ponds}
+                  label={
+                    t.nav.ponds
+                  }
                   icon="pond"
                 />
 
                 <SidebarLink
                   href="/insights"
-                  label={t.nav.insights}
+                  label={
+                    t.nav.insights
+                  }
                   icon="insight"
                 />
 
                 <SidebarLink
                   href="/alerts"
-                  label={t.nav.alerts}
+                  label={
+                    t.nav.alerts
+                  }
                   icon="alert"
                 />
 
                 <SidebarLink
                   href="/history"
-                  label={t.nav.history}
+                  label={
+                    t.nav.history
+                  }
                   icon="history"
                 />
 
@@ -1510,6 +2356,7 @@ export default function Home() {
 
             <div className="border-t border-white/10 p-5">
               <div className="rounded-2xl bg-white/5 p-4">
+
                 <p className="text-xs font-semibold">
                   {t.hero.farm}
                 </p>
@@ -1520,12 +2367,15 @@ export default function Home() {
 
                 <div className="mt-4 flex items-center gap-2">
                   <span className="h-2 w-2 rounded-full bg-teal-400" />
+
                   <span className="text-[11px] text-teal-300">
                     {t.common.active}
                   </span>
                 </div>
+
               </div>
             </div>
+
           </div>
         </aside>
 
@@ -1544,6 +2394,7 @@ export default function Home() {
             <div className="flex h-20 items-center justify-between px-4 sm:px-6 lg:px-8">
 
               {/* MOBILE BRAND */}
+
               <div className="flex items-center gap-3 lg:hidden">
 
                 <Image
@@ -1558,35 +2409,49 @@ export default function Home() {
                   <p className="text-sm font-bold">
                     AquaSentinel
                   </p>
+
                   <p className="text-[9px] uppercase tracking-[0.18em] text-teal-300">
                     Labs
                   </p>
                 </div>
+
               </div>
 
               {/* DESKTOP TITLE */}
+
               <div className="hidden lg:block">
+
                 <p className="text-xs uppercase tracking-[0.2em] text-white/35">
                   {t.nav.dashboard}
                 </p>
+
                 <p className="mt-1 text-sm text-white/70">
-                  {t.hero.farm} • {t.hero.location}
+                  {t.hero.farm} •{" "}
+                  {t.hero.location}
                 </p>
+
               </div>
 
               <div className="flex items-center gap-3">
 
                 {/* LANGUAGE SELECTOR */}
+
                 <select
-                  value={alertLanguage}
-                  onChange={(event) => {
+                  value={
+                    alertLanguage
+                  }
+                  onChange={(
+                    event
+                  ) => {
                     setAlertLanguage(
                       event.target
                         .value as AlertLanguage
                     );
                   }}
                   className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs text-white outline-none transition focus:border-teal-400/50"
-                  onClick={(event) =>
+                  onClick={(
+                    event
+                  ) =>
                     event.stopPropagation()
                   }
                 >
@@ -1620,19 +2485,27 @@ export default function Home() {
                 </select>
 
                 {/* NOTIFICATION BUTTON */}
+
                 <div className="relative">
 
                   <button
-                    onClick={(event) => {
+                    onClick={(
+                      event
+                    ) => {
                       event.stopPropagation();
+
                       initializeAudio();
+
                       setNotificationsOpen(
                         !notificationsOpen
                       );
                     }}
                     className="relative flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/5 transition hover:bg-white/10"
-                    aria-label={t.alerts.title}
+                    aria-label={
+                      t.alerts.title
+                    }
                   >
+
                     <svg
                       width="19"
                       height="19"
@@ -1648,137 +2521,284 @@ export default function Home() {
                       <path d="M13.73 21a2 2 0 0 1-3.46 0" />
                     </svg>
 
-                    {unreadAlerts.length > 0 && (
+                    {unreadAlerts.length >
+                      0 && (
                       <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[9px] font-bold">
-                        {unreadAlerts.length > 9
+                        {unreadAlerts.length >
+                        9
                           ? "9+"
                           : unreadAlerts.length}
                       </span>
                     )}
+
                   </button>
 
                   {/* NOTIFICATION PANEL */}
+
                   {notificationsOpen && (
                     <div
                       className="absolute right-0 top-14 z-50 w-[min(380px,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-white/10 bg-[#07343a] shadow-2xl"
-                      onClick={(event) =>
+                      onClick={(
+                        event
+                      ) =>
                         event.stopPropagation()
                       }
                     >
+
                       <div className="flex items-center justify-between border-b border-white/10 px-4 py-4">
 
                         <div>
+
                           <p className="text-sm font-semibold">
                             {t.alerts.title}
                           </p>
 
                           <p className="mt-1 text-[11px] text-white/40">
-                            {unreadAlerts.length}{" "}
-                            {t.alerts.unread}
+                            {
+                              unreadAlerts.length
+                            }{" "}
+                            {
+                              t.alerts.unread
+                            }
                           </p>
+
                         </div>
 
-                        {alerts.length > 0 && (
+                        {alerts.length >
+                          0 && (
                           <button
                             onClick={
                               markAllAlertsAsRead
                             }
                             className="text-[10px] font-medium text-teal-300 hover:text-teal-200"
                           >
-                            {t.alerts.markAllRead}
+                            {
+                              t.alerts
+                                .markAllRead
+                            }
                           </button>
                         )}
+
                       </div>
 
                       <div className="max-h-[420px] overflow-y-auto">
 
-                        {alerts.length === 0 ? (
+                        {alerts.length ===
+                        0 ? (
                           <div className="px-5 py-10 text-center">
+
                             <p className="text-sm text-white/50">
-                              {t.alerts.noAlerts}
+                              {
+                                t.alerts
+                                  .noAlerts
+                              }
                             </p>
+
                           </div>
                         ) : (
-                          alerts.map((alert) => {
-                            const presentation =
-                              getAlertPresentation(
-                                alert
-                              );
+                          alerts.map(
+                            (
+                              alert
+                            ) => {
+                              const presentation =
+                                getAlertPresentation(
+                                  alert
+                                );
 
-                            const isRead =
-                              readAlertIds.includes(
-                                alert.id
-                              );
+                              const isRead =
+                                readAlertIds.includes(
+                                  alert.id
+                                );
 
-                            return (
-                              <button
-                                key={alert.id}
-                                onClick={() =>
-                                  markAlertAsRead(
+                              const isSpeaking =
+                                speakingAlertId ===
+                                alert.id;
+
+                              return (
+                                <div
+                                  key={
                                     alert.id
-                                  )
-                                }
-                                className={`w-full border-b border-white/5 p-4 text-left transition hover:bg-white/5 ${
-                                  !isRead
-                                    ? "bg-white/[0.035]"
-                                    : ""
-                                }`}
-                              >
-                                <div className="flex gap-3">
+                                  }
+                                  onClick={() =>
+                                    markAlertAsRead(
+                                      alert.id
+                                    )
+                                  }
+                                  className={`border-b border-white/5 p-4 transition hover:bg-white/5 ${
+                                    !isRead
+                                      ? "bg-white/[0.035]"
+                                      : ""
+                                  }`}
+                                >
 
-                                  <span
-                                    className={`mt-1 h-2.5 w-2.5 shrink-0 rounded-full ${getRiskDotClass(
-                                      presentation.riskLevel
-                                    )}`}
-                                  />
+                                  <div className="flex gap-3">
 
-                                  <div className="min-w-0 flex-1">
+                                    <span
+                                      className={`mt-1 h-2.5 w-2.5 shrink-0 rounded-full ${getRiskDotClass(
+                                        presentation.riskLevel
+                                      )}`}
+                                    />
 
-                                    <div className="flex items-start justify-between gap-3">
+                                    <div className="min-w-0 flex-1">
 
-                                      <p className="text-xs font-semibold">
+                                      <div className="flex items-start justify-between gap-3">
+
+                                        <p className="text-xs font-semibold">
+                                          {
+                                            presentation.riskLabel
+                                          }
+                                        </p>
+
+                                        {!isRead && (
+                                          <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-teal-300" />
+                                        )}
+
+                                      </div>
+
+                                      <p className="mt-1 text-xs leading-5 text-white/65">
                                         {
-                                          presentation.riskLabel
+                                          presentation.message
                                         }
                                       </p>
 
+                                      <div className="mt-3 flex items-center justify-between gap-3">
+
+                                        <p className="text-[10px] text-white/30">
+                                          {
+                                            presentation.date
+                                          }
+                                        </p>
+
+                                        <button
+                                          onClick={(
+                                            event
+                                          ) => {
+                                            event.stopPropagation();
+
+                                            speakAlert(
+                                              alert
+                                            );
+                                          }}
+                                          className={`flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[10px] font-medium transition ${
+                                            isSpeaking
+                                              ? "border-red-400/30 bg-red-400/10 text-red-300"
+                                              : "border-teal-400/20 bg-teal-400/5 text-teal-300 hover:bg-teal-400/10"
+                                          }`}
+                                          aria-label={
+                                            isSpeaking
+                                              ? t
+                                                  .alerts
+                                                  .stopVoice
+                                              : t
+                                                  .alerts
+                                                  .readAloud
+                                          }
+                                        >
+
+                                          {isSpeaking ? (
+                                            <>
+                                              <svg
+                                                width="13"
+                                                height="13"
+                                                viewBox="0 0 24 24"
+                                                fill="currentColor"
+                                              >
+                                                <rect
+                                                  x="6"
+                                                  y="6"
+                                                  width="12"
+                                                  height="12"
+                                                  rx="1"
+                                                />
+                                              </svg>
+
+                                              {
+                                                t
+                                                  .alerts
+                                                  .stopVoice
+                                              }
+                                            </>
+                                          ) : (
+                                            <>
+                                              <svg
+                                                width="13"
+                                                height="13"
+                                                viewBox="0 0 24 24"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                strokeWidth="1.8"
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                              >
+                                                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+                                                <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
+                                                <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
+                                              </svg>
+
+                                              {
+                                                t
+                                                  .alerts
+                                                  .readAloud
+                                              }
+                                            </>
+                                          )}
+
+                                        </button>
+
+                                      </div>
+
                                       {!isRead && (
-                                        <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-teal-300" />
+                                        <button
+                                          onClick={(
+                                            event
+                                          ) => {
+                                            event.stopPropagation();
+
+                                            markAlertAsRead(
+                                              alert.id
+                                            );
+                                          }}
+                                          className="mt-2 text-[10px] font-medium text-white/40 hover:text-white/70"
+                                        >
+                                          {
+                                            t
+                                              .alerts
+                                              .markRead
+                                          }
+                                        </button>
                                       )}
+
                                     </div>
 
-                                    <p className="mt-1 text-xs leading-5 text-white/65">
-                                      {
-                                        presentation.message
-                                      }
-                                    </p>
-
-                                    <p className="mt-2 text-[10px] text-white/30">
-                                      {
-                                        presentation.date
-                                      }
-                                    </p>
                                   </div>
+
                                 </div>
-                              </button>
-                            );
-                          })
+                              );
+                            }
+                          )
                         )}
 
                       </div>
+
                     </div>
                   )}
+
                 </div>
 
                 {/* FARM USER */}
+
                 <div className="hidden items-center gap-3 sm:flex">
+
                   <div className="text-right">
+
                     <p className="text-xs font-semibold">
                       {t.hero.farm}
                     </p>
+
                     <p className="text-[10px] text-white/35">
                       {t.hero.location}
                     </p>
+
                   </div>
 
                   <button
@@ -1786,30 +2806,43 @@ export default function Home() {
                       localStorage.removeItem(
                         "aquasentinel_token"
                       );
-                      router.push("/login");
+
+                      router.push(
+                        "/login"
+                      );
                     }}
                     className="flex h-9 w-9 items-center justify-center rounded-full bg-teal-500 text-xs font-bold text-[#022b30]"
                   >
                     S
                   </button>
+
                 </div>
 
                 {/* MOBILE HAMBURGER */}
+
                 <button
-                  onClick={(event) => {
+                  onClick={(
+                    event
+                  ) => {
                     event.stopPropagation();
-                    setMenuOpen(!menuOpen);
+
+                    setMenuOpen(
+                      !menuOpen
+                    );
                   }}
                   className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-lg lg:hidden"
                   aria-label="Menu"
                 >
-                  {menuOpen ? "✕" : "☰"}
+                  {menuOpen
+                    ? "✕"
+                    : "☰"}
                 </button>
 
               </div>
             </div>
 
             {/* MOBILE MENU */}
+
             {menuOpen && (
               <div className="border-t border-white/10 bg-[#01252a] px-4 py-4 lg:hidden">
 
@@ -1817,48 +2850,70 @@ export default function Home() {
 
                   <MobileNavLink
                     href="/"
-                    label={t.nav.dashboard}
+                    label={
+                      t.nav.dashboard
+                    }
                     active
                     onClick={() =>
-                      setMenuOpen(false)
+                      setMenuOpen(
+                        false
+                      )
                     }
                   />
 
                   <MobileNavLink
                     href="/ponds"
-                    label={t.nav.ponds}
+                    label={
+                      t.nav.ponds
+                    }
                     onClick={() =>
-                      setMenuOpen(false)
+                      setMenuOpen(
+                        false
+                      )
                     }
                   />
 
                   <MobileNavLink
                     href="/insights"
-                    label={t.nav.insights}
+                    label={
+                      t.nav.insights
+                    }
                     onClick={() =>
-                      setMenuOpen(false)
+                      setMenuOpen(
+                        false
+                      )
                     }
                   />
 
                   <MobileNavLink
                     href="/alerts"
-                    label={t.nav.alerts}
+                    label={
+                      t.nav.alerts
+                    }
                     onClick={() =>
-                      setMenuOpen(false)
+                      setMenuOpen(
+                        false
+                      )
                     }
                   />
 
                   <MobileNavLink
                     href="/history"
-                    label={t.nav.history}
+                    label={
+                      t.nav.history
+                    }
                     onClick={() =>
-                      setMenuOpen(false)
+                      setMenuOpen(
+                        false
+                      )
                     }
                   />
 
                 </div>
+
               </div>
             )}
+
           </header>
 
           {/* =================================================
@@ -1868,6 +2923,7 @@ export default function Home() {
           <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
 
             {/* HERO */}
+
             <section className="mb-8">
 
               <div className="flex flex-col justify-between gap-5 lg:flex-row lg:items-end">
@@ -1875,46 +2931,69 @@ export default function Home() {
                 <div>
 
                   <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-teal-400/20 bg-teal-400/5 px-3 py-1.5">
+
                     <span className="h-1.5 w-1.5 rounded-full bg-teal-300" />
+
                     <span className="text-[10px] font-semibold tracking-[0.16em] text-teal-300">
-                      {t.hero.badge}
+                      {
+                        t.hero.badge
+                      }
                     </span>
+
                   </div>
 
                   <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
-                    {getTimeGreeting(
-                      alertLanguage
-                    )}
+                    {
+                      getTimeGreeting(
+                        alertLanguage
+                      )
+                    }
                   </h1>
 
                   <p className="mt-3 max-w-2xl text-sm leading-6 text-white/45">
-                    {t.hero.monitoring}
+                    {
+                      t.hero.monitoring
+                    }
                   </p>
+
                 </div>
 
                 <div className="rounded-2xl border border-white/10 bg-white/[0.035] px-4 py-3">
+
                   <p className="text-[10px] uppercase tracking-[0.15em] text-white/30">
                     {t.common.status}
                   </p>
 
                   <div className="mt-2 flex items-center gap-2">
+
                     <span className="h-2 w-2 rounded-full bg-teal-400" />
+
                     <span className="text-xs font-medium text-teal-300">
                       {t.common.active}
                     </span>
+
                   </div>
+
                 </div>
+
               </div>
+
             </section>
 
             {/* METRICS */}
+
             <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
 
               <MetricCard
-                title={t.metrics.temperature}
+                title={
+                  t.metrics.temperature
+                }
                 value={
-                  temperature !== null
-                    ? `${temperature.toFixed(1)}°C`
+                  temperature !==
+                  null
+                    ? `${temperature.toFixed(
+                        1
+                      )}°C`
                     : "--"
                 }
                 subtitle={
@@ -1929,10 +3008,14 @@ export default function Home() {
               />
 
               <MetricCard
-                title={t.metrics.ph}
+                title={
+                  t.metrics.ph
+                }
                 value={
                   ph !== null
-                    ? ph.toFixed(1)
+                    ? ph.toFixed(
+                        1
+                      )
                     : "--"
                 }
                 subtitle={
@@ -1940,15 +3023,22 @@ export default function Home() {
                     ? t.metrics.attention
                     : t.metrics.optimal
                 }
-                attention={phAttention}
+                attention={
+                  phAttention
+                }
                 icon="ph"
               />
 
               <MetricCard
-                title={t.metrics.oxygen}
+                title={
+                  t.metrics.oxygen
+                }
                 value={
-                  oxygen !== null
-                    ? `${oxygen.toFixed(1)}`
+                  oxygen !==
+                  null
+                    ? `${oxygen.toFixed(
+                        1
+                      )}`
                     : "--"
                 }
                 subtitle={
@@ -1956,51 +3046,60 @@ export default function Home() {
                     ? t.metrics.attention
                     : t.metrics.optimal
                 }
-                attention={oxygenAttention}
+                attention={
+                  oxygenAttention
+                }
                 icon="oxygen"
               />
 
               <MetricCard
-                title={t.metrics.fishActivity}
+                title={
+                  t.metrics.fishActivity
+                }
                 value={
-                  activity
-                    ? activity
-                    : "--"
+                  activity ||
+                  "--"
                 }
                 subtitle={
                   fish?.unusual_behaviour
                     ? t.metrics.attention
                     : t.metrics.optimal
                 }
-                attention={
-                  Boolean(
-                    fish?.unusual_behaviour
-                  )
-                }
+                attention={Boolean(
+                  fish?.unusual_behaviour
+                )}
                 icon="fish"
               />
 
             </section>
 
             {/* MAIN GRID */}
+
             <section className="mt-6 grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
 
               {/* FISH BEHAVIOUR */}
+
               <div className="rounded-3xl border border-white/10 bg-white/[0.035] p-5 sm:p-6">
 
                 <div className="flex items-start justify-between">
 
                   <div>
+
                     <p className="text-sm font-semibold">
                       {t.fish.title}
                     </p>
 
                     <p className="mt-1 text-xs text-white/35">
-                      {t.fish.monitoring}
+                      {
+                        t.fish
+                          .monitoring
+                      }
                     </p>
+
                   </div>
 
                   <div className="rounded-xl bg-teal-400/10 p-2 text-teal-300">
+
                     <svg
                       width="20"
                       height="20"
@@ -2016,6 +3115,7 @@ export default function Home() {
                         r="2"
                       />
                     </svg>
+
                   </div>
 
                 </div>
@@ -2023,7 +3123,9 @@ export default function Home() {
                 <div className="mt-6 grid gap-3 sm:grid-cols-2">
 
                   <InfoBox
-                    label={t.fish.activity}
+                    label={
+                      t.fish.activity
+                    }
                     value={
                       fish?.activity_level ||
                       "--"
@@ -2031,7 +3133,9 @@ export default function Home() {
                   />
 
                   <InfoBox
-                    label={t.fish.feeding}
+                    label={
+                      t.fish.feeding
+                    }
                     value={
                       fish?.feeding_response ||
                       "--"
@@ -2039,21 +3143,23 @@ export default function Home() {
                   />
 
                   <InfoBox
-                    label={t.fish.unusual}
+                    label={
+                      t.fish.unusual
+                    }
                     value={
                       fish?.unusual_behaviour
                         ? t.fish.observed
                         : t.fish.noneObserved
                     }
-                    danger={
-                      Boolean(
-                        fish?.unusual_behaviour
-                      )
-                    }
+                    danger={Boolean(
+                      fish?.unusual_behaviour
+                    )}
                   />
 
                   <InfoBox
-                    label={t.fish.fishCount}
+                    label={
+                      t.fish.fishCount
+                    }
                     value={
                       fish?.fish_count !==
                       undefined
@@ -2065,9 +3171,11 @@ export default function Home() {
                   />
 
                 </div>
+
               </div>
 
               {/* RISK */}
+
               <div
                 className={`rounded-3xl border p-5 sm:p-6 ${getRiskColorClass(
                   localizedRisk
@@ -2077,13 +3185,17 @@ export default function Home() {
                 <div className="flex items-start justify-between">
 
                   <div>
+
                     <p className="text-sm font-semibold text-white">
                       {t.risk.title}
                     </p>
 
                     <p className="mt-1 text-xs leading-5 text-white/45">
-                      {t.risk.subtitle}
+                      {
+                        t.risk.subtitle
+                      }
                     </p>
+
                   </div>
 
                   <div
@@ -2091,7 +3203,9 @@ export default function Home() {
                       localizedRisk
                     )}`}
                   >
-                    {localizedRiskLabel}
+                    {
+                      localizedRiskLabel
+                    }
                   </div>
 
                 </div>
@@ -2101,24 +3215,36 @@ export default function Home() {
                   <div className="flex items-end justify-between">
 
                     <div>
+
                       <p className="text-[10px] uppercase tracking-[0.15em] text-white/35">
-                        {t.risk.riskScore}
+                        {
+                          t.risk
+                            .riskScore
+                        }
                       </p>
 
                       <p className="mt-1 text-4xl font-semibold">
-                        {numericalRiskScore}
+                        {
+                          numericalRiskScore
+                        }
+
                         <span className="text-lg text-white/30">
                           /100
                         </span>
                       </p>
+
                     </div>
 
                     <p className="text-xs text-white/40">
-                      {localizedRiskLabel}
+                      {
+                        localizedRiskLabel
+                      }
                     </p>
+
                   </div>
 
                   <div className="mt-4 h-2 overflow-hidden rounded-full bg-black/20">
+
                     <div
                       className={`h-full rounded-full transition-all duration-700 ${
                         localizedRisk ===
@@ -2140,35 +3266,48 @@ export default function Home() {
                         )}%`,
                       }}
                     />
+
                   </div>
+
                 </div>
 
-                {/* ATTENTION */}
                 {hasAttention && (
                   <div className="mt-5 rounded-2xl border border-red-400/20 bg-red-500/10 p-4">
+
                     <div className="flex gap-3">
 
                       <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-red-400" />
 
                       <div>
+
                         <p className="text-xs font-semibold text-red-300">
-                          {t.common.attentionRequired}
+                          {
+                            t.common
+                              .attentionRequired
+                          }
                         </p>
 
                         <p className="mt-1 text-xs leading-5 text-white/55">
-                          {t.risk.attention}
+                          {
+                            t.risk
+                              .attention
+                          }
                         </p>
+
                       </div>
 
                     </div>
+
                   </div>
                 )}
 
-                {/* FACTORS */}
                 <div className="mt-6">
 
                   <p className="text-[10px] uppercase tracking-[0.15em] text-white/35">
-                    {t.risk.contributingFactors}
+                    {
+                      t.risk
+                        .contributingFactors
+                    }
                   </p>
 
                   <div className="mt-3 flex flex-wrap gap-2">
@@ -2176,11 +3315,17 @@ export default function Home() {
                     {localizedFactors.length ===
                     0 ? (
                       <span className="text-xs text-white/40">
-                        {t.risk.noFactors}
+                        {
+                          t.risk
+                            .noFactors
+                        }
                       </span>
                     ) : (
                       localizedFactors.map(
-                        (factor, index) => (
+                        (
+                          factor,
+                          index
+                        ) => (
                           <span
                             key={`${factor}-${index}`}
                             className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[11px] text-white/65"
@@ -2192,11 +3337,15 @@ export default function Home() {
                     )}
 
                   </div>
+
                 </div>
+
               </div>
+
             </section>
 
             {/* AI / ML */}
+
             <section className="mt-6 rounded-3xl border border-teal-400/15 bg-[#07343a] p-5 sm:p-6">
 
               <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
@@ -2204,19 +3353,26 @@ export default function Home() {
                 <div className="max-w-2xl">
 
                   <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-teal-300/20 bg-teal-300/5 px-3 py-1.5">
+
                     <span className="h-1.5 w-1.5 rounded-full bg-teal-300" />
 
                     <span className="text-[10px] font-semibold tracking-[0.16em] text-teal-300">
                       {t.ml.title}
                     </span>
+
                   </div>
 
                   <h2 className="text-lg font-semibold">
-                    {t.ml.anomalyDetection}
+                    {
+                      t.ml
+                        .anomalyDetection
+                    }
                   </h2>
 
                   <p className="mt-2 text-xs leading-6 text-white/45">
-                    {t.ml.explanation}
+                    {
+                      t.ml.explanation
+                    }
                   </p>
 
                 </div>
@@ -2226,7 +3382,10 @@ export default function Home() {
                   <div className="flex items-center justify-between">
 
                     <p className="text-xs text-white/45">
-                      {t.ml.anomalyDetection}
+                      {
+                        t.ml
+                          .anomalyDetection
+                      }
                     </p>
 
                     <span
@@ -2241,20 +3400,26 @@ export default function Home() {
 
                   <p className="mt-3 text-sm font-semibold">
                     {anomalyDetected
-                      ? t.ml.anomalyDetected
-                      : t.ml.noAnomaly}
+                      ? t.ml
+                          .anomalyDetected
+                      : t.ml
+                          .noAnomaly}
                   </p>
 
                   <div className="mt-4">
 
                     <div className="flex justify-between text-[10px] text-white/35">
+
                       <span>
-                        {t.ml.anomalyScore}
+                        {
+                          t.ml
+                            .anomalyScore
+                        }
                       </span>
 
                       <span>
                         {risk?.ml_anomaly_score !==
-                        null &&
+                          null &&
                         risk?.ml_anomaly_score !==
                           undefined
                           ? risk.ml_anomaly_score.toFixed(
@@ -2262,9 +3427,11 @@ export default function Home() {
                             )
                           : "--"}
                       </span>
+
                     </div>
 
                     <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-black/20">
+
                       <div
                         className={`h-full rounded-full ${
                           anomalyDetected
@@ -2272,30 +3439,40 @@ export default function Home() {
                             : "bg-teal-400"
                         }`}
                         style={{
-                          width: anomalyDetected
-                            ? "75%"
-                            : "15%",
+                          width:
+                            anomalyDetected
+                              ? "75%"
+                              : "15%",
                         }}
                       />
+
                     </div>
 
                   </div>
+
                 </div>
 
               </div>
+
             </section>
 
             {/* REASONING + STATUS */}
+
             <section className="mt-6 grid gap-6 lg:grid-cols-2">
 
               <div className="rounded-3xl border border-white/10 bg-white/[0.035] p-5 sm:p-6">
 
                 <p className="text-sm font-semibold">
-                  {t.risk.reasoningTitle}
+                  {
+                    t.risk
+                      .reasoningTitle
+                  }
                 </p>
 
                 <p className="mt-3 text-sm leading-7 text-white/45">
-                  {t.risk.reasoning}
+                  {
+                    t.risk.reasoning
+                  }
                 </p>
 
                 <div className="mt-5 grid gap-3 sm:grid-cols-3">
@@ -2349,6 +3526,7 @@ export default function Home() {
                   />
 
                 </div>
+
               </div>
 
               <div className="rounded-3xl border border-white/10 bg-white/[0.035] p-5 sm:p-6">
@@ -2356,13 +3534,21 @@ export default function Home() {
                 <div className="flex items-start justify-between">
 
                   <div>
+
                     <p className="text-sm font-semibold">
-                      {t.risk.statusTitle}
+                      {
+                        t.risk
+                          .statusTitle
+                      }
                     </p>
 
                     <p className="mt-1 text-xs text-white/35">
-                      {t.common.current}
+                      {
+                        t.common
+                          .current
+                      }
                     </p>
+
                   </div>
 
                   <span
@@ -2376,13 +3562,17 @@ export default function Home() {
                 <div className="mt-6">
 
                   <p className="text-2xl font-semibold">
-                    {localizedRiskLabel}
+                    {
+                      localizedRiskLabel
+                    }
                   </p>
 
                   <p className="mt-3 text-sm leading-6 text-white/45">
                     {hasAttention
-                      ? t.risk.statusAttention
-                      : t.risk.statusHealthy}
+                      ? t.risk
+                          .statusAttention
+                      : t.risk
+                          .statusHealthy}
                   </p>
 
                 </div>
@@ -2392,138 +3582,298 @@ export default function Home() {
                   <div className="flex items-center justify-between">
 
                     <span className="text-xs text-white/35">
-                      {t.common.status}
+                      {
+                        t.common
+                          .status
+                      }
                     </span>
 
                     <span className="flex items-center gap-2 text-xs text-teal-300">
+
                       <span className="h-1.5 w-1.5 rounded-full bg-teal-400" />
-                      {t.common.active}
+
+                      {
+                        t.common
+                          .active
+                      }
+
                     </span>
 
                   </div>
+
                 </div>
+
               </div>
+
             </section>
 
             {/* ALERT LIST */}
+
             <section className="mt-6 rounded-3xl border border-white/10 bg-white/[0.035] p-5 sm:p-6">
 
               <div className="flex items-center justify-between">
 
                 <div>
+
                   <p className="text-sm font-semibold">
-                    {t.alerts.title}
+                    {
+                      t.alerts
+                        .title
+                    }
                   </p>
 
                   <p className="mt-1 text-xs text-white/35">
-                    {unreadAlerts.length}{" "}
-                    {t.alerts.unread}
+                    {
+                      unreadAlerts.length
+                    }{" "}
+                    {
+                      t.alerts
+                        .unread
+                    }
                   </p>
+
                 </div>
 
-                {alerts.length > 0 && (
+                {alerts.length >
+                  0 && (
                   <button
-                    onClick={markAllAlertsAsRead}
+                    onClick={
+                      markAllAlertsAsRead
+                    }
                     className="text-xs text-teal-300 hover:text-teal-200"
                   >
-                    {t.alerts.markAllRead}
+                    {
+                      t.alerts
+                        .markAllRead
+                    }
                   </button>
                 )}
 
               </div>
 
+              {/* VOICE STATUS */}
+
+              {voiceStatus && (
+                <div className="mt-4 flex items-start justify-between gap-3 rounded-xl border border-amber-400/20 bg-amber-400/5 px-4 py-3">
+
+                  <div className="flex items-start gap-2">
+
+                    <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-amber-400" />
+
+                    <p className="text-[11px] leading-5 text-amber-200/80">
+                      {
+                        voiceStatus
+                      }
+                    </p>
+
+                  </div>
+
+                  <button
+                    onClick={() =>
+                      setVoiceStatus(
+                        null
+                      )
+                    }
+                    className="text-xs text-white/40 hover:text-white"
+                  >
+                    ✕
+                  </button>
+
+                </div>
+              )}
+
               <div className="mt-5 space-y-3">
 
-                {alerts.length === 0 ? (
+                {alerts.length ===
+                0 ? (
                   <div className="rounded-2xl border border-white/5 bg-white/[0.02] px-5 py-8 text-center">
+
                     <p className="text-sm text-white/40">
-                      {t.alerts.noAlerts}
+                      {
+                        t.alerts
+                          .noAlerts
+                      }
                     </p>
+
                   </div>
                 ) : (
                   alerts
                     .slice(0, 5)
-                    .map((alert) => {
-                      const presentation =
-                        getAlertPresentation(
-                          alert
-                        );
+                    .map(
+                      (alert) => {
+                        const presentation =
+                          getAlertPresentation(
+                            alert
+                          );
 
-                      const isRead =
-                        readAlertIds.includes(
-                          alert.id
-                        );
+                        const isRead =
+                          readAlertIds.includes(
+                            alert.id
+                          );
 
-                      return (
-                        <div
-                          key={alert.id}
-                          className={`rounded-2xl border p-4 ${getAlertLevelClass(
-                            alert.alert_level
-                          )} ${
-                            isRead
-                              ? "opacity-60"
-                              : ""
-                          }`}
-                        >
-                          <div className="flex gap-3">
+                        const isSpeaking =
+                          speakingAlertId ===
+                          alert.id;
 
-                            <span
-                              className={`mt-1 h-2.5 w-2.5 shrink-0 rounded-full ${getRiskDotClass(
-                                presentation.riskLevel
-                              )}`}
-                            />
+                        return (
+                          <div
+                            key={
+                              alert.id
+                            }
+                            className={`rounded-2xl border p-4 ${getAlertLevelClass(
+                              alert.alert_level
+                            )} ${
+                              isRead
+                                ? "opacity-60"
+                                : ""
+                            }`}
+                          >
 
-                            <div className="min-w-0 flex-1">
+                            <div className="flex gap-3">
 
-                              <div className="flex flex-wrap items-center justify-between gap-2">
+                              <span
+                                className={`mt-1 h-2.5 w-2.5 shrink-0 rounded-full ${getRiskDotClass(
+                                  presentation.riskLevel
+                                )}`}
+                              />
 
-                                <p className="text-xs font-semibold">
+                              <div className="min-w-0 flex-1">
+
+                                <div className="flex flex-wrap items-center justify-between gap-2">
+
+                                  <p className="text-xs font-semibold">
+                                    {
+                                      presentation.riskLabel
+                                    }
+                                  </p>
+
+                                  <span className="text-[10px] text-white/30">
+                                    {
+                                      presentation.date
+                                    }
+                                  </span>
+
+                                </div>
+
+                                <p className="mt-2 text-sm leading-6 text-white/65">
                                   {
-                                    presentation.riskLabel
+                                    presentation.message
                                   }
                                 </p>
 
-                                <span className="text-[10px] text-white/30">
-                                  {
-                                    presentation.date
-                                  }
-                                </span>
+                                <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+
+                                  <div className="flex items-center gap-2">
+
+                                    {!isRead && (
+                                      <button
+                                        onClick={() =>
+                                          markAlertAsRead(
+                                            alert.id
+                                          )
+                                        }
+                                        className="text-[10px] font-medium text-teal-300 hover:text-teal-200"
+                                      >
+                                        {
+                                          t
+                                            .alerts
+                                            .markRead
+                                        }
+                                      </button>
+                                    )}
+
+                                  </div>
+
+                                  <button
+                                    onClick={() =>
+                                      speakAlert(
+                                        alert
+                                      )
+                                    }
+                                    className={`flex items-center gap-2 rounded-xl border px-3 py-2 text-[10px] font-medium transition ${
+                                      isSpeaking
+                                        ? "border-red-400/30 bg-red-400/10 text-red-300"
+                                        : "border-teal-400/20 bg-teal-400/5 text-teal-300 hover:bg-teal-400/10"
+                                    }`}
+                                    aria-label={
+                                      isSpeaking
+                                        ? t
+                                            .alerts
+                                            .stopVoice
+                                        : t
+                                            .alerts
+                                            .readAloud
+                                    }
+                                  >
+
+                                    {isSpeaking ? (
+                                      <>
+                                        <svg
+                                          width="14"
+                                          height="14"
+                                          viewBox="0 0 24 24"
+                                          fill="currentColor"
+                                        >
+                                          <rect
+                                            x="6"
+                                            y="6"
+                                            width="12"
+                                            height="12"
+                                            rx="1"
+                                          />
+                                        </svg>
+
+                                        {
+                                          t
+                                            .alerts
+                                            .stopVoice
+                                        }
+                                      </>
+                                    ) : (
+                                      <>
+                                        <svg
+                                          width="14"
+                                          height="14"
+                                          viewBox="0 0 24 24"
+                                          fill="none"
+                                          stroke="currentColor"
+                                          strokeWidth="1.8"
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                        >
+                                          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+                                          <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
+                                          <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
+                                        </svg>
+
+                                        {
+                                          t
+                                            .alerts
+                                            .readAloud
+                                        }
+                                      </>
+                                    )}
+
+                                  </button>
+
+                                </div>
 
                               </div>
 
-                              <p className="mt-2 text-sm leading-6 text-white/65">
-                                {
-                                  presentation.message
-                                }
-                              </p>
-
-                              {!isRead && (
-                                <button
-                                  onClick={() =>
-                                    markAlertAsRead(
-                                      alert.id
-                                    )
-                                  }
-                                  className="mt-3 text-[10px] font-medium text-teal-300 hover:text-teal-200"
-                                >
-                                  {
-                                    t.alerts
-                                      .markRead
-                                  }
-                                </button>
-                              )}
-
                             </div>
+
                           </div>
-                        </div>
-                      );
-                    })
+                        );
+                      }
+                    )
                 )}
 
               </div>
+
             </section>
 
             {/* FOOTER */}
+
             <footer className="mt-10 border-t border-white/10 py-6 text-center">
 
               <p className="text-[10px] text-white/25">
@@ -2533,19 +3883,28 @@ export default function Home() {
             </footer>
 
           </div>
+
         </div>
+
       </div>
 
       {/* LOADING OVERLAY */}
+
       {loading && (
         <div className="pointer-events-none fixed bottom-5 right-5 z-50 flex items-center gap-2 rounded-full border border-white/10 bg-[#07343a] px-4 py-2 shadow-xl">
+
           <span className="h-2 w-2 animate-pulse rounded-full bg-teal-400" />
 
           <span className="text-[10px] text-white/50">
-            {t.common.loading}
+            {
+              t.common
+                .loading
+            }
           </span>
+
         </div>
       )}
+
     </main>
   );
 }
@@ -2574,8 +3933,13 @@ function SidebarLink({
           : "text-white/45 hover:bg-white/5 hover:text-white"
       }`}
     >
-      <NavIcon icon={icon} />
-      <span>{label}</span>
+      <NavIcon
+        icon={icon}
+      />
+
+      <span>
+        {label}
+      </span>
     </Link>
   );
 }
@@ -2618,8 +3982,10 @@ function NavIcon({
     fill: "none",
     stroke: "currentColor",
     strokeWidth: 1.7,
-    strokeLinecap: "round" as const,
-    strokeLinejoin: "round" as const,
+    strokeLinecap:
+      "round" as const,
+    strokeLinejoin:
+      "round" as const,
   };
 
   if (icon === "pond") {
@@ -2669,6 +4035,7 @@ function NavIcon({
         height="7"
         rx="1"
       />
+
       <rect
         x="14"
         y="3"
@@ -2676,6 +4043,7 @@ function NavIcon({
         height="7"
         rx="1"
       />
+
       <rect
         x="3"
         y="14"
@@ -2683,6 +4051,7 @@ function NavIcon({
         height="7"
         rx="1"
       />
+
       <rect
         x="14"
         y="14"
@@ -2723,10 +4092,21 @@ function MetricCard({
               : "bg-teal-400/10 text-teal-300"
           }`}
         >
-          {icon === "temperature" && "°"}
-          {icon === "ph" && "pH"}
-          {icon === "oxygen" && "O₂"}
-          {icon === "fish" && "🐟"}
+          {icon ===
+            "temperature" &&
+            "°"}
+
+          {icon ===
+            "ph" &&
+            "pH"}
+
+          {icon ===
+            "oxygen" &&
+            "O₂"}
+
+          {icon ===
+            "fish" &&
+            "🐟"}
         </span>
 
       </div>
@@ -2756,6 +4136,7 @@ function MetricCard({
         </span>
 
       </div>
+
     </div>
   );
 }
