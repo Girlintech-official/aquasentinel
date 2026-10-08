@@ -1123,12 +1123,12 @@ const getTimeGreeting = (
   }
 
   if (hour < 12)
-    return "Anina";
+    return "Dasiba";
 
   if (hour < 18)
-    return "Antuma";
+    return "Antire";
 
-  return "Anihi";
+  return "Aniwunla";
 };
 
 const formatDate = (
