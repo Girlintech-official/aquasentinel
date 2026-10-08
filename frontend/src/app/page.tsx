@@ -65,6 +65,11 @@ export default function Home() {
   const [readAlertIds, setReadAlertIds] =
     useState<number[]>([]);
 
+  type AlertLanguage = "English" | "Twi" | "Dagbani" | "Hausa";
+
+  const [alertLanguage, setAlertLanguage] =
+    useState<AlertLanguage>("English");
+
   const [greeting, setGreeting] =
     useState("Good afternoon.");
 
@@ -123,6 +128,30 @@ export default function Home() {
       );
     };
   }, [router]);
+
+  /*
+   * Load the saved alert language.
+   */
+  useEffect(() => {
+    const saved = localStorage.getItem(
+      "aquasentinel_alert_language"
+    ) as AlertLanguage | null;
+
+    if (
+      saved &&
+      ["English", "Twi", "Dagbani", "Hausa"].includes(saved)
+    ) {
+      setAlertLanguage(saved);
+    }
+  }, []);
+
+  const changeAlertLanguage = (language: AlertLanguage) => {
+    setAlertLanguage(language);
+    localStorage.setItem(
+      "aquasentinel_alert_language",
+      language
+    );
+  };
 
   /*
    * Greeting
@@ -848,6 +877,50 @@ export default function Home() {
     };
 
   /*
+   * Translate standardized alert messages.
+   * The dashboard itself remains in English; only
+   * notification alert text changes language.
+   */
+  const translateAlert = (alert: Alert) => {
+    const level = alert.alert_level.toLowerCase().trim();
+
+    const translations: Record<AlertLanguage, Record<string, string>> = {
+      English: {
+        high: "High stress risk detected in pond",
+        moderate: "Moderate stress risk detected in pond",
+        medium: "Moderate stress risk detected in pond",
+        critical: "Critical risk detected in pond",
+      },
+      Twi: {
+        high: "Yɛahu ahokyere kɛse wɔ ɔtare",
+        moderate: "Yɛahu ahokyere kakra wɔ ɔtare",
+        medium: "Yɛahu ahokyere kakra wɔ ɔtare",
+        critical: "Yɛahu asiane kɛse paa wɔ ɔtare",
+      },
+      Dagbani: {
+        high: "Pond no wɔ asiane kɛse",
+        moderate: "Pond no wɔ asiane kakra",
+        medium: "Pond no wɔ asiane kakra",
+        critical: "Pond no wɔ asiane kɛse paa",
+      },
+      Hausa: {
+        high: "An gano babban haɗarin damuwa a tafkin",
+        moderate: "An gano matsakaicin haɗarin damuwa a tafkin",
+        medium: "An gano matsakaicin haɗarin damuwa a tafkin",
+        critical: "An gano babban haɗari a tafkin",
+      },
+    };
+
+    const translated = translations[alertLanguage][level];
+
+    if (!translated) {
+      return alert.message;
+    }
+
+    return `${translated} ${alert.pond_id}.`;
+  };
+
+  /*
    * Alert badge styling.
    */
   const alertLevelClass = (
@@ -1078,6 +1151,30 @@ export default function Home() {
                           Notifications
                         </p>
 
+                        <div className="mt-3 flex flex-wrap gap-1.5">
+                          {([
+                            "English",
+                            "Twi",
+                            "Dagbani",
+                            "Hausa",
+                          ] as AlertLanguage[]).map((language) => (
+                            <button
+                              key={language}
+                              type="button"
+                              onClick={() =>
+                                changeAlertLanguage(language)
+                              }
+                              className={`rounded-lg px-2.5 py-1 text-[10px] font-medium transition ${
+                                alertLanguage === language
+                                  ? "bg-[#27e0d0]/15 text-[#27e0d0]"
+                                  : "bg-white/[0.03] text-slate-500 hover:bg-white/[0.06] hover:text-white"
+                              }`}
+                            >
+                              {language}
+                            </button>
+                          ))}
+                        </div>
+
                         <p className="mt-1 text-xs text-slate-500">
 
                           {unreadAlerts.length >
@@ -1226,9 +1323,7 @@ export default function Home() {
                                       </p>
 
                                       <p className="mt-1 text-sm leading-5 text-slate-400">
-                                        {
-                                          alert.message
-                                        }
+                                        {translateAlert(alert)}
                                       </p>
 
                                       <p className="mt-2 text-[10px] text-slate-600">
