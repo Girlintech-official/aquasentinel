@@ -65,7 +65,18 @@ export default function Home() {
   const [readAlertIds, setReadAlertIds] =
     useState<number[]>([]);
 
-  type AlertLanguage = "English" | "Twi" | "Dagbani" | "Hausa";
+  /*
+   * Alert language.
+   *
+   * The language setting changes the alert labels and
+   * keeps the original alert.message intact so detailed
+   * risk factors from the backend are never lost.
+   */
+  type AlertLanguage =
+    | "English"
+    | "Twi"
+    | "Dagbani"
+    | "Hausa";
 
   const [alertLanguage, setAlertLanguage] =
     useState<AlertLanguage>("English");
@@ -128,30 +139,6 @@ export default function Home() {
       );
     };
   }, [router]);
-
-  /*
-   * Load the saved alert language.
-   */
-  useEffect(() => {
-    const saved = localStorage.getItem(
-      "aquasentinel_alert_language"
-    ) as AlertLanguage | null;
-
-    if (
-      saved &&
-      ["English", "Twi", "Dagbani", "Hausa"].includes(saved)
-    ) {
-      setAlertLanguage(saved);
-    }
-  }, []);
-
-  const changeAlertLanguage = (language: AlertLanguage) => {
-    setAlertLanguage(language);
-    localStorage.setItem(
-      "aquasentinel_alert_language",
-      language
-    );
-  };
 
   /*
    * Greeting
@@ -712,6 +699,132 @@ export default function Home() {
   }, []);
 
   /*
+   * Load the user's preferred alert language.
+   */
+  useEffect(() => {
+    try {
+      const savedLanguage =
+        localStorage.getItem(
+          "aquasentinel_alert_language"
+        ) as AlertLanguage | null;
+
+      if (
+        savedLanguage === "English" ||
+        savedLanguage === "Twi" ||
+        savedLanguage === "Dagbani" ||
+        savedLanguage === "Hausa"
+      ) {
+        setAlertLanguage(savedLanguage);
+      }
+    } catch (error) {
+      console.error(
+        "Could not load alert language:",
+        error
+      );
+    }
+  }, []);
+
+  /*
+   * Change and persist the alert language.
+   */
+  const changeAlertLanguage = (
+    language: AlertLanguage
+  ) => {
+    setAlertLanguage(language);
+
+    try {
+      localStorage.setItem(
+        "aquasentinel_alert_language",
+        language
+      );
+    } catch (error) {
+      console.error(
+        "Could not save alert language:",
+        error
+      );
+    }
+  };
+
+  /*
+   * Localized alert presentation.
+   *
+   * IMPORTANT: alert.message is deliberately preserved.
+   * It contains the detailed contributing factors returned
+   * by the risk engine, including any sensor values or
+   * explanations. We only translate the surrounding alert
+   * labels here instead of replacing the technical details
+   * with a generic sentence.
+   *
+   * Dagbani: "barina" is a verified dictionary term for
+   * danger/risk. We do not fabricate a full Dagbani
+   * sentence until the wording is verified by a speaker.
+   */
+  const getAlertPresentation = (
+    alert: Alert
+  ) => {
+    const normalizedLevel =
+      alert.alert_level
+        .toLowerCase()
+        .trim();
+
+    const levelLabels: Record<
+      AlertLanguage,
+      Record<string, string>
+    > = {
+      English: {
+        critical: "Critical risk",
+        high: "High risk",
+        moderate: "Moderate risk",
+        medium: "Moderate risk",
+      },
+      Twi: {
+        critical: "Asiane kɛse paa",
+        high: "Asiane kɛse",
+        moderate: "Asiane kakra",
+        medium: "Asiane kakra",
+      },
+      Hausa: {
+        critical: "Babban haɗari",
+        high: "Babban haɗari",
+        moderate: "Matsakaicin haɗari",
+        medium: "Matsakaicin haɗari",
+      },
+      Dagbani: {
+        critical: "Barina",
+        high: "Barina",
+        moderate: "Barina",
+        medium: "Barina",
+      },
+    };
+
+    const detailLabels: Record<
+      AlertLanguage,
+      string
+    > = {
+      English: "Details",
+      Twi: "Nkyerɛkyerɛmu",
+      Dagbani: "Details",
+      Hausa: "Cikakkun bayanai",
+    };
+
+    const localizedLevel =
+      levelLabels[alertLanguage][
+        normalizedLevel
+      ] ||
+      levelLabels.English[
+        normalizedLevel
+      ] ||
+      alert.alert_level;
+
+    return {
+      localizedLevel,
+      detailLabel:
+        detailLabels[alertLanguage],
+      message: alert.message,
+    };
+  };
+
+  /*
    * Current risk level.
    */
   const riskLevel =
@@ -875,50 +988,6 @@ export default function Home() {
         }
       );
     };
-
-  /*
-   * Translate standardized alert messages.
-   * The dashboard itself remains in English; only
-   * notification alert text changes language.
-   */
-  const translateAlert = (alert: Alert) => {
-    const level = alert.alert_level.toLowerCase().trim();
-
-    const translations: Record<AlertLanguage, Record<string, string>> = {
-      English: {
-        high: "High stress risk detected in pond",
-        moderate: "Moderate stress risk detected in pond",
-        medium: "Moderate stress risk detected in pond",
-        critical: "Critical risk detected in pond",
-      },
-      Twi: {
-        high: "Yɛahu ahokyere kɛse wɔ ɔtare",
-        moderate: "Yɛahu ahokyere kakra wɔ ɔtare",
-        medium: "Yɛahu ahokyere kakra wɔ ɔtare",
-        critical: "Yɛahu asiane kɛse paa wɔ ɔtare",
-      },
-      Dagbani: {
-        high: "Pond no wɔ asiane kɛse",
-        moderate: "Pond no wɔ asiane kakra",
-        medium: "Pond no wɔ asiane kakra",
-        critical: "Pond no wɔ asiane kɛse paa",
-      },
-      Hausa: {
-        high: "An gano babban haɗarin damuwa a tafkin",
-        moderate: "An gano matsakaicin haɗarin damuwa a tafkin",
-        medium: "An gano matsakaicin haɗarin damuwa a tafkin",
-        critical: "An gano babban haɗari a tafkin",
-      },
-    };
-
-    const translated = translations[alertLanguage][level];
-
-    if (!translated) {
-      return alert.message;
-    }
-
-    return `${translated} ${alert.pond_id}.`;
-  };
 
   /*
    * Alert badge styling.
@@ -1151,31 +1220,37 @@ export default function Home() {
                           Notifications
                         </p>
 
+                        {/* Alert language selector */}
                         <div className="mt-3 flex flex-wrap gap-1.5">
                           {([
                             "English",
                             "Twi",
                             "Dagbani",
                             "Hausa",
-                          ] as AlertLanguage[]).map((language) => (
-                            <button
-                              key={language}
-                              type="button"
-                              onClick={() =>
-                                changeAlertLanguage(language)
-                              }
-                              className={`rounded-lg px-2.5 py-1 text-[10px] font-medium transition ${
-                                alertLanguage === language
-                                  ? "bg-[#27e0d0]/15 text-[#27e0d0]"
-                                  : "bg-white/[0.03] text-slate-500 hover:bg-white/[0.06] hover:text-white"
-                              }`}
-                            >
-                              {language}
-                            </button>
-                          ))}
+                          ] as AlertLanguage[]).map(
+                            (language) => (
+                              <button
+                                key={language}
+                                type="button"
+                                onClick={() =>
+                                  changeAlertLanguage(
+                                    language
+                                  )
+                                }
+                                className={`rounded-lg px-2.5 py-1 text-[10px] font-medium transition ${
+                                  alertLanguage ===
+                                  language
+                                    ? "bg-[#27e0d0]/15 text-[#27e0d0]"
+                                    : "bg-white/[0.03] text-slate-500 hover:bg-white/[0.06] hover:text-white"
+                                }`}
+                              >
+                                {language}
+                              </button>
+                            )
+                          )}
                         </div>
 
-                        <p className="mt-1 text-xs text-slate-500">
+                        <p className="mt-2 text-xs text-slate-500">
 
                           {unreadAlerts.length >
                           0
@@ -1315,16 +1390,31 @@ export default function Home() {
 
                                     <div className="min-w-0 flex-1">
 
-                                      <p className="text-xs font-medium text-slate-300">
-                                        Pond{" "}
-                                        {
-                                          alert.pond_id
-                                        }
-                                      </p>
+                                      {(() => {
+                                        const presentation =
+                                          getAlertPresentation(
+                                            alert
+                                          );
 
-                                      <p className="mt-1 text-sm leading-5 text-slate-400">
-                                        {translateAlert(alert)}
-                                      </p>
+                                        return (
+                                          <>
+                                            <p className="text-xs font-medium text-slate-300">
+                                              {presentation.localizedLevel}
+                                              {" · "}
+                                              Pond{" "}
+                                              {alert.pond_id}
+                                            </p>
+
+                                            <p className="mt-1 text-[10px] font-medium uppercase tracking-[0.12em] text-slate-600">
+                                              {presentation.detailLabel}
+                                            </p>
+
+                                            <p className="mt-1 text-sm leading-5 text-slate-400">
+                                              {presentation.message}
+                                            </p>
+                                          </>
+                                        );
+                                      })()}
 
                                       <p className="mt-2 text-[10px] text-slate-600">
                                         {new Date(
