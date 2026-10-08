@@ -1,9 +1,11 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+
+type AlertLanguage = "English" | "Twi" | "Dagbani" | "Hausa";
 
 type WaterReading = {
   id: number;
@@ -19,7 +21,7 @@ type FishObservation = {
   pond_id: number;
   activity_level: string;
   feeding_response: string;
-  unusual_behaviour: string;
+  unusual_behaviour: boolean;
   fish_count: number;
   observed_at: string;
 };
@@ -29,7 +31,7 @@ type RiskAssessment = {
   pond_id: number;
   risk_level: string;
   risk_score: number;
-  contributing_factors: string;
+  contributing_factors: string[] | string | null;
   ml_anomaly: boolean;
   ml_anomaly_score: number | null;
   assessed_at: string;
@@ -38,176 +40,948 @@ type RiskAssessment = {
 type Alert = {
   id: number;
   pond_id: number;
-  risk_assessment_id: number | null;
+  risk_assessment_id: number;
   alert_level: string;
   message: string;
   sent_at: string;
 };
 
+type RiskLevel = "Low" | "Moderate" | "Medium" | "High" | "Critical";
+
+const API_BASE =
+  process.env.NEXT_PUBLIC_API_URL ||
+  "https://aquasentinel-api-q232.onrender.com";
+
+/* =========================================================
+   LANGUAGE TRANSLATIONS
+   ========================================================= */
+
+const translations = {
+  English: {
+    nav: {
+      dashboard: "Dashboard",
+      ponds: "Ponds",
+      insights: "Insights",
+      alerts: "Alerts",
+      history: "History",
+    },
+
+    common: {
+      dashboard: "Dashboard",
+      loading: "Loading...",
+      noData: "No data available",
+      normal: "Normal",
+      low: "Low",
+      moderate: "Moderate",
+      medium: "Medium",
+      high: "High",
+      critical: "Critical",
+      attentionRequired: "Attention Required",
+      healthy: "Healthy",
+      active: "Active",
+      detected: "Detected",
+      none: "None",
+      latest: "Latest",
+      current: "Current",
+      score: "Score",
+      status: "Status",
+      details: "Details",
+      alert: "Alert",
+      alerts: "Alerts",
+      pond: "Pond",
+    },
+
+    hero: {
+      badge: "EARLY-WARNING INTELLIGENCE",
+      title: "Good evening",
+      monitoring: "Sentinel is continuously monitoring your aquaculture environment.",
+      farm: "Saha Aqua Farm",
+      location: "Gurugu, Tamale",
+    },
+
+    metrics: {
+      temperature: "Temperature",
+      ph: "pH Balance",
+      oxygen: "Dissolved Oxygen",
+      fishActivity: "Fish Activity",
+      optimal: "Within expected range",
+      attention: "Requires attention",
+    },
+
+    fish: {
+      title: "Fish Behaviour",
+      activity: "Activity Level",
+      feeding: "Feeding Response",
+      unusual: "Unusual Behaviour",
+      fishCount: "Fish Count",
+      normal: "Normal",
+      observed: "Observed",
+      noneObserved: "None observed",
+      monitoring: "Sentinel is monitoring fish behaviour for early signs of stress.",
+    },
+
+    risk: {
+      title: "Risk Intelligence",
+      subtitle: "Sentinel's current assessment of your pond conditions.",
+      riskLevel: "Risk Level",
+      riskScore: "Risk Score",
+      contributingFactors: "Contributing Factors",
+      noFactors: "No significant contributing factors detected.",
+      attention:
+        "Sentinel has detected a condition that may require your attention.",
+      healthy:
+        "Current pond conditions are within the expected operating range.",
+      reasoningTitle: "How Sentinel is reasoning",
+      reasoning:
+        "Sentinel combines water-quality readings, fish behaviour and machine-learning anomaly detection to identify conditions that may require attention.",
+      statusTitle: "Sentinel Status",
+      statusHealthy:
+        "Your pond currently appears to be within the expected range.",
+      statusAttention:
+        "Sentinel has identified a condition that should be reviewed.",
+    },
+
+    ml: {
+      title: "AI / ML INTELLIGENCE",
+      anomalyDetection: "Anomaly Detection",
+      anomalyDetected: "Anomaly detected",
+      noAnomaly: "No anomaly detected",
+      anomalyScore: "Anomaly Score",
+      explanation:
+        "The machine-learning model compares current pond conditions with observed patterns to identify unusual combinations of readings.",
+    },
+
+    alerts: {
+      title: "Alerts",
+      unread: "unread",
+      markRead: "Mark as read",
+      markAllRead: "Mark all as read",
+      noAlerts: "No alerts at the moment.",
+      notification: "Notification",
+      riskAlert: "Risk Alert",
+      temperatureHigh:
+        "Water temperature is higher than the recommended range.",
+      temperatureLow:
+        "Water temperature is lower than the recommended range.",
+      phHigh: "pH level is higher than the recommended range.",
+      phLow: "pH level is lower than the recommended range.",
+      oxygenHigh:
+        "Dissolved oxygen is higher than the expected operating range.",
+      oxygenLow:
+        "Dissolved oxygen is lower than the recommended range.",
+      unusualFishBehaviour: "Unusual fish behaviour has been detected.",
+      poorFeeding:
+        "Fish feeding response appears to be lower than expected.",
+      anomaly:
+        "An unusual pattern has been detected in the pond data.",
+      attention: "The pond requires attention.",
+      normal:
+        "Pond conditions are currently within the expected range.",
+    },
+
+    factors: {
+      temperature: "Temperature",
+      ph: "pH",
+      dissolved_oxygen: "Dissolved oxygen",
+      fish_activity: "Fish activity",
+      feeding_response: "Feeding response",
+      unusual_behaviour: "Unusual behaviour",
+      ml_anomaly: "Machine-learning anomaly",
+      water_quality: "Water quality",
+    },
+
+    footer:
+      "AquaSentinel • Multimodal Early-Warning Intelligence for African Aquaculture",
+  },
+
+  Twi: {
+    nav: {
+      dashboard: "Dashboard",
+      ponds: "Atare",
+      insights: "Nimdeɛ",
+      alerts: "Kɔkɔbɔ",
+      history: "Abakɔsɛm",
+    },
+
+    common: {
+      dashboard: "Dashboard",
+      loading: "Ɛresoa...",
+      noData: "Data biara nni hɔ",
+      normal: "Ɛyɛ sɛnea ɛsɛ",
+      low: "Ɔhaw Ketewa",
+      moderate: "Ɔhaw Kakra",
+      medium: "Ɔhaw Mfinimfini",
+      high: "Ɔhaw Kɛse",
+      critical: "Ɔhaw Kɛse Pa Ara",
+      attentionRequired: "Ɛhia sɛ wodi ho dwuma",
+      healthy: "Ɛyɛ den",
+      active: "Ɛreyɛ adwuma",
+      detected: "Wɔahu",
+      none: "Biara nni hɔ",
+      latest: "Nea etwa to",
+      current: "Mprempren",
+      score: "Nkyerɛkyerɛ",
+      status: "Gyinabea",
+      details: "Nkyerɛkyerɛmu",
+      alert: "Kɔkɔbɔ",
+      alerts: "Kɔkɔbɔ",
+      pond: "Atare",
+    },
+
+    hero: {
+      badge: "NKƆKƆBƆ A ƐBA NTƐM",
+      title: "Maadwo",
+      monitoring:
+        "Sentinel rehwehwɛ w’atarɛ mu tebea no bere nyinaa.",
+      farm: "Saha Aqua Farm",
+      location: "Gurugu, Tamale",
+    },
+
+    metrics: {
+      temperature: "Nsuo Hyew",
+      ph: "pH Gyinaesi",
+      oxygen: "Oxygen a ɛwɔ Nsuo mu",
+      fishActivity: "Mpataa Nneyɛe",
+      optimal: "Ɛwɔ baabi a ɛsɛ",
+      attention: "Ɛhia sɛ wodi ho dwuma",
+    },
+
+    fish: {
+      title: "Mpataa Nneyɛe",
+      activity: "Nneyɛe Dodow",
+      feeding: "Aduan Ho Mmuae",
+      unusual: "Nneyɛe a Ɛnte Sɛnea Ɛsɛ",
+      fishCount: "Mpataa Dodow",
+      normal: "Ɛyɛ sɛnea ɛsɛ",
+      observed: "Wɔahu",
+      noneObserved: "Wɔnhu biara",
+      monitoring:
+        "Sentinel rehwehwɛ mpataa nneyɛe de ahu nsɛnkyerɛnne a ɛkyerɛ sɛ wɔrebrɛ.",
+    },
+
+    risk: {
+      title: "Ɔhaw Nimdeɛ",
+      subtitle: "Sentinel hwɛbea a ɛwɔ w’atarɛ ho mprempren.",
+      riskLevel: "Ɔhaw Gyinabea",
+      riskScore: "Ɔhaw Nkyerɛkyerɛ",
+      contributingFactors: "Nneɛma a Ɛde Ɔhaw No Ba",
+      noFactors: "Wɔnhu ade titiriw biara a ɛde ɔhaw ba.",
+      attention:
+        "Sentinel ahu tebea bi a ebia ɛsɛ sɛ wodi ho dwuma.",
+      healthy:
+        "Mprempren atare no tebea no wɔ baabi a ɛsɛ.",
+      reasoningTitle: "Sɛn na Sentinel resusuw ho",
+      reasoning:
+        "Sentinel de nsuo no su, mpataa nneyɛe ne machine-learning nhwehwɛmu bom de hu tebea a ebia ɛhia sɛ wodi ho dwuma.",
+      statusTitle: "Sentinel Gyinabea",
+      statusHealthy:
+        "Mprempren, ɛte sɛ nea w’atarɛ no tebea no yɛ papa.",
+      statusAttention:
+        "Sentinel ahu tebea bi a ɛsɛ sɛ wohwɛ mu.",
+    },
+
+    ml: {
+      title: "AI / ML NIMDEƐ",
+      anomalyDetection: "Nsakrae a Ɛnte Sɛnea Ɛsɛ",
+      anomalyDetected: "Wɔahu nsakrae bi",
+      noAnomaly: "Wɔnhu nsakrae biara",
+      anomalyScore: "Nsakrae Nkyerɛkyerɛ",
+      explanation:
+        "Machine-learning model no de mprempren atare no tebea toto nsɛm a wɔahu dedaw ho de hu nsɛm a ɛnte sɛnea ɛsɛ.",
+    },
+
+    alerts: {
+      title: "Kɔkɔbɔ",
+      unread: "a wɔnhyɛɛ no nkenkan",
+      markRead: "Hyɛ sɛ wɔakan",
+      markAllRead: "Hyɛ ne nyinaa sɛ wɔakan",
+      noAlerts: "Kɔkɔbɔ biara nni hɔ mprempren.",
+      notification: "Amanneɛbɔ",
+      riskAlert: "Ɔhaw Kɔkɔbɔ",
+      temperatureHigh: "Nsuo no ayɛ hyew sen sɛnea ɛsɛ.",
+      temperatureLow: "Nsuo no ayɛ nwini sen sɛnea ɛsɛ.",
+      phHigh: "pH no akɔ soro sen sɛnea ɛsɛ.",
+      phLow: "pH no akɔ fam sen sɛnea ɛsɛ.",
+      oxygenHigh:
+        "Oxygen a ɛwɔ nsuo no mu no akɔ soro sen sɛnea wɔhwɛ kwan.",
+      oxygenLow:
+        "Oxygen a ɛwɔ nsuo no mu no akɔ fam sen sɛnea ɛsɛ.",
+      unusualFishBehaviour:
+        "Wɔahu mpataa nneyɛe bi a ɛnte sɛnea ɛsɛ.",
+      poorFeeding:
+        "Mpataa no aduan ho mmuae no sua sen sɛnea ɛsɛ.",
+      anomaly:
+        "Wɔahu nsakrae bi a ɛnte sɛnea ɛsɛ wɔ atare no mu nsɛm mu.",
+      attention: "Ɛsɛ sɛ wodi atare no ho dwuma.",
+      normal:
+        "Mprempren atare no tebea no wɔ baabi a ɛsɛ.",
+    },
+
+    factors: {
+      temperature: "Nsuo hyew",
+      ph: "pH",
+      dissolved_oxygen: "Oxygen a ɛwɔ nsuo mu",
+      fish_activity: "Mpataa nneyɛe",
+      feeding_response: "Aduan ho mmuae",
+      unusual_behaviour: "Nneyɛe a ɛnte sɛnea ɛsɛ",
+      ml_anomaly: "Machine-learning nsakrae",
+      water_quality: "Nsuo no su",
+    },
+
+    footer:
+      "AquaSentinel • Nsuo ne Mpataa Nneyɛe Ho Kɔkɔbɔ Ntɛm ma Afrika Mpataa Yɛnkurom",
+  },
+
+  Hausa: {
+    nav: {
+      dashboard: "Dashboard",
+      ponds: "Rijiyoyi",
+      insights: "Fahimta",
+      alerts: "Gargadi",
+      history: "Tarihi",
+    },
+
+    common: {
+      dashboard: "Dashboard",
+      loading: "Ana lodawa...",
+      noData: "Babu bayanai",
+      normal: "Al'ada",
+      low: "Ƙaramin Haɗari",
+      moderate: "Haɗari Matsakaici",
+      medium: "Haɗari Matsakaici",
+      high: "Babban Haɗari",
+      critical: "Haɗari Mai Tsanani",
+      attentionRequired: "Ana Bukatar Kulawa",
+      healthy: "Lafiya",
+      active: "Aiki",
+      detected: "An gano",
+      none: "Babu",
+      latest: "Na baya-bayan nan",
+      current: "Yanzu",
+      score: "Maki",
+      status: "Matsayi",
+      details: "Cikakkun Bayanai",
+      alert: "Gargaɗi",
+      alerts: "Gargadi",
+      pond: "Rijiya",
+    },
+
+    hero: {
+      badge: "FASAHA TA GARGADI DA WURI",
+      title: "Barka da yamma",
+      monitoring:
+        "Sentinel na sa ido kan yanayin ruwan kiwon kifinka a kowane lokaci.",
+      farm: "Saha Aqua Farm",
+      location: "Gurugu, Tamale",
+    },
+
+    metrics: {
+      temperature: "Zafin Ruwa",
+      ph: "Ma'aunin pH",
+      oxygen: "Oxygen da ke cikin Ruwa",
+      fishActivity: "Ayyukan Kifi",
+      optimal: "Yana cikin iyakar da ta dace",
+      attention: "Ana bukatar kulawa",
+    },
+
+    fish: {
+      title: "Halayen Kifi",
+      activity: "Matsayin Aiki",
+      feeding: "Martanin Cin Abinci",
+      unusual: "Halin da ba na al'ada ba",
+      fishCount: "Adadin Kifi",
+      normal: "Al'ada",
+      observed: "An lura",
+      noneObserved: "Ba a lura da shi ba",
+      monitoring:
+        "Sentinel na sa ido kan halayen kifi domin gano alamun damuwa da wuri.",
+    },
+
+    risk: {
+      title: "Bayanan Haɗari",
+      subtitle: "Binciken Sentinel na halin ruwan rijiyarka a yanzu.",
+      riskLevel: "Matsayin Haɗari",
+      riskScore: "Makin Haɗari",
+      contributingFactors: "Abubuwan da ke haifar da Haɗarin",
+      noFactors: "Ba a gano wani muhimmin abu da ke haifar da haɗari ba.",
+      attention:
+        "Sentinel ya gano wani yanayi da zai iya bukatar kulawa.",
+      healthy:
+        "A halin yanzu yanayin ruwan yana cikin iyakar da ta dace.",
+      reasoningTitle: "Yadda Sentinel ke nazari",
+      reasoning:
+        "Sentinel na haɗa bayanan ingancin ruwa, halayen kifi da machine-learning domin gano yanayin da zai iya bukatar kulawa.",
+      statusTitle: "Matsayin Sentinel",
+      statusHealthy:
+        "A halin yanzu ruwan rijiyar yana cikin yanayin da ake tsammani.",
+      statusAttention:
+        "Sentinel ya gano wani yanayi da ya kamata a duba.",
+    },
+
+    ml: {
+      title: "AI / ML INTELLIGENCE",
+      anomalyDetection: "Gano Yanayin da ba na Al'ada ba",
+      anomalyDetected: "An gano yanayin da ba na al'ada ba",
+      noAnomaly: "Ba a gano wani yanayi da ba na al'ada ba",
+      anomalyScore: "Makin Yanayin",
+      explanation:
+        "Tsarin machine-learning yana kwatanta bayanan yanzu da tsarin bayanan da aka gani domin gano abubuwan da ba su saba ba.",
+    },
+
+    alerts: {
+      title: "Gargadi",
+      unread: "ba a karanta ba",
+      markRead: "Alama an karanta",
+      markAllRead: "Alama duka an karanta",
+      noAlerts: "Babu gargadi a yanzu.",
+      notification: "Sanarwa",
+      riskAlert: "Gargadin Haɗari",
+      temperatureHigh:
+        "Zafin ruwan ya fi yadda ya kamata.",
+      temperatureLow:
+        "Zafin ruwan ya yi ƙasa da yadda ya kamata.",
+      phHigh:
+        "Matsayin pH ya fi yadda ya kamata.",
+      phLow:
+        "Matsayin pH ya yi ƙasa da yadda ya kamata.",
+      oxygenHigh:
+        "Oxygen da ke cikin ruwan ya fi abin da ake tsammani.",
+      oxygenLow:
+        "Oxygen da ke cikin ruwan ya yi ƙasa da yadda ya kamata.",
+      unusualFishBehaviour:
+        "An gano halin kifi da ba na al'ada ba.",
+      poorFeeding:
+        "Martanin kifin ga abinci ya yi ƙasa da yadda ake tsammani.",
+      anomaly:
+        "An gano wani yanayi da ba na al'ada ba a bayanan rijiya.",
+      attention:
+        "Ana bukatar kulawa da rijiya.",
+      normal:
+        "A halin yanzu yanayin ruwan rijiya yana cikin iyakar da ta dace.",
+    },
+
+    factors: {
+      temperature: "Zafin ruwa",
+      ph: "pH",
+      dissolved_oxygen: "Oxygen da ke cikin ruwa",
+      fish_activity: "Ayyukan kifi",
+      feeding_response: "Martanin cin abinci",
+      unusual_behaviour: "Halin da ba na al'ada ba",
+      ml_anomaly: "Machine-learning ya gano yanayi",
+      water_quality: "Ingancin ruwa",
+    },
+
+    footer:
+      "AquaSentinel • Fasahar Gargadi ta Farko don Kiwo Kifi a Afirka",
+  },
+
+  Dagbani: {
+    nav: {
+      dashboard: "Dashboard",
+      ponds: "Nɔɔŋu",
+      insights: "Nimdi",
+      alerts: "Kɔkɔbɩ",
+      history: "Dɔɣim",
+    },
+
+    common: {
+      dashboard: "Dashboard",
+      loading: "A yi mali...",
+      noData: "Data ka be",
+      normal: "Yuli",
+      low: "Kaɣila Palli",
+      moderate: "Kaɣila Palli Ka",
+      medium: "Kaɣila Palli Ka",
+      high: "Kaɣila Kpema",
+      critical: "Kaɣila Kpema Pam",
+      attentionRequired: "A niŋdi pam",
+      healthy: "A yɛla",
+      active: "A niŋdi",
+      detected: "Wɔ nyɛli",
+      none: "Ka be",
+      latest: "Din kaŋa",
+      current: "Naa",
+      score: "Nɔɔŋu",
+      status: "Yuli",
+      details: "N-yɛli",
+      alert: "Kɔkɔbɩ",
+      alerts: "Kɔkɔbɩ",
+      pond: "Nɔɔŋu",
+    },
+
+    hero: {
+      badge: "KƆKƆBƆ DIN BA NTƐM",
+      title: "N-yɛli",
+      monitoring:
+        "Sentinel ni nyɛ nɔɔŋu maa yɛli pam pam.",
+      farm: "Saha Aqua Farm",
+      location: "Gurugu, Tamale",
+    },
+
+    metrics: {
+      temperature: "Kɔligu",
+      ph: "pH Yuli",
+      oxygen: "Oxygen din be nɔɔŋu ni",
+      fishActivity: "Bihi N-yɛli",
+      optimal: "A be yuli din mali",
+      attention: "A niŋdi pam",
+    },
+
+    fish: {
+      title: "Bihi N-yɛli",
+      activity: "N-yɛli Yuli",
+      feeding: "Diibu N-yɛli",
+      unusual: "N-yɛli din mali yɛli maa",
+      fishCount: "Bihi Dɔɔgu",
+      normal: "Yuli",
+      observed: "Wɔ nyɛli",
+      noneObserved: "Wɔ ka nyɛli",
+      monitoring:
+        "Sentinel ni nyɛ bihi n-yɛli ka o nyɛli yɛli din niŋ ka bihi maa brɛ.",
+    },
+
+    risk: {
+      title: "Kaɣila Nimdi",
+      subtitle: "Sentinel ni nyɛ nɔɔŋu maa yuli naa.",
+      riskLevel: "Kaɣila Yuli",
+      riskScore: "Kaɣila Nɔɔŋu",
+      contributingFactors: "N-yɛli din nyɛ ka kaɣila maa",
+      noFactors: "Wɔ ka nyɛli n-yɛli din nyɛ ka kaɣila maa.",
+      attention:
+        "Sentinel nyɛli yɛli din niŋ ka a niŋdi pam.",
+      healthy:
+        "Nɔɔŋu maa yuli ni be baŋa din mali.",
+      reasoningTitle: "Sɛnti Sentinel ni dihi yɛlima",
+      reasoning:
+        "Sentinel ni bohi nɔɔŋu yuli, bihi n-yɛli ne machine-learning ka o nyɛli yɛli din niŋ ka a niŋdi pam.",
+      statusTitle: "Sentinel Yuli",
+      statusHealthy:
+        "Nɔɔŋu maa yuli ni be baŋa din mali.",
+      statusAttention:
+        "Sentinel nyɛli yɛli din niŋ ka a yɛli pam.",
+    },
+
+    ml: {
+      title: "AI / ML NIMDI",
+      anomalyDetection: "Yɛli din mali yɛli maa",
+      anomalyDetected: "Wɔ nyɛli yɛli din mali",
+      noAnomaly: "Wɔ ka nyɛli yɛli din mali",
+      anomalyScore: "Yɛli Nɔɔŋu",
+      explanation:
+        "Machine-learning ni bohi nɔɔŋu maa naa yuli ne yɛli din kaŋa ka o nyɛli yɛli din mali.",
+    },
+
+    alerts: {
+      title: "Kɔkɔbɩ",
+      unread: "ka wɔ karigimi",
+      markRead: "Maali ka wɔ karigimi",
+      markAllRead: "Maali nyɛla ka wɔ karigimi",
+      noAlerts: "Kɔkɔbɩ ka be naa.",
+      notification: "Yɛli",
+      riskAlert: "Kaɣila Kɔkɔbɩ",
+      temperatureHigh:
+        "Nɔɔŋu maa kɔligu yɛ pam.",
+      temperatureLow:
+        "Nɔɔŋu maa kɔligu yɛ kpɛligu.",
+      phHigh:
+        "pH maa yɛ pam.",
+      phLow:
+        "pH maa yɛ kpɛligu.",
+      oxygenHigh:
+        "Oxygen din be nɔɔŋu ni yɛ pam.",
+      oxygenLow:
+        "Oxygen din be nɔɔŋu ni yɛ kpɛligu.",
+      unusualFishBehaviour:
+        "Wɔ nyɛli bihi n-yɛli din mali yɛli maa.",
+      poorFeeding:
+        "Bihi maa diibu n-yɛli yɛ kpɛligu.",
+      anomaly:
+        "Wɔ nyɛli yɛli din mali yɛli maa nɔɔŋu maa data ni.",
+      attention:
+        "A niŋdi pam ka wɔ yɛli nɔɔŋu maa.",
+      normal:
+        "Nɔɔŋu maa yɛli ni be yuli din mali.",
+    },
+
+    factors: {
+      temperature: "Kɔligu",
+      ph: "pH",
+      dissolved_oxygen: "Oxygen din be nɔɔŋu ni",
+      fish_activity: "Bihi n-yɛli",
+      feeding_response: "Diibu n-yɛli",
+      unusual_behaviour: "N-yɛli din mali yɛli maa",
+      ml_anomaly: "ML n-yɛli",
+      water_quality: "Nɔɔŋu yuli",
+    },
+
+    footer:
+      "AquaSentinel • Kɔkɔbɩ Din Ba Ntɛm ma Africa Fish Farming",
+  },
+} as const;
+
+/* =========================================================
+   HELPERS
+   ========================================================= */
+
+const normalizeRiskLevel = (level?: string): RiskLevel => {
+  const normalized = (level || "low").toLowerCase().trim();
+
+  if (normalized === "critical") return "Critical";
+  if (normalized === "high") return "High";
+  if (normalized === "moderate") return "Moderate";
+  if (normalized === "medium") return "Medium";
+
+  return "Low";
+};
+
+const getRiskPercentage = (level: RiskLevel) => {
+  switch (level) {
+    case "Critical":
+      return 100;
+    case "High":
+      return 80;
+    case "Moderate":
+      return 55;
+    case "Medium":
+      return 55;
+    default:
+      return 20;
+  }
+};
+
+const getRiskScore = (score?: number | null) => {
+  if (score === null || score === undefined || Number.isNaN(score)) {
+    return 0;
+  }
+
+  if (score <= 1) {
+    return Math.round(score * 100);
+  }
+
+  return Math.min(100, Math.round(score));
+};
+
+const getRiskColorClass = (level: RiskLevel) => {
+  switch (level) {
+    case "Critical":
+      return "border-red-500/40 bg-red-500/10 text-red-300";
+    case "High":
+      return "border-red-400/30 bg-red-400/10 text-red-300";
+    case "Moderate":
+    case "Medium":
+      return "border-amber-400/30 bg-amber-400/10 text-amber-300";
+    default:
+      return "border-teal-400/30 bg-teal-400/10 text-teal-300";
+  }
+};
+
+const getRiskDotClass = (level: RiskLevel) => {
+  switch (level) {
+    case "Critical":
+    case "High":
+      return "bg-red-400";
+    case "Moderate":
+    case "Medium":
+      return "bg-amber-400";
+    default:
+      return "bg-teal-400";
+  }
+};
+
+const getAlertLevelClass = (level?: string) => {
+  const normalized = (level || "").toLowerCase();
+
+  if (normalized === "critical" || normalized === "high") {
+    return "border-red-400/30 bg-red-500/10";
+  }
+
+  if (normalized === "moderate" || normalized === "medium") {
+    return "border-amber-400/30 bg-amber-500/10";
+  }
+
+  return "border-teal-400/30 bg-teal-500/10";
+};
+
+const getFactorTranslationKey = (
+  factor: string
+): keyof typeof translations.English.factors | null => {
+  const value = factor.toLowerCase();
+
+  if (value.includes("temperature")) return "temperature";
+  if (value.includes("dissolved") || value.includes("oxygen")) {
+    return "dissolved_oxygen";
+  }
+  if (value.includes("ph")) return "ph";
+  if (value.includes("fish") && value.includes("activity")) {
+    return "fish_activity";
+  }
+  if (value.includes("feeding")) return "feeding_response";
+  if (value.includes("unusual") && value.includes("behaviour")) {
+    return "unusual_behaviour";
+  }
+  if (value.includes("unusual") && value.includes("behavior")) {
+    return "unusual_behaviour";
+  }
+  if (value.includes("anomaly") || value.includes("machine")) {
+    return "ml_anomaly";
+  }
+  if (value.includes("water")) return "water_quality";
+
+  return null;
+};
+
+/*
+ * Converts the backend alert message into a language-specific
+ * farmer-facing message.
+ *
+ * IMPORTANT:
+ * The raw backend English message is never displayed when another
+ * language has been selected.
+ */
+const translateAlertMessage = (
+  message: string,
+  language: AlertLanguage
+) => {
+  const t = translations[language].alerts;
+
+  if (!message) {
+    return t.attention;
+  }
+
+  if (language === "English") {
+    return message;
+  }
+
+  const lower = message.toLowerCase();
+
+  if (
+    lower.includes("temperature") &&
+    (lower.includes("high") ||
+      lower.includes("above") ||
+      lower.includes("higher"))
+  ) {
+    return t.temperatureHigh;
+  }
+
+  if (
+    lower.includes("temperature") &&
+    (lower.includes("low") ||
+      lower.includes("below") ||
+      lower.includes("lower"))
+  ) {
+    return t.temperatureLow;
+  }
+
+  if (
+    lower.includes("ph") &&
+    (lower.includes("high") ||
+      lower.includes("above") ||
+      lower.includes("higher"))
+  ) {
+    return t.phHigh;
+  }
+
+  if (
+    lower.includes("ph") &&
+    (lower.includes("low") ||
+      lower.includes("below") ||
+      lower.includes("lower"))
+  ) {
+    return t.phLow;
+  }
+
+  if (
+    lower.includes("dissolved oxygen") &&
+    (lower.includes("high") ||
+      lower.includes("above") ||
+      lower.includes("higher"))
+  ) {
+    return t.oxygenHigh;
+  }
+
+  if (
+    lower.includes("dissolved oxygen") &&
+    (lower.includes("low") ||
+      lower.includes("below") ||
+      lower.includes("lower"))
+  ) {
+    return t.oxygenLow;
+  }
+
+  if (
+    lower.includes("unusual fish behaviour") ||
+    lower.includes("unusual fish behavior")
+  ) {
+    return t.unusualFishBehaviour;
+  }
+
+  if (
+    lower.includes("feeding") &&
+    (lower.includes("low") ||
+      lower.includes("poor") ||
+      lower.includes("reduced"))
+  ) {
+    return t.poorFeeding;
+  }
+
+  if (
+    lower.includes("anomaly") ||
+    lower.includes("unusual pattern")
+  ) {
+    return t.anomaly;
+  }
+
+  if (
+    lower.includes("attention") ||
+    lower.includes("requires attention")
+  ) {
+    return t.attention;
+  }
+
+  return t.attention;
+};
+
+const getTimeGreeting = (
+  language: AlertLanguage
+): string => {
+  const hour = new Date().getHours();
+
+  if (language === "English") {
+    if (hour < 12) return "Good morning";
+    if (hour < 18) return "Good afternoon";
+    return "Good evening";
+  }
+
+  if (language === "Twi") {
+    if (hour < 12) return "Maakye";
+    if (hour < 18) return "Maaha";
+    return "Maadwo";
+  }
+
+  if (language === "Hausa") {
+    if (hour < 12) return "Barka da safe";
+    if (hour < 18) return "Barka da rana";
+    return "Barka da yamma";
+  }
+
+  // Keep Dagbani greeting conservative.
+  if (hour < 12) return "Anina";
+  if (hour < 18) return "Antuma";
+  return "Anihi";
+};
+
+const formatDate = (
+  date: string | undefined,
+  language: AlertLanguage
+) => {
+  if (!date) return "";
+
+  try {
+    const localeMap: Record<AlertLanguage, string> = {
+      English: "en-GH",
+      Twi: "ak-GH",
+      Hausa: "ha-GH",
+      Dagbani: "en-GH",
+    };
+
+    return new Intl.DateTimeFormat(localeMap[language], {
+      day: "numeric",
+      month: "short",
+      hour: "numeric",
+      minute: "2-digit",
+    }).format(new Date(date));
+  } catch {
+    return "";
+  }
+};
+
+/* =========================================================
+   DASHBOARD
+   ========================================================= */
+
 export default function Home() {
   const router = useRouter();
 
-  const [water, setWater] =
-    useState<WaterReading | null>(null);
-
-  const [fish, setFish] =
-    useState<FishObservation | null>(null);
-
-  const [risk, setRisk] =
-    useState<RiskAssessment | null>(null);
-
-  const [alerts, setAlerts] =
-    useState<Alert[]>([]);
+  const [water, setWater] = useState<WaterReading | null>(null);
+  const [fish, setFish] = useState<FishObservation | null>(null);
+  const [risk, setRisk] = useState<RiskAssessment | null>(null);
+  const [alerts, setAlerts] = useState<Alert[]>([]);
 
   const [notificationsOpen, setNotificationsOpen] =
     useState(false);
 
-  const [readAlertIds, setReadAlertIds] =
-    useState<number[]>([]);
-
-  /*
-   * Alert language.
-   *
-   * The language setting changes the alert labels and
-   * keeps the original alert.message intact so detailed
-   * risk factors from the backend are never lost.
-   */
-  type AlertLanguage =
-    | "English"
-    | "Twi"
-    | "Dagbani"
-    | "Hausa";
+  const [readAlertIds, setReadAlertIds] = useState<number[]>(
+    []
+  );
 
   const [alertLanguage, setAlertLanguage] =
     useState<AlertLanguage>("English");
 
-  const [greeting, setGreeting] =
-    useState("Good afternoon.");
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  const [menuOpen, setMenuOpen] =
-    useState(false);
-
-  /*
-   * Tracks alert IDs between polling cycles.
-   *
-   * null means the dashboard has not completed
-   * its first alert check yet.
-   */
-  const previousAlertIds =
-    useRef<number[] | null>(null);
-
-  /*
-   * Tracks the latest risk assessment ID so that
-   * a new risk assessment can create a notification
-   * even when the backend /alerts endpoint has not
-   * created an alert yet.
-   */
-  const previousRiskId =
-    useRef<number | null>(null);
-
-  /*
-   * Browser audio context.
-   */
+  const previousAlertIds = useRef<Set<number>>(new Set());
   const audioContextRef =
     useRef<AudioContext | null>(null);
 
-  /*
-   * Authentication
-   */
+  const t = translations[alertLanguage];
+
+  /* =======================================================
+     AUTHENTICATION
+     ======================================================= */
+
   useEffect(() => {
-    const checkAuth = () => {
-      const token = localStorage.getItem(
-        "aquasentinel_token"
-      );
+    const token = localStorage.getItem("aquasentinel_token");
 
-      if (!token) {
-        router.replace("/login");
-      }
-    };
-
-    checkAuth();
-
-    window.addEventListener(
-      "storage",
-      checkAuth
-    );
-
-    return () => {
-      window.removeEventListener(
-        "storage",
-        checkAuth
-      );
-    };
+    if (!token) {
+      router.push("/login");
+    }
   }, [router]);
 
-  /*
-   * Greeting
-   */
-  useEffect(() => {
-    function updateGreeting() {
-      const hour = new Date().getHours();
+  /* =======================================================
+     LANGUAGE PREFERENCE
+     ======================================================= */
 
-      setGreeting(
-        hour < 12
-          ? "Good morning."
-          : hour < 17
-          ? "Good afternoon."
-          : "Good evening."
-      );
+  useEffect(() => {
+    const savedLanguage =
+      localStorage.getItem(
+        "aquasentinel_alert_language"
+      ) as AlertLanguage | null;
+
+    if (
+      savedLanguage &&
+      ["English", "Twi", "Dagbani", "Hausa"].includes(
+        savedLanguage
+      )
+    ) {
+      setAlertLanguage(savedLanguage);
     }
 
-    updateGreeting();
+    const savedReadAlerts =
+      localStorage.getItem("aquasentinel_read_alerts");
 
-    const greetingInterval =
-      setInterval(
-        updateGreeting,
-        60000
-      );
-
-    return () =>
-      clearInterval(
-        greetingInterval
-      );
-  }, []);
-
-  /*
-   * Load previously read notifications.
-   */
-  useEffect(() => {
-    try {
-      const stored =
-        localStorage.getItem(
-          "aquasentinel_read_alerts"
-        );
-
-      if (stored) {
-        const parsed =
-          JSON.parse(stored);
-
-        if (Array.isArray(parsed)) {
-          setReadAlertIds(parsed);
-        }
+    if (savedReadAlerts) {
+      try {
+        setReadAlertIds(JSON.parse(savedReadAlerts));
+      } catch {
+        setReadAlertIds([]);
       }
-    } catch (error) {
-      console.error(
-        "Could not load notification state:",
-        error
-      );
     }
   }, []);
 
-  /*
-   * Enable browser audio after the user
-   * interacts with the dashboard.
-   */
   useEffect(() => {
-    const enableAudio = () => {
-      if (
-        typeof window === "undefined"
-      ) {
-        return;
-      }
+    localStorage.setItem(
+      "aquasentinel_alert_language",
+      alertLanguage
+    );
+  }, [alertLanguage]);
 
+  /* =======================================================
+     AUDIO
+     ======================================================= */
+
+  const initializeAudio = () => {
+    if (!audioContextRef.current) {
       const AudioContextClass =
         window.AudioContext ||
         (
@@ -216,105 +990,36 @@ export default function Home() {
           }
         ).webkitAudioContext;
 
-      if (!AudioContextClass) {
-        return;
-      }
-
-      if (
-        !audioContextRef.current
-      ) {
+      if (AudioContextClass) {
         audioContextRef.current =
           new AudioContextClass();
       }
-
-      if (
-        audioContextRef.current.state ===
-        "suspended"
-      ) {
-        audioContextRef.current
-          .resume()
-          .catch(() => {});
-      }
-    };
-
-    window.addEventListener(
-      "click",
-      enableAudio,
-      { once: true }
-    );
-
-    return () => {
-      window.removeEventListener(
-        "click",
-        enableAudio
-      );
-    };
-  }, []);
-
-  /*
-   * Audible alert.
-   *
-   * Moderate / Medium = 2 beeps
-   * High / Critical = 3 beeps
-   */
-  const playAlertSound = (
-    level: string
-  ) => {
-    if (
-      typeof window === "undefined"
-    ) {
-      return;
-    }
-
-    const AudioContextClass =
-      window.AudioContext ||
-      (
-        window as typeof window & {
-          webkitAudioContext?: typeof AudioContext;
-        }
-      ).webkitAudioContext;
-
-    if (!AudioContextClass) {
-      return;
     }
 
     if (
-      !audioContextRef.current
+      audioContextRef.current &&
+      audioContextRef.current.state === "suspended"
     ) {
-      audioContextRef.current =
-        new AudioContextClass();
+      audioContextRef.current.resume();
     }
+  };
 
-    const audioContext =
-      audioContextRef.current;
+  const playAlertSound = (level: string) => {
+    const audioContext = audioContextRef.current;
 
-    if (
-      audioContext.state ===
-      "suspended"
-    ) {
-      audioContext
-        .resume()
-        .catch(() => {});
-    }
+    if (!audioContext) return;
 
-    const normalizedLevel =
-      level.toLowerCase().trim();
-
-    const isHigh =
-      normalizedLevel === "high" ||
-      normalizedLevel === "critical";
+    const normalized = level.toLowerCase();
 
     const beepCount =
-      isHigh ? 3 : 2;
+      normalized === "critical" || normalized === "high"
+        ? 3
+        : normalized === "moderate" ||
+          normalized === "medium"
+        ? 2
+        : 1;
 
-    const frequency =
-      isHigh ? 880 : 660;
-
-    for (
-      let i = 0;
-      i < beepCount;
-      i++
-    ) {
+    for (let i = 0; i < beepCount; i++) {
       const oscillator =
         audioContext.createOscillator();
 
@@ -322,2295 +1027,1786 @@ export default function Home() {
         audioContext.createGain();
 
       oscillator.type = "sine";
-
       oscillator.frequency.value =
-        frequency;
+        normalized === "critical" ||
+        normalized === "high"
+          ? 880
+          : 660;
+
+      gainNode.gain.value = 0.04;
+
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
 
       const startTime =
-        audioContext.currentTime +
-        i * 0.18;
+        audioContext.currentTime + i * 0.18;
 
-      const endTime =
-        startTime + 0.11;
-
-      gainNode.gain.setValueAtTime(
-        0.0001,
-        startTime
-      );
-
-      gainNode.gain.exponentialRampToValueAtTime(
-        0.18,
-        startTime + 0.01
-      );
-
-      gainNode.gain.exponentialRampToValueAtTime(
-        0.0001,
-        endTime
-      );
-
-      oscillator.connect(
-        gainNode
-      );
-
-      gainNode.connect(
-        audioContext.destination
-      );
-
-      oscillator.start(
-        startTime
-      );
-
-      oscillator.stop(
-        endTime
-      );
+      oscillator.start(startTime);
+      oscillator.stop(startTime + 0.1);
     }
   };
 
-  /*
-   * Dashboard data + notification monitoring.
-   */
+  /* =======================================================
+     DATA FETCHING
+     ======================================================= */
+
   useEffect(() => {
-    async function loadData() {
+    let mounted = true;
+
+    const fetchDashboardData = async () => {
+      const token =
+        localStorage.getItem("aquasentinel_token");
+
+      if (!token) return;
+
       try {
-        const token =
-          localStorage.getItem(
-            "aquasentinel_token"
-          );
-
-        if (!token) {
-          console.error(
-            "No token found"
-          );
-          return;
-        }
-
-        const headers: HeadersInit = {
+        const headers = {
           Authorization: `Bearer ${token}`,
         };
 
         const [
-          waterRes,
-          fishRes,
-          riskRes,
-          alertsRes,
+          waterResponse,
+          fishResponse,
+          riskResponse,
+          alertsResponse,
         ] = await Promise.all([
-          fetch(
-            "https://aquasentinel-api-q232.onrender.com/water-readings",
-            { headers }
-          ),
-
-          fetch(
-            "https://aquasentinel-api-q232.onrender.com/fish-observations",
-            { headers }
-          ),
-
-          fetch(
-            "https://aquasentinel-api-q232.onrender.com/risk-assessments",
-            { headers }
-          ),
-
-          fetch(
-            "https://aquasentinel-api-q232.onrender.com/alerts",
-            { headers }
-          ),
+          fetch(`${API_BASE}/water-readings`, {
+            headers,
+          }),
+          fetch(`${API_BASE}/fish-observations`, {
+            headers,
+          }),
+          fetch(`${API_BASE}/risk-assessments`, {
+            headers,
+          }),
+          fetch(`${API_BASE}/alerts`, {
+            headers,
+          }),
         ]);
 
+        if (
+          waterResponse.status === 401 ||
+          fishResponse.status === 401 ||
+          riskResponse.status === 401 ||
+          alertsResponse.status === 401
+        ) {
+          localStorage.removeItem(
+            "aquasentinel_token"
+          );
+          router.push("/login");
+          return;
+        }
+
         const waterData =
-          await waterRes.json();
+          waterResponse.ok
+            ? await waterResponse.json()
+            : [];
 
         const fishData =
-          await fishRes.json();
+          fishResponse.ok
+            ? await fishResponse.json()
+            : [];
 
         const riskData =
-          await riskRes.json();
-
-        const alertsData =
-          alertsRes.ok
-            ? await alertsRes.json()
+          riskResponse.ok
+            ? await riskResponse.json()
             : [];
 
-        /*
-         * Get latest risk assessment.
-         */
-        const latestRisk: RiskAssessment | null =
-          Array.isArray(riskData)
-            ? riskData[0] || null
+        const alertData =
+          alertsResponse.ok
+            ? await alertsResponse.json()
+            : [];
+
+        if (!mounted) return;
+
+        const latestWater =
+          Array.isArray(waterData)
+            ? [...waterData].sort(
+                (a, b) =>
+                  new Date(b.recorded_at).getTime() -
+                  new Date(a.recorded_at).getTime()
+              )[0]
             : null;
 
-        /*
-         * Update dashboard data.
-         */
-        setWater(
-          Array.isArray(waterData)
-            ? waterData[0] || null
-            : null
-        );
-
-        setFish(
+        const latestFish =
           Array.isArray(fishData)
-            ? fishData[0] || null
-            : null
-        );
+            ? [...fishData].sort(
+                (a, b) =>
+                  new Date(b.observed_at).getTime() -
+                  new Date(a.observed_at).getTime()
+              )[0]
+            : null;
 
-        setRisk(latestRisk);
+        const latestRisk =
+          Array.isArray(riskData)
+            ? [...riskData].sort(
+                (a, b) =>
+                  new Date(b.assessed_at).getTime() -
+                  new Date(a.assessed_at).getTime()
+              )[0]
+            : null;
 
-        /*
-         * Start with real backend alerts.
-         */
-        let nextAlerts: Alert[] =
-          Array.isArray(alertsData)
-            ? alertsData
+        setWater(latestWater || null);
+        setFish(latestFish || null);
+        setRisk(latestRisk || null);
+
+        let backendAlerts: Alert[] =
+          Array.isArray(alertData)
+            ? alertData
             : [];
 
         /*
-         * ------------------------------------------------
-         * IMPORTANT NOTIFICATION FIX
-         * ------------------------------------------------
-         *
-         * If the latest risk is Moderate/Medium/High/
-         * Critical but the backend has not yet created
-         * an alert for that risk assessment, create a
-         * temporary dashboard notification.
-         *
-         * The ID is negative so it cannot collide with
-         * a real database alert ID.
+         * If the backend has not created an alert for the
+         * latest risk assessment yet, create a temporary
+         * dashboard alert.
          */
-        if (latestRisk) {
-          const normalizedRisk =
-            latestRisk.risk_level
-              .toLowerCase()
-              .trim();
-
-          const isRiskAlert =
-            normalizedRisk ===
-              "moderate" ||
-            normalizedRisk ===
-              "medium" ||
-            normalizedRisk ===
-              "high" ||
-            normalizedRisk ===
-              "critical";
-
-          const alreadyHasRiskAlert =
-            nextAlerts.some(
+        if (
+          latestRisk &&
+          ["moderate", "medium", "high", "critical"].includes(
+            String(latestRisk.risk_level).toLowerCase()
+          )
+        ) {
+          const existingRiskAlert =
+            backendAlerts.find(
               (alert) =>
                 alert.risk_assessment_id ===
                 latestRisk.id
             );
 
-          if (
-            isRiskAlert &&
-            !alreadyHasRiskAlert
-          ) {
-            const localRiskAlert: Alert =
-              {
-                /*
-                 * Stable ID for this specific
-                 * risk assessment.
-                 */
-                id: -latestRisk.id,
+          if (!existingRiskAlert) {
+            const temporaryAlert: Alert = {
+              id: -latestRisk.id,
+              pond_id: latestRisk.pond_id,
+              risk_assessment_id: latestRisk.id,
+              alert_level:
+                latestRisk.risk_level,
+              message:
+                latestRisk.contributing_factors
+                  ? Array.isArray(
+                      latestRisk.contributing_factors
+                    )
+                    ? latestRisk.contributing_factors.join(
+                        ". "
+                      )
+                    : String(
+                        latestRisk.contributing_factors
+                      )
+                  : "Attention required.",
+              sent_at: latestRisk.assessed_at,
+            };
 
-                pond_id:
-                  latestRisk.pond_id,
-
-                risk_assessment_id:
-                  latestRisk.id,
-
-                alert_level:
-                  latestRisk.risk_level,
-
-                message:
-                  latestRisk.contributing_factors ||
-                  `AquaSentinel detected ${latestRisk.risk_level.toLowerCase()} risk conditions.`,
-
-                sent_at:
-                  latestRisk.assessed_at,
-              };
-
-            nextAlerts = [
-              localRiskAlert,
-              ...nextAlerts,
+            backendAlerts = [
+              temporaryAlert,
+              ...backendAlerts,
             ];
           }
         }
 
-        /*
-         * Remove duplicate alert IDs.
-         */
-        const uniqueAlerts =
-          Array.from(
-            new Map(
-              nextAlerts.map(
-                (alert) => [
-                  alert.id,
-                  alert,
-                ]
-              )
-            ).values()
-          );
-
-        /*
-         * Newest notifications first.
-         */
-        uniqueAlerts.sort(
+        backendAlerts = backendAlerts.sort(
           (a, b) =>
-            new Date(
-              b.sent_at
-            ).getTime() -
-            new Date(
-              a.sent_at
-            ).getTime()
+            new Date(b.sent_at).getTime() -
+            new Date(a.sent_at).getTime()
         );
 
-        nextAlerts =
-          uniqueAlerts;
+        setAlerts(backendAlerts);
 
         /*
-         * IDs currently returned by the
-         * notification system.
+         * Notify only when a genuinely new alert appears.
          */
-        const nextAlertIds =
-          nextAlerts.map(
-            (alert) => alert.id
-          );
+        const currentIds = new Set(
+          backendAlerts.map((alert) => alert.id)
+        );
 
-        /*
-         * ------------------------------------------------
-         * SOUND DETECTION
-         * ------------------------------------------------
-         *
-         * We only make a sound after the first
-         * dashboard load.
-         *
-         * Existing alerts on page load do NOT beep.
-         */
-        if (
-          previousAlertIds.current !==
-          null
-        ) {
-          const newAlerts =
-            nextAlerts.filter(
-              (alert) =>
-                !previousAlertIds.current!.includes(
-                  alert.id
-                )
-            );
+        const newAlerts = backendAlerts.filter(
+          (alert) =>
+            !previousAlertIds.current.has(alert.id)
+        );
 
-          const newRiskAlerts =
-            newAlerts.filter(
-              (alert) => {
-                const level =
-                  alert.alert_level
-                    .toLowerCase()
-                    .trim();
+        if (previousAlertIds.current.size > 0) {
+          const seriousNewAlert =
+            newAlerts.find((alert) => {
+              const level =
+                alert.alert_level.toLowerCase();
 
-                return (
-                  level ===
-                    "moderate" ||
-                  level ===
-                    "medium" ||
-                  level ===
-                    "high" ||
-                  level ===
-                    "critical"
-                );
-              }
-            );
+              return [
+                "moderate",
+                "medium",
+                "high",
+                "critical",
+              ].includes(level);
+            });
 
-          if (
-            newRiskAlerts.length >
-            0
-          ) {
-            /*
-             * High/Critical gets priority.
-             */
-            const highestPriorityAlert =
-              newRiskAlerts.find(
-                (alert) => {
-                  const level =
-                    alert.alert_level
-                      .toLowerCase()
-                      .trim();
-
-                  return (
-                    level ===
-                      "high" ||
-                    level ===
-                      "critical"
-                  );
-                }
-              ) ||
-              newRiskAlerts[0];
-
+          if (seriousNewAlert) {
             playAlertSound(
-              highestPriorityAlert.alert_level
+              seriousNewAlert.alert_level
             );
           }
         }
 
-        /*
-         * Remember IDs for the next
-         * 10-second check.
-         */
-        previousAlertIds.current =
-          nextAlertIds;
-
-        /*
-         * Update notifications.
-         *
-         * THIS is what makes the red number
-         * appear on the bell.
-         */
-        setAlerts(nextAlerts);
-
-        /*
-         * Remember the latest risk assessment.
-         */
-        if (latestRisk) {
-          previousRiskId.current =
-            latestRisk.id;
-        }
+        previousAlertIds.current = currentIds;
       } catch (error) {
         console.error(
-          "AquaSentinel data error:",
+          "Failed to load dashboard data:",
           error
         );
+      } finally {
+        if (mounted) {
+          setLoading(false);
+        }
       }
+    };
+
+    fetchDashboardData();
+
+    const interval = setInterval(
+      fetchDashboardData,
+      10000
+    );
+
+    return () => {
+      mounted = false;
+      clearInterval(interval);
+    };
+  }, [router]);
+
+  /* =======================================================
+     LANGUAGE-AWARE VALUES
+     ======================================================= */
+
+  const localizedRisk = useMemo(() => {
+    return normalizeRiskLevel(risk?.risk_level);
+  }, [risk?.risk_level]);
+
+  const localizedRiskLabel =
+    t.common[
+      localizedRisk.toLowerCase() as
+        | "low"
+        | "moderate"
+        | "medium"
+        | "high"
+        | "critical"
+    ];
+
+  const localizedFactors = useMemo(() => {
+    if (!risk?.contributing_factors) {
+      return [];
     }
 
-    /*
-     * Initial load.
-     */
-    loadData();
+    const rawFactors = Array.isArray(
+      risk.contributing_factors
+    )
+      ? risk.contributing_factors
+      : String(
+          risk.contributing_factors
+        ).split(",");
 
-    /*
-     * Check every 10 seconds.
-     */
-    const interval =
-      setInterval(
-        loadData,
-        10000
-      );
+    return rawFactors
+      .map((factor) => {
+        const key =
+          getFactorTranslationKey(
+            String(factor).trim()
+          );
 
-    return () =>
-      clearInterval(
-        interval
-      );
-  }, []);
+        return key
+          ? t.factors[key]
+          : String(factor).trim();
+      })
+      .filter(Boolean);
+  }, [risk?.contributing_factors, alertLanguage]);
 
-  /*
-   * Load the user's preferred alert language.
-   */
-  useEffect(() => {
-    try {
-      const savedLanguage =
-        localStorage.getItem(
-          "aquasentinel_alert_language"
-        ) as AlertLanguage | null;
+  const unreadAlerts = alerts.filter(
+    (alert) =>
+      !readAlertIds.includes(alert.id)
+  );
 
-      if (
-        savedLanguage === "English" ||
-        savedLanguage === "Twi" ||
-        savedLanguage === "Dagbani" ||
-        savedLanguage === "Hausa"
-      ) {
-        setAlertLanguage(savedLanguage);
+  /* =======================================================
+     ALERT ACTIONS
+     ======================================================= */
+
+  const markAlertAsRead = (id: number) => {
+    setReadAlertIds((previous) => {
+      if (previous.includes(id)) {
+        return previous;
       }
-    } catch (error) {
-      console.error(
-        "Could not load alert language:",
-        error
-      );
-    }
-  }, []);
 
-  /*
-   * Change and persist the alert language.
-   */
-  const changeAlertLanguage = (
-    language: AlertLanguage
-  ) => {
-    setAlertLanguage(language);
+      const updated = [...previous, id];
 
-    try {
       localStorage.setItem(
-        "aquasentinel_alert_language",
-        language
+        "aquasentinel_read_alerts",
+        JSON.stringify(updated)
       );
-    } catch (error) {
-      console.error(
-        "Could not save alert language:",
-        error
-      );
-    }
+
+      return updated;
+    });
+  };
+
+  const markAllAlertsAsRead = () => {
+    const allIds = alerts.map(
+      (alert) => alert.id
+    );
+
+    setReadAlertIds(allIds);
+
+    localStorage.setItem(
+      "aquasentinel_read_alerts",
+      JSON.stringify(allIds)
+    );
   };
 
   /*
-   * Translate the COMPLETE alert message.
+   * This is intentionally language-aware.
    *
-   * The risk engine sends useful detail in alert.message.
-   * We keep that information and translate the known alert
-   * phrases/factors instead of replacing the message with a
-   * generic "high risk" sentence.
+   * When voice/TTS is added later, call:
+   *
+   * const voiceText = getAlertPresentation(alert).message;
+   *
+   * NEVER pass alert.message directly to TTS.
    */
-  const translateAlertMessage = (
-    message: string,
-    language: AlertLanguage
-  ) => {
-    if (!message) {
-      return "";
-    }
-
-    if (language === "English") {
-      return message;
-    }
-
-    const pondMatch = message.match(
-      /pond\s+(\d+)/i
-    );
-    const pondNumber =
-      pondMatch?.[1] || "";
-
-    /*
-     * Remove the pond number from the source temporarily so
-     * the same translation rules work for every pond.
-     */
-    let text = message.replace(
-      /pond\s+\d+/gi,
-      "__POND__"
-    );
-
-    const translations: Record<
-      Exclude<AlertLanguage, "English">,
-      Array<[RegExp, string]>
-    > = {
-      Twi: [
-        [
-          /Moderate stress risk detected/i,
-          "Wɔahu ahokyere kakra",
-        ],
-        [
-          /High stress risk detected/i,
-          "Wɔahu ahokyere kɛse",
-        ],
-        [
-          /Critical risk detected/i,
-          "Wɔahu asiane kɛse paa",
-        ],
-        [
-          /AquaSentinel detected moderate risk conditions/i,
-          "AquaSentinel ahu asiane kakra",
-        ],
-        [
-          /AquaSentinel detected high risk conditions/i,
-          "AquaSentinel ahu asiane kɛse",
-        ],
-        [
-          /AquaSentinel detected critical risk conditions/i,
-          "AquaSentinel ahu asiane kɛse paa",
-        ],
-        [
-          /Factors?:/i,
-          "Nneɛma a ɛde eyi bae:",
-        ],
-        [
-          /Dissolved oxygen is below its recent average/i,
-          "Nsuo mu oxygen so atew sen ne sɛnea ɛte daa",
-        ],
-        [
-          /Dissolved oxygen is declining/i,
-          "Nsuo mu oxygen redwane",
-        ],
-        [
-          /Dissolved oxygen is low/i,
-          "Nsuo mu oxygen sua",
-        ],
-        [
-          /Temperature is above normal/i,
-          "Nsuo hyew no akɔ soro sen sɛnea ɛte daa",
-        ],
-        [
-          /Temperature is high/i,
-          "Nsuo hyew no yɛ kɛse",
-        ],
-        [
-          /Temperature is below normal/i,
-          "Nsuo hyew no akɔ fam sen sɛnea ɛte daa",
-        ],
-        [
-          /pH is above the healthy range/i,
-          "pH no akɔ soro sen baabi a ɛyɛ papa ma nsuo",
-        ],
-        [
-          /pH is below the healthy range/i,
-          "pH no akɔ fam sen baabi a ɛyɛ papa ma nsuo",
-        ],
-        [
-          /pH is high/i,
-          "pH no yɛ kɛse",
-        ],
-        [
-          /pH is low/i,
-          "pH no sua",
-        ],
-        [
-          /ML detected an unusual water-quality pattern/i,
-          "ML ahu nsuo no mu nsakrae a ɛnyɛ sɛnea ɛtaa te",
-        ],
-        [
-          /unusual water-quality pattern/i,
-          "nsuo no mu nsakrae a ɛnyɛ sɛnea ɛtaa te",
-        ],
-        [
-          /Fish activity is low/i,
-          "mpataa no dwumadi sua",
-        ],
-        [
-          /Feeding response is poor/i,
-          "mpataa no adidi ho mmuae no nyɛ papa",
-        ],
-        [
-          /Unusual behaviour detected/i,
-          "wɔahu mpataa no suban a ɛnyɛ sɛnea ɛtaa te",
-        ],
-      ],
-
-      Hausa: [
-        [
-          /Moderate stress risk detected/i,
-          "An gano matsakaicin haɗarin damuwa",
-        ],
-        [
-          /High stress risk detected/i,
-          "An gano babban haɗarin damuwa",
-        ],
-        [
-          /Critical risk detected/i,
-          "An gano babban haɗari sosai",
-        ],
-        [
-          /AquaSentinel detected moderate risk conditions/i,
-          "AquaSentinel ya gano matsakaicin haɗari",
-        ],
-        [
-          /AquaSentinel detected high risk conditions/i,
-          "AquaSentinel ya gano babban haɗari",
-        ],
-        [
-          /AquaSentinel detected critical risk conditions/i,
-          "AquaSentinel ya gano babban haɗari sosai",
-        ],
-        [
-          /Factors?:/i,
-          "Dalilai:",
-        ],
-        [
-          /Dissolved oxygen is below its recent average/i,
-          "Oxygen da ke cikin ruwa ya ragu fiye da matsakaicin da aka saba",
-        ],
-        [
-          /Dissolved oxygen is declining/i,
-          "Oxygen da ke cikin ruwa yana raguwa",
-        ],
-        [
-          /Dissolved oxygen is low/i,
-          "Oxygen da ke cikin ruwa ya yi ƙasa",
-        ],
-        [
-          /Temperature is above normal/i,
-          "Zafin ruwan ya fi yadda aka saba",
-        ],
-        [
-          /Temperature is high/i,
-          "Zafin ruwan ya yi yawa",
-        ],
-        [
-          /Temperature is below normal/i,
-          "Zafin ruwan ya yi ƙasa da yadda aka saba",
-        ],
-        [
-          /pH is above the healthy range/i,
-          "pH na ruwa ya wuce iyakar da ta dace",
-        ],
-        [
-          /pH is below the healthy range/i,
-          "pH na ruwa ya yi ƙasa da iyakar da ta dace",
-        ],
-        [
-          /pH is high/i,
-          "pH na ruwa ya yi yawa",
-        ],
-        [
-          /pH is low/i,
-          "pH na ruwa ya yi ƙasa",
-        ],
-        [
-          /ML detected an unusual water-quality pattern/i,
-          "Tsarin ML ya gano wani yanayi na ingancin ruwa wanda ba a saba gani ba",
-        ],
-        [
-          /unusual water-quality pattern/i,
-          "wani yanayi na ingancin ruwa wanda ba a saba gani ba",
-        ],
-        [
-          /Fish activity is low/i,
-          "Ayyukan kifaye sun yi ƙasa",
-        ],
-        [
-          /Feeding response is poor/i,
-          "Amsar kifaye ga ciyarwa ba ta da kyau",
-        ],
-        [
-          /Unusual behaviour detected/i,
-          "An gano halin kifaye da ba a saba gani ba",
-        ],
-      ],
-
-      /*
-       * Dagbani terminology is kept conservative here.
-       * "barna" is documented as danger/risk, "kom" as water,
-       * and "zahim" as fish. Technical terms such as oxygen and
-       * pH are retained where a verified aquaculture equivalent
-       * is not available, rather than inventing a translation.
-       */
-      Dagbani: [
-        [
-          /Moderate stress risk detected/i,
-          "Barna din yɛla ka pond maa niŋla",
-        ],
-        [
-          /High stress risk detected/i,
-          "Barna kpeɛlim ka pond maa niŋla",
-        ],
-        [
-          /Critical risk detected/i,
-          "Barna kpeɛlim pam ka pond maa niŋla",
-        ],
-        [
-          /AquaSentinel detected moderate risk conditions/i,
-          "AquaSentinel nyɛli barna din yɛla",
-        ],
-        [
-          /AquaSentinel detected high risk conditions/i,
-          "AquaSentinel nyɛli barna kpeɛlim",
-        ],
-        [
-          /AquaSentinel detected critical risk conditions/i,
-          "AquaSentinel nyɛli barna kpeɛlim pam",
-        ],
-        [
-          /Factors?:/i,
-          "Din nyɛli niŋgbɛlim:",
-        ],
-        [
-          /Dissolved oxygen is below its recent average/i,
-          "kom ni oxygen maa nyɛla ka o palli n-tiŋgbana",
-        ],
-        [
-          /Dissolved oxygen is declining/i,
-          "kom ni oxygen maa palli",
-        ],
-        [
-          /Dissolved oxygen is low/i,
-          "kom ni oxygen maa yɛla pam",
-        ],
-        [
-          /Temperature is above normal/i,
-          "kom maa yuli pam n-tiŋgbana",
-        ],
-        [
-          /Temperature is high/i,
-          "kom maa yuli pam",
-        ],
-        [
-          /Temperature is below normal/i,
-          "kom maa yuli yɛla",
-        ],
-        [
-          /pH is above the healthy range/i,
-          "pH maa nyɛla ka o palli n-tiŋgbana",
-        ],
-        [
-          /pH is below the healthy range/i,
-          "pH maa nyɛla ka o yuli",
-        ],
-        [
-          /pH is high/i,
-          "pH maa pam",
-        ],
-        [
-          /pH is low/i,
-          "pH maa yɛla",
-        ],
-        [
-          /ML detected an unusual water-quality pattern/i,
-          "ML nyɛli kom maa niŋgbɛlim din kaŋa",
-        ],
-        [
-          /unusual water-quality pattern/i,
-          "kom maa niŋgbɛlim din kaŋa",
-        ],
-        [
-          /Fish activity is low/i,
-          "zahim maa yɛla niŋgbɛlim",
-        ],
-        [
-          /Feeding response is poor/i,
-          "zahim maa niŋgbɛlim pam n-diibu",
-        ],
-        [
-          /Unusual behaviour detected/i,
-          "wɔ nyɛli zahim maa niŋgbɛlim din kaŋa",
-        ],
-      ],
-    };
-
-    for (const [pattern, replacement] of translations[
-      language
-    ]) {
-      text = text.replace(
-        pattern,
-        replacement
-      );
-    }
-
-    text = text.replace(
-      /__POND__/g,
-      language === "Twi"
-        ? `ɔtare ${pondNumber}`
-        : language === "Hausa"
-        ? `tafki na ${pondNumber}`
-        : `pond ${pondNumber}`
-    );
-
-    return text;
-  };
-
-  const getAlertPresentation = (
-    alert: Alert
-  ) => {
-    const normalizedLevel =
+  const getAlertPresentation = (alert: Alert) => {
+    const riskLevel = normalizeRiskLevel(
       alert.alert_level
-        .toLowerCase()
-        .trim();
-
-    const levelLabels: Record<
-      AlertLanguage,
-      Record<string, string>
-    > = {
-      English: {
-        critical: "Critical risk",
-        high: "High risk",
-        moderate: "Moderate risk",
-        medium: "Moderate risk",
-      },
-      Twi: {
-        critical: "Asiane kɛse paa",
-        high: "Asiane kɛse",
-        moderate: "Asiane kakra",
-        medium: "Asiane kakra",
-      },
-      Hausa: {
-        critical: "Babban haɗari",
-        high: "Babban haɗari",
-        moderate: "Matsakaicin haɗari",
-        medium: "Matsakaicin haɗari",
-      },
-      Dagbani: {
-        critical: "Barna kpeɛlim pam",
-        high: "Barna kpeɛlim",
-        moderate: "Barna din yɛla",
-        medium: "Barna din yɛla",
-      },
-    };
-
-    const detailLabels: Record<
-      AlertLanguage,
-      string
-    > = {
-      English: "Details",
-      Twi: "Nkyerɛkyerɛmu",
-      Dagbani: "Niŋgbɛlim",
-      Hausa: "Cikakkun bayanai",
-    };
-
-    const localizedLevel =
-      levelLabels[alertLanguage][
-        normalizedLevel
-      ] ||
-      levelLabels.English[
-        normalizedLevel
-      ] ||
-      alert.alert_level;
-
-    const pondLabels: Record<
-      AlertLanguage,
-      string
-    > = {
-      English: "Pond",
-      Twi: "Ɔtare",
-      Dagbani: "Pond",
-      Hausa: "Tafki",
-    };
+    );
 
     return {
-      localizedLevel,
-      detailLabel:
-        detailLabels[alertLanguage],
-      pondLabel:
-        pondLabels[alertLanguage],
+      riskLevel,
+      riskLabel:
+        t.common[
+          riskLevel.toLowerCase() as
+            | "low"
+            | "moderate"
+            | "medium"
+            | "high"
+            | "critical"
+        ],
+      alertLabel: t.alerts.riskAlert,
+      pondLabel: t.common.pond,
+      detailsLabel: t.common.details,
       message: translateAlertMessage(
         alert.message,
+        alertLanguage
+      ),
+      date: formatDate(
+        alert.sent_at,
         alertLanguage
       ),
     };
   };
 
-  /*
-   * Current risk level.
-   */
-  const riskLevel =
-    risk?.risk_level || "Low";
+  /* =======================================================
+     METRICS
+     ======================================================= */
 
-  /*
-   * Risk styling.
-   */
-  const riskStyles = {
-    Low: {
-      badge:
-        "bg-emerald-400/10 text-emerald-300 border-emerald-400/20",
+  const temperature =
+    water?.temperature ?? null;
 
-      glow:
-        "shadow-[0_0_50px_rgba(52,211,153,0.08)]",
+  const ph = water?.ph ?? null;
 
-      icon: "✓",
+  const oxygen =
+    water?.dissolved_oxygen ?? null;
 
-      message:
-        "Conditions look healthy",
-    },
+  const activity =
+    fish?.activity_level ?? null;
 
-    Moderate: {
-      badge:
-        "bg-amber-400/10 text-amber-300 border-amber-400/20",
+  const temperatureAttention =
+    temperature !== null &&
+    (temperature < 24 || temperature > 30);
 
-      glow:
-        "shadow-[0_0_50px_rgba(251,191,36,0.08)]",
+  const phAttention =
+    ph !== null &&
+    (ph < 6.8 || ph > 8);
 
-      icon: "!",
+  const oxygenAttention =
+    oxygen !== null &&
+    (oxygen < 5 || oxygen > 8);
 
-      message:
-        "Potential stress detected",
-    },
+  const riskPercentage =
+    getRiskPercentage(localizedRisk);
 
-    High: {
-      badge:
-        "bg-red-400/10 text-red-300 border-red-400/20",
+  const numericalRiskScore =
+    getRiskScore(risk?.risk_score);
 
-      glow:
-        "shadow-[0_0_50px_rgba(248,113,113,0.10)]",
+  const hasAttention =
+    localizedRisk !== "Low";
 
-      icon: "!",
+  const anomalyDetected =
+    Boolean(risk?.ml_anomaly);
 
-      message:
-        "Potentially harmful conditions detected",
-    },
-  };
-
-  const currentRisk =
-    riskStyles[
-      riskLevel as keyof typeof riskStyles
-    ] || riskStyles.Low;
-
-  /*
-   * ONLY Moderate/Medium/High/Critical
-   * are counted as notification alerts.
-   */
-  const unreadAlerts =
-    alerts.filter(
-      (alert) => {
-        const level =
-          alert.alert_level
-            .toLowerCase()
-            .trim();
-
-        const isRiskAlert =
-          level === "moderate" ||
-          level === "medium" ||
-          level === "high" ||
-          level === "critical";
-
-        return (
-          isRiskAlert &&
-          !readAlertIds.includes(
-            alert.id
-          )
-        );
-      }
-    );
-
-  /*
-   * Mark one alert as read.
-   */
-  const markAlertAsRead = (
-    alertId: number
-  ) => {
-    setReadAlertIds(
-      (current) => {
-        const updated =
-          current.includes(
-            alertId
-          )
-            ? current
-            : [
-                ...current,
-                alertId,
-              ];
-
-        localStorage.setItem(
-          "aquasentinel_read_alerts",
-          JSON.stringify(
-            updated
-          )
-        );
-
-        return updated;
-      }
-    );
-  };
-
-  /*
-   * Mark all current risk alerts as read.
-   */
-  const markAllAlertsAsRead =
-    () => {
-      setReadAlertIds(
-        (current) => {
-          const riskAlertIds =
-            alerts
-              .filter(
-                (alert) => {
-                  const level =
-                    alert.alert_level
-                      .toLowerCase()
-                      .trim();
-
-                  return (
-                    level ===
-                      "moderate" ||
-                    level ===
-                      "medium" ||
-                    level ===
-                      "high" ||
-                    level ===
-                      "critical"
-                  );
-                }
-              )
-              .map(
-                (alert) =>
-                  alert.id
-              );
-
-          const updated =
-            Array.from(
-              new Set([
-                ...current,
-                ...riskAlertIds,
-              ])
-            );
-
-          localStorage.setItem(
-            "aquasentinel_read_alerts",
-            JSON.stringify(
-              updated
-            )
-          );
-
-          return updated;
-        }
-      );
-    };
-
-  /*
-   * Alert badge styling.
-   */
-  const alertLevelClass = (
-    level: string
-  ) => {
-    const normalized =
-      level
-        .toLowerCase()
-        .trim();
-
-    if (
-      normalized ===
-        "critical" ||
-      normalized ===
-        "high"
-    ) {
-      return "border-red-400/20 bg-red-400/10 text-red-300";
-    }
-
-    if (
-      normalized ===
-        "moderate" ||
-      normalized ===
-        "medium"
-    ) {
-      return "border-amber-400/20 bg-amber-400/10 text-amber-300";
-    }
-
-    return "border-[#27e0d0]/20 bg-[#27e0d0]/10 text-[#27e0d0]";
-  };
+  /* =======================================================
+     RENDER
+     ======================================================= */
 
   return (
-    <main className="min-h-screen bg-[#022b30] text-white">
+    <main
+      className="min-h-screen text-white"
+      style={{
+        background: "#022b30",
+      }}
+      onClick={initializeAudio}
+    >
+      <div className="flex min-h-screen">
 
-      {/* Ambient background */}
-      <div className="pointer-events-none fixed inset-0 overflow-hidden">
+        {/* =================================================
+            DESKTOP SIDEBAR
+            ================================================= */}
 
-        <div className="absolute -left-40 -top-40 h-96 w-96 rounded-full bg-[#00b8a9]/10 blur-3xl" />
+        <aside className="hidden w-64 shrink-0 border-r border-white/10 bg-[#01252a] lg:flex lg:flex-col">
+          <div className="flex h-full flex-col">
 
-        <div className="absolute right-0 top-1/3 h-96 w-96 rounded-full bg-[#27e0d0]/5 blur-3xl" />
-
-      </div>
-
-      <div className="relative flex min-h-screen">
-
-        {/* Desktop Sidebar */}
-        <aside className="hidden w-64 shrink-0 border-r border-white/5 bg-[#071d23]/90 px-5 py-7 lg:block">
-
-          <div className="mb-12">
-
-            <Image
-              src="/logo.jpg"
-              alt="AquaSentinel Labs"
-              width={420}
-              height={130}
-              priority
-              className="h-auto w-full max-w-[210px]"
-            />
-
-          </div>
-
-          <nav className="space-y-2">
-
-            <p className="mb-3 px-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-600">
-              Overview
-            </p>
-
-            <Link
-              href="/"
-              className="flex w-full items-center gap-3 rounded-xl bg-[#00b8a9]/10 px-3 py-3 text-sm font-medium text-[#27e0d0]"
-            >
-              <span>◉</span>
-              Dashboard
-            </Link>
-
-            <Link
-              href="/ponds"
-              className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-sm text-slate-400 transition hover:bg-white/5 hover:text-white"
-            >
-              <span>◌</span>
-              Ponds
-            </Link>
-
-            <Link
-              href="/insights"
-              className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-sm text-slate-400 transition hover:bg-white/5 hover:text-white"
-            >
-              <span>⌁</span>
-              Insights
-            </Link>
-
-            <p className="mb-3 mt-8 px-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-600">
-              Monitoring
-            </p>
-
-            <Link
-              href="/alerts"
-              className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-sm text-slate-400 transition hover:bg-white/5 hover:text-white"
-            >
-              <span>◈</span>
-              Alerts
-            </Link>
-
-            <Link
-              href="/history"
-              className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-sm text-slate-400 transition hover:bg-white/5 hover:text-white"
-            >
-              <span>◷</span>
-              History
-            </Link>
-
-          </nav>
-
-          <div className="mt-16 rounded-2xl border border-[#00b8a9]/10 bg-[#00b8a9]/5 p-4">
-
-            <div className="mb-2 flex items-center gap-2">
-
-              <span className="h-2 w-2 animate-pulse rounded-full bg-[#27e0d0]" />
-
-              <span className="text-xs font-medium text-[#27e0d0]">
-                SENTINEL ACTIVE
-              </span>
-
-            </div>
-
-            <p className="text-xs leading-5 text-slate-500">
-              Continuous monitoring is active for your aquaculture environment.
-            </p>
-
-          </div>
-
-        </aside>
-
-        {/* Main */}
-        <section className="flex-1 px-5 py-7 sm:px-8 lg:px-10">
-
-          {/* Top bar */}
-          <header className="mb-6 flex items-center justify-between">
-
-            {/* Mobile logo + hamburger */}
-            <div className="flex items-center gap-3 lg:hidden">
-
-              <button
-                onClick={() =>
-                  setMenuOpen(
-                    !menuOpen
-                  )
-                }
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-xl text-white transition hover:bg-white/10"
-                aria-label="Toggle navigation menu"
-              >
-                {menuOpen
-                  ? "✕"
-                  : "☰"}
-              </button>
-
+            <div className="flex items-center gap-3 px-6 py-6">
               <Image
                 src="/logo.jpg"
                 alt="AquaSentinel Labs"
-                width={420}
-                height={130}
-                priority
-                className="h-auto w-[150px] sm:w-[180px]"
+                width={42}
+                height={42}
+                className="rounded-xl object-cover"
               />
 
+              <div>
+                <p className="text-sm font-bold">
+                  AquaSentinel
+                </p>
+                <p className="text-[10px] uppercase tracking-[0.2em] text-teal-300">
+                  Labs
+                </p>
+              </div>
             </div>
 
-            {/* Farm information */}
-            <div className="ml-auto flex items-center gap-3">
+            <nav className="mt-6 flex-1 px-4">
+              <div className="space-y-2">
 
-              {/* Notifications */}
-              <div className="relative">
+                <SidebarLink
+                  href="/"
+                  label={t.nav.dashboard}
+                  active
+                  icon="dashboard"
+                />
 
-                <button
-                  type="button"
-                  onClick={() =>
-                    setNotificationsOpen(
-                      !notificationsOpen
-                    )
+                <SidebarLink
+                  href="/ponds"
+                  label={t.nav.ponds}
+                  icon="pond"
+                />
+
+                <SidebarLink
+                  href="/insights"
+                  label={t.nav.insights}
+                  icon="insight"
+                />
+
+                <SidebarLink
+                  href="/alerts"
+                  label={t.nav.alerts}
+                  icon="alert"
+                />
+
+                <SidebarLink
+                  href="/history"
+                  label={t.nav.history}
+                  icon="history"
+                />
+
+              </div>
+            </nav>
+
+            <div className="border-t border-white/10 p-5">
+              <div className="rounded-2xl bg-white/5 p-4">
+                <p className="text-xs font-semibold">
+                  {t.hero.farm}
+                </p>
+
+                <p className="mt-1 text-xs text-white/45">
+                  {t.hero.location}
+                </p>
+
+                <div className="mt-4 flex items-center gap-2">
+                  <span className="h-2 w-2 rounded-full bg-teal-400" />
+                  <span className="text-[11px] text-teal-300">
+                    {t.common.active}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </aside>
+
+        {/* =================================================
+            MAIN CONTENT
+            ================================================= */}
+
+        <div className="min-w-0 flex-1">
+
+          {/* =================================================
+              TOP BAR
+              ================================================= */}
+
+          <header className="sticky top-0 z-40 border-b border-white/10 bg-[#022b30]/95 backdrop-blur-xl">
+
+            <div className="flex h-20 items-center justify-between px-4 sm:px-6 lg:px-8">
+
+              {/* MOBILE BRAND */}
+              <div className="flex items-center gap-3 lg:hidden">
+
+                <Image
+                  src="/logo.jpg"
+                  alt="AquaSentinel Labs"
+                  width={38}
+                  height={38}
+                  className="rounded-xl object-cover"
+                />
+
+                <div>
+                  <p className="text-sm font-bold">
+                    AquaSentinel
+                  </p>
+                  <p className="text-[9px] uppercase tracking-[0.18em] text-teal-300">
+                    Labs
+                  </p>
+                </div>
+              </div>
+
+              {/* DESKTOP TITLE */}
+              <div className="hidden lg:block">
+                <p className="text-xs uppercase tracking-[0.2em] text-white/35">
+                  {t.nav.dashboard}
+                </p>
+                <p className="mt-1 text-sm text-white/70">
+                  {t.hero.farm} • {t.hero.location}
+                </p>
+              </div>
+
+              <div className="flex items-center gap-3">
+
+                {/* LANGUAGE SELECTOR */}
+                <select
+                  value={alertLanguage}
+                  onChange={(event) => {
+                    setAlertLanguage(
+                      event.target
+                        .value as AlertLanguage
+                    );
+                  }}
+                  className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs text-white outline-none transition focus:border-teal-400/50"
+                  onClick={(event) =>
+                    event.stopPropagation()
                   }
-                  className="relative flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-lg text-slate-300 transition hover:border-[#27e0d0]/20 hover:bg-[#27e0d0]/10 hover:text-[#27e0d0]"
-                  aria-label="Open notifications"
-                  aria-expanded={
-                    notificationsOpen
-                  }
-                  title="Notifications"
                 >
-
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.8"
-                    className="h-5 w-5"
-                    aria-hidden="true"
+                  <option
+                    value="English"
+                    className="bg-[#022b30]"
                   >
+                    English
+                  </option>
 
-                    <path
+                  <option
+                    value="Twi"
+                    className="bg-[#022b30]"
+                  >
+                    Twi
+                  </option>
+
+                  <option
+                    value="Dagbani"
+                    className="bg-[#022b30]"
+                  >
+                    Dagbani
+                  </option>
+
+                  <option
+                    value="Hausa"
+                    className="bg-[#022b30]"
+                  >
+                    Hausa
+                  </option>
+                </select>
+
+                {/* NOTIFICATION BUTTON */}
+                <div className="relative">
+
+                  <button
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      initializeAudio();
+                      setNotificationsOpen(
+                        !notificationsOpen
+                      );
+                    }}
+                    className="relative flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/5 transition hover:bg-white/10"
+                    aria-label={t.alerts.title}
+                  >
+                    <svg
+                      width="19"
+                      height="19"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.8"
                       strokeLinecap="round"
                       strokeLinejoin="round"
-                      d="M15 17H9m10-2.5c-1.2-1.1-2-2.7-2-4.5V8a5 5 0 0 0-10 0v2c0 1.8-.8 3.4-2 4.5-.5.5-.1 1.5.6 1.5h12.8c.7 0 1.1-1 .6-1.5ZM10 20h4"
-                    />
+                      className="text-white/80"
+                    >
+                      <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" />
+                      <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                    </svg>
 
-                  </svg>
+                    {unreadAlerts.length > 0 && (
+                      <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[9px] font-bold">
+                        {unreadAlerts.length > 9
+                          ? "9+"
+                          : unreadAlerts.length}
+                      </span>
+                    )}
+                  </button>
 
-                  {/* RED UNREAD COUNT */}
-                  {unreadAlerts.length >
-                    0 && (
-                    <span className="absolute -right-1 -top-1 flex min-h-5 min-w-5 items-center justify-center rounded-full border-2 border-[#071d23] bg-red-400 px-1 text-[9px] font-bold text-white">
-                      {unreadAlerts.length >
-                      9
-                        ? "9+"
-                        : unreadAlerts.length}
-                    </span>
-                  )}
+                  {/* NOTIFICATION PANEL */}
+                  {notificationsOpen && (
+                    <div
+                      className="absolute right-0 top-14 z-50 w-[min(380px,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-white/10 bg-[#07343a] shadow-2xl"
+                      onClick={(event) =>
+                        event.stopPropagation()
+                      }
+                    >
+                      <div className="flex items-center justify-between border-b border-white/10 px-4 py-4">
 
-                </button>
+                        <div>
+                          <p className="text-sm font-semibold">
+                            {t.alerts.title}
+                          </p>
 
-                {notificationsOpen && (
-                  <div className="absolute right-0 top-12 z-50 w-[min(92vw,380px)] overflow-hidden rounded-2xl border border-white/10 bg-[#071d23] shadow-2xl">
-
-                    <div className="flex items-center justify-between border-b border-white/5 px-4 py-4">
-
-                      <div>
-
-                        <p className="text-sm font-semibold text-white">
-                          Notifications
-                        </p>
-
-                        {/* Alert language selector */}
-                        <div className="mt-3 flex flex-wrap gap-1.5">
-                          {([
-                            "English",
-                            "Twi",
-                            "Dagbani",
-                            "Hausa",
-                          ] as AlertLanguage[]).map(
-                            (language) => (
-                              <button
-                                key={language}
-                                type="button"
-                                onClick={() =>
-                                  changeAlertLanguage(
-                                    language
-                                  )
-                                }
-                                className={`rounded-lg px-2.5 py-1 text-[10px] font-medium transition ${
-                                  alertLanguage ===
-                                  language
-                                    ? "bg-[#27e0d0]/15 text-[#27e0d0]"
-                                    : "bg-white/[0.03] text-slate-500 hover:bg-white/[0.06] hover:text-white"
-                                }`}
-                              >
-                                {language}
-                              </button>
-                            )
-                          )}
+                          <p className="mt-1 text-[11px] text-white/40">
+                            {unreadAlerts.length}{" "}
+                            {t.alerts.unread}
+                          </p>
                         </div>
 
-                        <p className="mt-2 text-xs text-slate-500">
-
-                          {unreadAlerts.length >
-                          0
-                            ? `${unreadAlerts.length} unread alert${
-                                unreadAlerts.length ===
-                                1
-                                  ? ""
-                                  : "s"
-                              }`
-                            : "You're all caught up"}
-
-                        </p>
-
+                        {alerts.length > 0 && (
+                          <button
+                            onClick={
+                              markAllAlertsAsRead
+                            }
+                            className="text-[10px] font-medium text-teal-300 hover:text-teal-200"
+                          >
+                            {t.alerts.markAllRead}
+                          </button>
+                        )}
                       </div>
 
-                      {unreadAlerts.length >
-                        0 && (
-                        <button
-                          type="button"
-                          onClick={
-                            markAllAlertsAsRead
-                          }
-                          className="text-xs font-medium text-[#27e0d0] transition hover:text-white"
-                        >
-                          Mark all read
-                        </button>
-                      )}
+                      <div className="max-h-[420px] overflow-y-auto">
 
+                        {alerts.length === 0 ? (
+                          <div className="px-5 py-10 text-center">
+                            <p className="text-sm text-white/50">
+                              {t.alerts.noAlerts}
+                            </p>
+                          </div>
+                        ) : (
+                          alerts.map((alert) => {
+                            const presentation =
+                              getAlertPresentation(
+                                alert
+                              );
+
+                            const isRead =
+                              readAlertIds.includes(
+                                alert.id
+                              );
+
+                            return (
+                              <button
+                                key={alert.id}
+                                onClick={() =>
+                                  markAlertAsRead(
+                                    alert.id
+                                  )
+                                }
+                                className={`w-full border-b border-white/5 p-4 text-left transition hover:bg-white/5 ${
+                                  !isRead
+                                    ? "bg-white/[0.035]"
+                                    : ""
+                                }`}
+                              >
+                                <div className="flex gap-3">
+
+                                  <span
+                                    className={`mt-1 h-2.5 w-2.5 shrink-0 rounded-full ${getRiskDotClass(
+                                      presentation.riskLevel
+                                    )}`}
+                                  />
+
+                                  <div className="min-w-0 flex-1">
+
+                                    <div className="flex items-start justify-between gap-3">
+
+                                      <p className="text-xs font-semibold">
+                                        {
+                                          presentation.riskLabel
+                                        }
+                                      </p>
+
+                                      {!isRead && (
+                                        <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-teal-300" />
+                                      )}
+                                    </div>
+
+                                    <p className="mt-1 text-xs leading-5 text-white/65">
+                                      {
+                                        presentation.message
+                                      }
+                                    </p>
+
+                                    <p className="mt-2 text-[10px] text-white/30">
+                                      {
+                                        presentation.date
+                                      }
+                                    </p>
+                                  </div>
+                                </div>
+                              </button>
+                            );
+                          })
+                        )}
+
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* FARM USER */}
+                <div className="hidden items-center gap-3 sm:flex">
+                  <div className="text-right">
+                    <p className="text-xs font-semibold">
+                      {t.hero.farm}
+                    </p>
+                    <p className="text-[10px] text-white/35">
+                      {t.hero.location}
+                    </p>
+                  </div>
+
+                  <button
+                    onClick={() => {
+                      localStorage.removeItem(
+                        "aquasentinel_token"
+                      );
+                      router.push("/login");
+                    }}
+                    className="flex h-9 w-9 items-center justify-center rounded-full bg-teal-500 text-xs font-bold text-[#022b30]"
+                  >
+                    S
+                  </button>
+                </div>
+
+                {/* MOBILE HAMBURGER */}
+                <button
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    setMenuOpen(!menuOpen);
+                  }}
+                  className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-lg lg:hidden"
+                  aria-label="Menu"
+                >
+                  {menuOpen ? "✕" : "☰"}
+                </button>
+
+              </div>
+            </div>
+
+            {/* MOBILE MENU */}
+            {menuOpen && (
+              <div className="border-t border-white/10 bg-[#01252a] px-4 py-4 lg:hidden">
+
+                <div className="space-y-2">
+
+                  <MobileNavLink
+                    href="/"
+                    label={t.nav.dashboard}
+                    active
+                    onClick={() =>
+                      setMenuOpen(false)
+                    }
+                  />
+
+                  <MobileNavLink
+                    href="/ponds"
+                    label={t.nav.ponds}
+                    onClick={() =>
+                      setMenuOpen(false)
+                    }
+                  />
+
+                  <MobileNavLink
+                    href="/insights"
+                    label={t.nav.insights}
+                    onClick={() =>
+                      setMenuOpen(false)
+                    }
+                  />
+
+                  <MobileNavLink
+                    href="/alerts"
+                    label={t.nav.alerts}
+                    onClick={() =>
+                      setMenuOpen(false)
+                    }
+                  />
+
+                  <MobileNavLink
+                    href="/history"
+                    label={t.nav.history}
+                    onClick={() =>
+                      setMenuOpen(false)
+                    }
+                  />
+
+                </div>
+              </div>
+            )}
+          </header>
+
+          {/* =================================================
+              CONTENT
+              ================================================= */}
+
+          <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+
+            {/* HERO */}
+            <section className="mb-8">
+
+              <div className="flex flex-col justify-between gap-5 lg:flex-row lg:items-end">
+
+                <div>
+
+                  <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-teal-400/20 bg-teal-400/5 px-3 py-1.5">
+                    <span className="h-1.5 w-1.5 rounded-full bg-teal-300" />
+                    <span className="text-[10px] font-semibold tracking-[0.16em] text-teal-300">
+                      {t.hero.badge}
+                    </span>
+                  </div>
+
+                  <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
+                    {getTimeGreeting(
+                      alertLanguage
+                    )}
+                  </h1>
+
+                  <p className="mt-3 max-w-2xl text-sm leading-6 text-white/45">
+                    {t.hero.monitoring}
+                  </p>
+                </div>
+
+                <div className="rounded-2xl border border-white/10 bg-white/[0.035] px-4 py-3">
+                  <p className="text-[10px] uppercase tracking-[0.15em] text-white/30">
+                    {t.common.status}
+                  </p>
+
+                  <div className="mt-2 flex items-center gap-2">
+                    <span className="h-2 w-2 rounded-full bg-teal-400" />
+                    <span className="text-xs font-medium text-teal-300">
+                      {t.common.active}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            {/* METRICS */}
+            <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+
+              <MetricCard
+                title={t.metrics.temperature}
+                value={
+                  temperature !== null
+                    ? `${temperature.toFixed(1)}°C`
+                    : "--"
+                }
+                subtitle={
+                  temperatureAttention
+                    ? t.metrics.attention
+                    : t.metrics.optimal
+                }
+                attention={
+                  temperatureAttention
+                }
+                icon="temperature"
+              />
+
+              <MetricCard
+                title={t.metrics.ph}
+                value={
+                  ph !== null
+                    ? ph.toFixed(1)
+                    : "--"
+                }
+                subtitle={
+                  phAttention
+                    ? t.metrics.attention
+                    : t.metrics.optimal
+                }
+                attention={phAttention}
+                icon="ph"
+              />
+
+              <MetricCard
+                title={t.metrics.oxygen}
+                value={
+                  oxygen !== null
+                    ? `${oxygen.toFixed(1)}`
+                    : "--"
+                }
+                subtitle={
+                  oxygenAttention
+                    ? t.metrics.attention
+                    : t.metrics.optimal
+                }
+                attention={oxygenAttention}
+                icon="oxygen"
+              />
+
+              <MetricCard
+                title={t.metrics.fishActivity}
+                value={
+                  activity
+                    ? activity
+                    : "--"
+                }
+                subtitle={
+                  fish?.unusual_behaviour
+                    ? t.metrics.attention
+                    : t.metrics.optimal
+                }
+                attention={
+                  Boolean(
+                    fish?.unusual_behaviour
+                  )
+                }
+                icon="fish"
+              />
+
+            </section>
+
+            {/* MAIN GRID */}
+            <section className="mt-6 grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
+
+              {/* FISH BEHAVIOUR */}
+              <div className="rounded-3xl border border-white/10 bg-white/[0.035] p-5 sm:p-6">
+
+                <div className="flex items-start justify-between">
+
+                  <div>
+                    <p className="text-sm font-semibold">
+                      {t.fish.title}
+                    </p>
+
+                    <p className="mt-1 text-xs text-white/35">
+                      {t.fish.monitoring}
+                    </p>
+                  </div>
+
+                  <div className="rounded-xl bg-teal-400/10 p-2 text-teal-300">
+                    <svg
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.7"
+                    >
+                      <path d="M3 12s3.5-5 9-5 9 5 9 5-3.5 5-9 5-9-5-9-5Z" />
+                      <circle
+                        cx="12"
+                        cy="12"
+                        r="2"
+                      />
+                    </svg>
+                  </div>
+
+                </div>
+
+                <div className="mt-6 grid gap-3 sm:grid-cols-2">
+
+                  <InfoBox
+                    label={t.fish.activity}
+                    value={
+                      fish?.activity_level ||
+                      "--"
+                    }
+                  />
+
+                  <InfoBox
+                    label={t.fish.feeding}
+                    value={
+                      fish?.feeding_response ||
+                      "--"
+                    }
+                  />
+
+                  <InfoBox
+                    label={t.fish.unusual}
+                    value={
+                      fish?.unusual_behaviour
+                        ? t.fish.observed
+                        : t.fish.noneObserved
+                    }
+                    danger={
+                      Boolean(
+                        fish?.unusual_behaviour
+                      )
+                    }
+                  />
+
+                  <InfoBox
+                    label={t.fish.fishCount}
+                    value={
+                      fish?.fish_count !==
+                      undefined
+                        ? String(
+                            fish.fish_count
+                          )
+                        : "--"
+                    }
+                  />
+
+                </div>
+              </div>
+
+              {/* RISK */}
+              <div
+                className={`rounded-3xl border p-5 sm:p-6 ${getRiskColorClass(
+                  localizedRisk
+                )}`}
+              >
+
+                <div className="flex items-start justify-between">
+
+                  <div>
+                    <p className="text-sm font-semibold text-white">
+                      {t.risk.title}
+                    </p>
+
+                    <p className="mt-1 text-xs leading-5 text-white/45">
+                      {t.risk.subtitle}
+                    </p>
+                  </div>
+
+                  <div
+                    className={`rounded-xl px-3 py-2 text-xs font-semibold ${getRiskColorClass(
+                      localizedRisk
+                    )}`}
+                  >
+                    {localizedRiskLabel}
+                  </div>
+
+                </div>
+
+                <div className="mt-6">
+
+                  <div className="flex items-end justify-between">
+
+                    <div>
+                      <p className="text-[10px] uppercase tracking-[0.15em] text-white/35">
+                        {t.risk.riskScore}
+                      </p>
+
+                      <p className="mt-1 text-4xl font-semibold">
+                        {numericalRiskScore}
+                        <span className="text-lg text-white/30">
+                          /100
+                        </span>
+                      </p>
                     </div>
 
-                    <div className="max-h-[420px] overflow-y-auto">
+                    <p className="text-xs text-white/40">
+                      {localizedRiskLabel}
+                    </p>
+                  </div>
 
-                      {alerts.filter(
-                        (alert) => {
-                          const level =
+                  <div className="mt-4 h-2 overflow-hidden rounded-full bg-black/20">
+                    <div
+                      className={`h-full rounded-full transition-all duration-700 ${
+                        localizedRisk ===
+                          "High" ||
+                        localizedRisk ===
+                          "Critical"
+                          ? "bg-red-400"
+                          : localizedRisk ===
+                              "Moderate" ||
+                            localizedRisk ===
+                              "Medium"
+                          ? "bg-amber-400"
+                          : "bg-teal-400"
+                      }`}
+                      style={{
+                        width: `${Math.max(
+                          numericalRiskScore,
+                          riskPercentage
+                        )}%`,
+                      }}
+                    />
+                  </div>
+                </div>
+
+                {/* ATTENTION */}
+                {hasAttention && (
+                  <div className="mt-5 rounded-2xl border border-red-400/20 bg-red-500/10 p-4">
+                    <div className="flex gap-3">
+
+                      <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-red-400" />
+
+                      <div>
+                        <p className="text-xs font-semibold text-red-300">
+                          {t.common.attentionRequired}
+                        </p>
+
+                        <p className="mt-1 text-xs leading-5 text-white/55">
+                          {t.risk.attention}
+                        </p>
+                      </div>
+
+                    </div>
+                  </div>
+                )}
+
+                {/* FACTORS */}
+                <div className="mt-6">
+
+                  <p className="text-[10px] uppercase tracking-[0.15em] text-white/35">
+                    {t.risk.contributingFactors}
+                  </p>
+
+                  <div className="mt-3 flex flex-wrap gap-2">
+
+                    {localizedFactors.length ===
+                    0 ? (
+                      <span className="text-xs text-white/40">
+                        {t.risk.noFactors}
+                      </span>
+                    ) : (
+                      localizedFactors.map(
+                        (factor, index) => (
+                          <span
+                            key={`${factor}-${index}`}
+                            className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[11px] text-white/65"
+                          >
+                            {factor}
+                          </span>
+                        )
+                      )
+                    )}
+
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            {/* AI / ML */}
+            <section className="mt-6 rounded-3xl border border-teal-400/15 bg-[#07343a] p-5 sm:p-6">
+
+              <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+
+                <div className="max-w-2xl">
+
+                  <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-teal-300/20 bg-teal-300/5 px-3 py-1.5">
+                    <span className="h-1.5 w-1.5 rounded-full bg-teal-300" />
+
+                    <span className="text-[10px] font-semibold tracking-[0.16em] text-teal-300">
+                      {t.ml.title}
+                    </span>
+                  </div>
+
+                  <h2 className="text-lg font-semibold">
+                    {t.ml.anomalyDetection}
+                  </h2>
+
+                  <p className="mt-2 text-xs leading-6 text-white/45">
+                    {t.ml.explanation}
+                  </p>
+
+                </div>
+
+                <div className="min-w-[220px] rounded-2xl border border-white/10 bg-black/10 p-4">
+
+                  <div className="flex items-center justify-between">
+
+                    <p className="text-xs text-white/45">
+                      {t.ml.anomalyDetection}
+                    </p>
+
+                    <span
+                      className={`h-2.5 w-2.5 rounded-full ${
+                        anomalyDetected
+                          ? "bg-amber-400"
+                          : "bg-teal-400"
+                      }`}
+                    />
+
+                  </div>
+
+                  <p className="mt-3 text-sm font-semibold">
+                    {anomalyDetected
+                      ? t.ml.anomalyDetected
+                      : t.ml.noAnomaly}
+                  </p>
+
+                  <div className="mt-4">
+
+                    <div className="flex justify-between text-[10px] text-white/35">
+                      <span>
+                        {t.ml.anomalyScore}
+                      </span>
+
+                      <span>
+                        {risk?.ml_anomaly_score !==
+                        null &&
+                        risk?.ml_anomaly_score !==
+                          undefined
+                          ? risk.ml_anomaly_score.toFixed(
+                              3
+                            )
+                          : "--"}
+                      </span>
+                    </div>
+
+                    <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-black/20">
+                      <div
+                        className={`h-full rounded-full ${
+                          anomalyDetected
+                            ? "bg-amber-400"
+                            : "bg-teal-400"
+                        }`}
+                        style={{
+                          width: anomalyDetected
+                            ? "75%"
+                            : "15%",
+                        }}
+                      />
+                    </div>
+
+                  </div>
+                </div>
+
+              </div>
+            </section>
+
+            {/* REASONING + STATUS */}
+            <section className="mt-6 grid gap-6 lg:grid-cols-2">
+
+              <div className="rounded-3xl border border-white/10 bg-white/[0.035] p-5 sm:p-6">
+
+                <p className="text-sm font-semibold">
+                  {t.risk.reasoningTitle}
+                </p>
+
+                <p className="mt-3 text-sm leading-7 text-white/45">
+                  {t.risk.reasoning}
+                </p>
+
+                <div className="mt-5 grid gap-3 sm:grid-cols-3">
+
+                  <ReasoningStep
+                    number="01"
+                    title={
+                      alertLanguage ===
+                      "English"
+                        ? "Observe"
+                        : alertLanguage ===
+                          "Twi"
+                        ? "Hwɛ"
+                        : alertLanguage ===
+                          "Hausa"
+                        ? "Duba"
+                        : "Nyɛ"
+                    }
+                  />
+
+                  <ReasoningStep
+                    number="02"
+                    title={
+                      alertLanguage ===
+                      "English"
+                        ? "Analyze"
+                        : alertLanguage ===
+                          "Twi"
+                        ? "Hwehwɛ mu"
+                        : alertLanguage ===
+                          "Hausa"
+                        ? "Nazari"
+                        : "Hwehwɛ"
+                    }
+                  />
+
+                  <ReasoningStep
+                    number="03"
+                    title={
+                      alertLanguage ===
+                      "English"
+                        ? "Recommend"
+                        : alertLanguage ===
+                          "Twi"
+                        ? "Ma afotu"
+                        : alertLanguage ===
+                          "Hausa"
+                        ? "Ba da shawara"
+                        : "Ma afotu"
+                    }
+                  />
+
+                </div>
+              </div>
+
+              <div className="rounded-3xl border border-white/10 bg-white/[0.035] p-5 sm:p-6">
+
+                <div className="flex items-start justify-between">
+
+                  <div>
+                    <p className="text-sm font-semibold">
+                      {t.risk.statusTitle}
+                    </p>
+
+                    <p className="mt-1 text-xs text-white/35">
+                      {t.common.current}
+                    </p>
+                  </div>
+
+                  <span
+                    className={`h-3 w-3 rounded-full ${getRiskDotClass(
+                      localizedRisk
+                    )}`}
+                  />
+
+                </div>
+
+                <div className="mt-6">
+
+                  <p className="text-2xl font-semibold">
+                    {localizedRiskLabel}
+                  </p>
+
+                  <p className="mt-3 text-sm leading-6 text-white/45">
+                    {hasAttention
+                      ? t.risk.statusAttention
+                      : t.risk.statusHealthy}
+                  </p>
+
+                </div>
+
+                <div className="mt-6 border-t border-white/10 pt-5">
+
+                  <div className="flex items-center justify-between">
+
+                    <span className="text-xs text-white/35">
+                      {t.common.status}
+                    </span>
+
+                    <span className="flex items-center gap-2 text-xs text-teal-300">
+                      <span className="h-1.5 w-1.5 rounded-full bg-teal-400" />
+                      {t.common.active}
+                    </span>
+
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            {/* ALERT LIST */}
+            <section className="mt-6 rounded-3xl border border-white/10 bg-white/[0.035] p-5 sm:p-6">
+
+              <div className="flex items-center justify-between">
+
+                <div>
+                  <p className="text-sm font-semibold">
+                    {t.alerts.title}
+                  </p>
+
+                  <p className="mt-1 text-xs text-white/35">
+                    {unreadAlerts.length}{" "}
+                    {t.alerts.unread}
+                  </p>
+                </div>
+
+                {alerts.length > 0 && (
+                  <button
+                    onClick={markAllAlertsAsRead}
+                    className="text-xs text-teal-300 hover:text-teal-200"
+                  >
+                    {t.alerts.markAllRead}
+                  </button>
+                )}
+
+              </div>
+
+              <div className="mt-5 space-y-3">
+
+                {alerts.length === 0 ? (
+                  <div className="rounded-2xl border border-white/5 bg-white/[0.02] px-5 py-8 text-center">
+                    <p className="text-sm text-white/40">
+                      {t.alerts.noAlerts}
+                    </p>
+                  </div>
+                ) : (
+                  alerts
+                    .slice(0, 5)
+                    .map((alert) => {
+                      const presentation =
+                        getAlertPresentation(
+                          alert
+                        );
+
+                      const isRead =
+                        readAlertIds.includes(
+                          alert.id
+                        );
+
+                      return (
+                        <div
+                          key={alert.id}
+                          className={`rounded-2xl border p-4 ${getAlertLevelClass(
                             alert.alert_level
-                              .toLowerCase()
-                              .trim();
+                          )} ${
+                            isRead
+                              ? "opacity-60"
+                              : ""
+                          }`}
+                        >
+                          <div className="flex gap-3">
 
-                          return (
-                            level ===
-                              "moderate" ||
-                            level ===
-                              "medium" ||
-                            level ===
-                              "high" ||
-                            level ===
-                              "critical"
-                          );
-                        }
-                      ).length ===
-                      0 ? (
-                        <div className="px-5 py-8 text-center">
+                            <span
+                              className={`mt-1 h-2.5 w-2.5 shrink-0 rounded-full ${getRiskDotClass(
+                                presentation.riskLevel
+                              )}`}
+                            />
 
-                          <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-[#27e0d0]/10 text-[#27e0d0]">
-                            ✓
-                          </div>
+                            <div className="min-w-0 flex-1">
 
-                          <p className="mt-3 text-sm font-medium text-slate-300">
-                            No alerts
-                          </p>
+                              <div className="flex flex-wrap items-center justify-between gap-2">
 
-                          <p className="mt-1 text-xs leading-5 text-slate-500">
-                            AquaSentinel has not recorded any active risk alerts for your account.
-                          </p>
-
-                        </div>
-                      ) : (
-
-                        alerts
-                          .filter(
-                            (alert) => {
-                              const level =
-                                alert.alert_level
-                                  .toLowerCase()
-                                  .trim();
-
-                              return (
-                                level ===
-                                  "moderate" ||
-                                level ===
-                                  "medium" ||
-                                level ===
-                                  "high" ||
-                                level ===
-                                  "critical"
-                              );
-                            }
-                          )
-                          .slice(
-                            0,
-                            8
-                          )
-                          .map(
-                            (
-                              alert
-                            ) => {
-
-                              const isUnread =
-                                !readAlertIds.includes(
-                                  alert.id
-                                );
-
-                              const presentation =
-                                getAlertPresentation(
-                                  alert
-                                );
-
-                              return (
-                                <button
-                                  key={
-                                    alert.id
+                                <p className="text-xs font-semibold">
+                                  {
+                                    presentation.riskLabel
                                   }
-                                  type="button"
+                                </p>
+
+                                <span className="text-[10px] text-white/30">
+                                  {
+                                    presentation.date
+                                  }
+                                </span>
+
+                              </div>
+
+                              <p className="mt-2 text-sm leading-6 text-white/65">
+                                {
+                                  presentation.message
+                                }
+                              </p>
+
+                              {!isRead && (
+                                <button
                                   onClick={() =>
                                     markAlertAsRead(
                                       alert.id
                                     )
                                   }
-                                  className={`w-full border-b border-white/5 px-4 py-4 text-left transition hover:bg-white/[0.03] ${
-                                    isUnread
-                                      ? "bg-white/[0.02]"
-                                      : ""
-                                  }`}
+                                  className="mt-3 text-[10px] font-medium text-teal-300 hover:text-teal-200"
                                 >
-
-                                  <div className="flex items-start gap-3">
-
-                                    <span
-                                      className={`mt-0.5 rounded-full border px-2 py-1 text-[9px] font-semibold uppercase ${alertLevelClass(
-                                        alert.alert_level
-                                      )}`}
-                                    >
-                                      {presentation.localizedLevel}
-                                    </span>
-
-                                    {isUnread && (
-                                      <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[#27e0d0]" />
-                                    )}
-
-                                    <div className="min-w-0 flex-1">
-
-                                      {(() => {
-                                        return (
-                                          <>
-                                            <p className="text-xs font-medium text-slate-300">
-                                              {presentation.localizedLevel}
-                                              {" · "}
-                                              {presentation.pondLabel}{" "}
-                                              {alert.pond_id}
-                                            </p>
-
-                                            <p className="mt-1 text-[10px] font-medium uppercase tracking-[0.12em] text-slate-600">
-                                              {presentation.detailLabel}
-                                            </p>
-
-                                            <p className="mt-1 text-sm leading-5 text-slate-400">
-                                              {presentation.message}
-                                            </p>
-                                          </>
-                                        );
-                                      })()}
-
-                                      <p className="mt-2 text-[10px] text-slate-600">
-                                        {new Date(
-                                          alert.sent_at
-                                        ).toLocaleString()}
-                                      </p>
-
-                                    </div>
-
-                                  </div>
-
+                                  {
+                                    t.alerts
+                                      .markRead
+                                  }
                                 </button>
-                              );
-                            }
-                          )
-                      )}
+                              )}
 
-                    </div>
-
-                    <div className="border-t border-white/5 p-3">
-
-                      <Link
-                        href="/alerts"
-                        onClick={() =>
-                          setNotificationsOpen(
-                            false
-                          )
-                        }
-                        className="flex w-full items-center justify-center rounded-xl bg-white/[0.03] px-4 py-3 text-xs font-medium text-slate-400 transition hover:bg-white/[0.06] hover:text-white"
-                      >
-                        View all alerts →
-                      </Link>
-
-                    </div>
-
-                  </div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })
                 )}
 
               </div>
+            </section>
 
-              <div className="hidden text-right sm:block">
+            {/* FOOTER */}
+            <footer className="mt-10 border-t border-white/10 py-6 text-center">
 
-                <p className="text-sm font-medium">
-                  Saha Aqua Farm
-                </p>
+              <p className="text-[10px] text-white/25">
+                {t.footer}
+              </p>
 
-                <p className="text-xs text-slate-500">
-                  Gurugu, Tamale
-                </p>
-
-              </div>
-
-              <button
-                onClick={() => {
-                  localStorage.removeItem(
-                    "aquasentinel_token"
-                  );
-
-                  router.replace(
-                    "/login"
-                  );
-                }}
-                className="flex h-10 w-10 items-center justify-center rounded-full border border-[#27e0d0]/20 bg-[#27e0d0]/10 text-sm font-semibold text-[#27e0d0]"
-                title="Logout"
-              >
-                S
-              </button>
-
-            </div>
-
-          </header>
-
-          {/* Mobile navigation */}
-          {menuOpen && (
-            <div className="mb-8 rounded-2xl border border-white/10 bg-[#071d23] p-3 shadow-2xl lg:hidden">
-
-              <nav className="space-y-1">
-
-                <Link
-                  href="/"
-                  onClick={() =>
-                    setMenuOpen(
-                      false
-                    )
-                  }
-                  className="flex items-center gap-3 rounded-xl bg-[#00b8a9]/10 px-4 py-3 text-sm font-medium text-[#27e0d0]"
-                >
-                  <span>◉</span>
-                  Dashboard
-                </Link>
-
-                <Link
-                  href="/ponds"
-                  onClick={() =>
-                    setMenuOpen(
-                      false
-                    )
-                  }
-                  className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm text-slate-400 transition hover:bg-white/5 hover:text-white"
-                >
-                  <span>◌</span>
-                  Ponds
-                </Link>
-
-                <Link
-                  href="/insights"
-                  onClick={() =>
-                    setMenuOpen(
-                      false
-                    )
-                  }
-                  className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm text-slate-400 transition hover:bg-white/5 hover:text-white"
-                >
-                  <span>⌁</span>
-                  Insights
-                </Link>
-
-                <div className="my-2 border-t border-white/5" />
-
-                <Link
-                  href="/alerts"
-                  onClick={() =>
-                    setMenuOpen(
-                      false
-                    )
-                  }
-                  className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm text-slate-400 transition hover:bg-white/5 hover:text-white"
-                >
-                  <span>◈</span>
-                  Alerts
-                </Link>
-
-                <Link
-                  href="/history"
-                  onClick={() =>
-                    setMenuOpen(
-                      false
-                    )
-                  }
-                  className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm text-slate-400 transition hover:bg-white/5 hover:text-white"
-                >
-                  <span>◷</span>
-                  History
-                </Link>
-
-              </nav>
-
-              <div className="mt-4 rounded-xl border border-[#00b8a9]/10 bg-[#00b8a9]/5 p-4">
-
-                <div className="flex items-center gap-2">
-
-                  <span className="h-2 w-2 animate-pulse rounded-full bg-[#27e0d0]" />
-
-                  <span className="text-xs font-medium text-[#27e0d0]">
-                    SENTINEL ACTIVE
-                  </span>
-
-                </div>
-
-                <p className="mt-2 text-xs leading-5 text-slate-500">
-                  Continuous monitoring is active.
-                </p>
-
-              </div>
-
-            </div>
-          )}
-
-          {/* Hero */}
-          <div className="mb-9">
-
-            <p className="mb-2 text-sm font-medium text-[#27e0d0]">
-              EARLY-WARNING INTELLIGENCE
-            </p>
-
-            <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
-              {greeting}
-            </h1>
-
-            <p className="mt-2 max-w-xl text-sm leading-6 text-slate-400">
-              Your ponds are being monitored continuously. Here is the latest picture of your aquaculture environment.
-            </p>
+            </footer>
 
           </div>
-
-          {/* Metrics */}
-          <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-
-            <MetricCard
-              label="Temperature"
-              value={
-                water
-                  ? `${water.temperature}°`
-                  : "--"
-              }
-              unit="C"
-              detail="Water temperature"
-              icon="◉"
-            />
-
-            <MetricCard
-              label="pH Balance"
-              value={
-                water
-                  ? water.ph.toString()
-                  : "--"
-              }
-              unit=""
-              detail="Water acidity"
-              icon="◌"
-            />
-
-            <MetricCard
-              label="Dissolved Oxygen"
-              value={
-                water
-                  ? water.dissolved_oxygen.toString()
-                  : "--"
-              }
-              unit="mg/L"
-              detail="Available oxygen"
-              icon="≈"
-            />
-
-            <MetricCard
-              label="Fish Activity"
-              value={
-                fish
-                  ? fish.activity_level
-                  : "--"
-              }
-              unit=""
-              detail="Behaviour signal"
-              icon="◇"
-            />
-
-          </section>
-
-          {/* Fish Behaviour */}
-          <section className="mt-5">
-
-            <div className="rounded-3xl border border-white/5 bg-[#06434a] p-7">
-
-              <div className="flex items-start justify-between">
-
-                <div>
-
-                  <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">
-                    Fish Behaviour
-                  </p>
-
-                  <h2 className="mt-2 text-xl font-semibold">
-                    Behavioural signals
-                  </h2>
-
-                  <p className="mt-2 max-w-xl text-sm text-slate-500">
-                    Biological signals provide another layer of insight beyond water quality measurements.
-                  </p>
-
-                </div>
-
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#27e0d0]/10 text-lg text-[#27e0d0]">
-                  ◉
-                </div>
-
-              </div>
-
-              <div className="mt-7 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-
-                <div className="rounded-2xl bg-white/[0.03] p-5">
-
-                  <p className="text-xs uppercase tracking-[0.12em] text-slate-500">
-                    Activity
-                  </p>
-
-                  <p className="mt-3 text-lg font-semibold">
-                    {fish?.activity_level ||
-                      "--"}
-                  </p>
-
-                </div>
-
-                <div className="rounded-2xl bg-white/[0.03] p-5">
-
-                  <p className="text-xs uppercase tracking-[0.12em] text-slate-500">
-                    Feeding response
-                  </p>
-
-                  <p className="mt-3 text-lg font-semibold">
-                    {fish?.feeding_response ||
-                      "--"}
-                  </p>
-
-                </div>
-
-                <div className="rounded-2xl bg-white/[0.03] p-5">
-
-                  <p className="text-xs uppercase tracking-[0.12em] text-slate-500">
-                    Fish population
-                  </p>
-
-                  <p className="mt-3 text-lg font-semibold">
-                    {fish?.fish_count ??
-                      "--"}
-                  </p>
-
-                </div>
-
-                <div className="rounded-2xl bg-white/[0.03] p-5">
-
-                  <p className="text-xs uppercase tracking-[0.12em] text-slate-500">
-                    Unusual behaviour
-                  </p>
-
-                  <p className="mt-3 text-lg font-semibold">
-                    {fish?.unusual_behaviour ||
-                      "--"}
-                  </p>
-
-                </div>
-
-              </div>
-
-              <div className="mt-5 flex items-center justify-between border-t border-white/5 pt-5">
-
-                <p className="text-xs text-slate-500">
-                  Latest observation
-                </p>
-
-                <p className="text-xs text-slate-400">
-                  {fish?.observed_at
-                    ? new Date(
-                        fish.observed_at
-                      ).toLocaleTimeString(
-                        [],
-                        {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        }
-                      )
-                    : "--"}
-                </p>
-
-              </div>
-
-            </div>
-
-          </section>
-
-          {/* Risk + status */}
-          <section className="mt-5 grid gap-5 xl:grid-cols-[1.5fr_1fr]">
-
-            {/* Risk */}
-            <div
-              className={`rounded-3xl border border-white/5 bg-[#06434a] p-7 ${currentRisk.glow}`}
-            >
-
-              <div className="mb-8 flex items-start justify-between">
-
-                <div>
-
-                  <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">
-                    Sentinel Assessment
-                  </p>
-
-                  <h2 className="mt-2 text-xl font-semibold">
-                    Current pond risk
-                  </h2>
-
-                </div>
-
-                <div
-                  className={`rounded-full border px-3 py-1.5 text-xs font-semibold ${currentRisk.badge}`}
-                >
-                  {riskLevel.toUpperCase()}
-                </div>
-
-              </div>
-
-              {/* AI / ML Intelligence */}
-              <section className="mt-5">
-
-                <div className="rounded-3xl border border-[#27e0d0]/10 bg-[#06434a] p-7">
-
-                  <div className="flex items-start justify-between">
-
-                    <div>
-
-                      <p className="text-xs font-medium uppercase tracking-[0.18em] text-[#27e0d0]">
-                        AI / ML INTELLIGENCE
-                      </p>
-
-                      <h2 className="mt-2 text-xl font-semibold">
-                        Anomaly detection
-                      </h2>
-
-                      <p className="mt-2 max-w-xl text-sm leading-6 text-slate-500">
-                        AquaSentinel uses machine learning to identify water-quality patterns that differ from the pond's observed baseline.
-                      </p>
-
-                    </div>
-
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#27e0d0]/10 text-[#27e0d0]">
-                      AI
-                    </div>
-
-                  </div>
-
-                  <div className="mt-7 grid gap-4 sm:grid-cols-2">
-
-                    {/* ML Detection */}
-                    <div className="rounded-2xl bg-white/[0.03] p-5">
-
-                      <p className="text-xs uppercase tracking-[0.12em] text-slate-500">
-                        ML anomaly detection
-                      </p>
-
-                      <div className="mt-4 flex items-center gap-3">
-
-                        <div
-                          className={`flex h-10 w-10 items-center justify-center rounded-full ${
-                            risk?.ml_anomaly
-                              ? "bg-red-400/10 text-red-300"
-                              : "bg-emerald-400/10 text-emerald-300"
-                          }`}
-                        >
-                          {risk?.ml_anomaly
-                            ? "!"
-                            : "✓"}
-                        </div>
-
-                        <div>
-
-                          <p className="text-lg font-semibold">
-                            {risk?.ml_anomaly
-                              ? "Anomaly detected"
-                              : "Normal pattern"}
-                          </p>
-
-                          <p className="mt-1 text-xs text-slate-500">
-                            {risk?.ml_anomaly
-                              ? "The model detected an unusual water-quality pattern."
-                              : "The model found no significant anomaly in the latest reading."}
-                          </p>
-
-                        </div>
-
-                      </div>
-
-                    </div>
-
-                    {/* ML Score */}
-                    <div className="rounded-2xl bg-white/[0.03] p-5">
-
-                      <p className="text-xs uppercase tracking-[0.12em] text-slate-500">
-                        Anomaly score
-                      </p>
-
-                      <p className="mt-4 text-3xl font-semibold">
-                        {risk?.ml_anomaly_score !==
-                          null &&
-                        risk?.ml_anomaly_score !==
-                          undefined
-                          ? risk.ml_anomaly_score.toFixed(
-                              4
-                            )
-                          : "--"}
-                      </p>
-
-                      <p className="mt-2 text-xs leading-5 text-slate-500">
-                        Lower values indicate observations that are more unusual relative to the model's learned baseline.
-                      </p>
-
-                    </div>
-
-                  </div>
-
-                  {/* AI explanation */}
-                  <div className="mt-5 rounded-2xl border border-[#27e0d0]/10 bg-[#27e0d0]/5 p-5">
-
-                    <p className="text-xs uppercase tracking-[0.12em] text-[#27e0d0]">
-                      How Sentinel is reasoning
-                    </p>
-
-                    <p className="mt-3 text-sm leading-6 text-slate-400">
-                      The machine-learning model evaluates temperature, pH and dissolved oxygen together to identify patterns that differ from healthy observations. This signal is combined with rule-based and trend analysis to produce the final risk score.
-                    </p>
-
-                  </div>
-
-                </div>
-
-              </section>
-
-              {/* Risk score */}
-              <div className="flex items-end justify-between">
-
-                <div>
-
-                  <p className="text-xs uppercase tracking-[0.16em] text-slate-500">
-                    Risk score
-                  </p>
-
-                  <p className="mt-2 text-5xl font-semibold tracking-tight">
-                    {risk?.risk_score ??
-                      0}
-                  </p>
-
-                </div>
-
-                <div className="text-right">
-
-                  <p className="text-xs uppercase tracking-[0.16em] text-slate-500">
-                    Last assessed
-                  </p>
-
-                  <p className="mt-2 text-sm text-slate-400">
-                    {risk?.assessed_at
-                      ? new Date(
-                          risk.assessed_at
-                        ).toLocaleTimeString(
-                          [],
-                          {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          }
-                        )
-                      : "--"}
-                  </p>
-
-                </div>
-
-              </div>
-
-              {/* Risk intensity */}
-              <div className="mt-6">
-
-                <div className="h-2 overflow-hidden rounded-full bg-white/5">
-
-                  <div
-                    className={`h-full rounded-full transition-all duration-700 ${
-                      riskLevel ===
-                      "High"
-                        ? "bg-red-400"
-                        : riskLevel ===
-                          "Moderate"
-                        ? "bg-amber-400"
-                        : "bg-emerald-400"
-                    }`}
-                    style={{
-                      width: `${Math.min(
-                        risk?.risk_score ??
-                          0,
-                        100
-                      )}%`,
-                    }}
-                  />
-
-                </div>
-
-                <p className="mt-2 text-xs text-slate-500">
-                  Risk intensity
-                </p>
-
-              </div>
-
-              {/* Attention banner */}
-              {riskLevel !==
-                "Low" && (
-                <div
-                  className={`mt-6 rounded-2xl border px-5 py-4 ${
-                    riskLevel ===
-                    "High"
-                      ? "border-red-400/20 bg-red-400/10"
-                      : "border-amber-400/20 bg-amber-400/10"
-                  }`}
-                >
-
-                  <div className="flex items-start gap-3">
-
-                    <div
-                      className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full font-bold ${
-                        riskLevel ===
-                        "High"
-                          ? "bg-red-400/10 text-red-300"
-                          : "bg-amber-400/10 text-amber-300"
-                      }`}
-                    >
-                      !
-                    </div>
-
-                    <div>
-
-                      <p className="font-semibold">
-                        {riskLevel ===
-                        "High"
-                          ? "Potentially harmful conditions detected"
-                          : "Potential stress detected"}
-                      </p>
-
-                      <p className="mt-1 text-sm text-slate-400">
-                        {risk?.contributing_factors ||
-                          "AquaSentinel has detected conditions that may require closer monitoring."}
-                      </p>
-
-                    </div>
-
-                  </div>
-
-                </div>
-              )}
-
-              {/* Sentinel factors */}
-              <div className="mt-5 rounded-2xl bg-white/[0.03] p-4">
-
-                <p className="text-xs uppercase tracking-[0.16em] text-slate-500">
-                  Sentinel factors
-                </p>
-
-                <p className="mt-2 text-sm leading-6 text-slate-300">
-                  {risk?.contributing_factors ||
-                    "No significant stress signals detected."}
-                </p>
-
-              </div>
-
-              {/* Risk interpretation */}
-              <div className="mt-5 flex items-center gap-3">
-
-                <div
-                  className={`flex h-9 w-9 items-center justify-center rounded-full ${currentRisk.badge}`}
-                >
-                  {currentRisk.icon}
-                </div>
-
-                <div>
-
-                  <p className="text-sm font-medium">
-                    {currentRisk.message}
-                  </p>
-
-                  <p className="mt-1 text-xs text-slate-500">
-                    Based on current water and fish behaviour signals.
-                  </p>
-
-                </div>
-
-              </div>
-
-            </div>
-
-            {/* Sentinel status */}
-            <div className="rounded-3xl border border-white/5 bg-[#06434a] p-7">
-
-              <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">
-                Sentinel Status
-              </p>
-
-              <div className="mt-8 flex items-center gap-5">
-
-                <div className="relative flex h-20 w-20 items-center justify-center rounded-full border border-[#27e0d0]/20 bg-[#27e0d0]/5">
-
-                  <div className="absolute h-12 w-12 animate-pulse rounded-full bg-[#27e0d0]/10" />
-
-                  <div className="h-3 w-3 rounded-full bg-[#27e0d0] shadow-[0_0_20px_rgba(39,224,208,0.8)]" />
-
-                </div>
-
-                <div>
-
-                  <h2 className="text-2xl font-semibold">
-                    Monitoring
-                  </h2>
-
-                  <p className="mt-1 text-sm text-slate-500">
-                    System operating normally
-                  </p>
-
-                </div>
-
-              </div>
-
-              <div className="mt-8 border-t border-white/5 pt-5">
-
-                <div className="flex items-center justify-between text-sm">
-
-                  <span className="text-slate-500">
-                    Monitoring interval
-                  </span>
-
-                  <span className="font-medium">
-                    10 seconds
-                  </span>
-
-                </div>
-
-                <div className="mt-4 flex items-center justify-between text-sm">
-
-                  <span className="text-slate-500">
-                    Active pond
-                  </span>
-
-                  <span className="font-medium">
-                    Pond 1
-                  </span>
-
-                </div>
-
-              </div>
-
-            </div>
-
-          </section>
-
-          {/* Bottom cards */}
-          <section className="mt-5 grid gap-5 md:grid-cols-2">
-
-            <div className="rounded-3xl border border-white/5 bg-[#06434a] p-7">
-
-              <div className="flex items-center justify-between">
-
-                <div>
-
-                  <p className="text-xs uppercase tracking-[0.18em] text-slate-500">
-                    Fish Behaviour
-                  </p>
-
-                  <h2 className="mt-2 text-lg font-semibold">
-                    Behaviour signal
-                  </h2>
-
-                </div>
-
-                <div className="rounded-full bg-emerald-400/10 px-3 py-1 text-xs text-emerald-300">
-                  {fish?.activity_level ||
-                    "Unknown"}
-                </div>
-
-              </div>
-
-              <div className="mt-8 grid grid-cols-2 gap-3">
-
-                <div className="rounded-2xl bg-white/[0.03] p-4">
-
-                  <p className="text-xs text-slate-500">
-                    Activity
-                  </p>
-
-                  <p className="mt-2 text-sm font-medium">
-                    {fish?.activity_level ||
-                      "--"}
-                  </p>
-
-                </div>
-
-                <div className="rounded-2xl bg-white/[0.03] p-4">
-
-                  <p className="text-xs text-slate-500">
-                    Feeding response
-                  </p>
-
-                  <p className="mt-2 text-sm font-medium">
-                    {fish?.feeding_response ||
-                      "--"}
-                  </p>
-
-                </div>
-
-              </div>
-
-            </div>
-
-            <div className="rounded-3xl border border-white/5 bg-[#06434a] p-7">
-
-              <p className="text-xs uppercase tracking-[0.18em] text-slate-500">
-                Risk Factors
-              </p>
-
-              <h2 className="mt-2 text-lg font-semibold">
-                What is influencing the score?
-              </h2>
-
-              <div className="mt-6 rounded-2xl bg-white/[0.03] p-4">
-
-                <p className="text-sm leading-6 text-slate-400">
-                  {risk?.contributing_factors ||
-                    "No contributing factors detected."}
-                </p>
-
-              </div>
-
-            </div>
-
-          </section>
-
-          <footer className="mt-10 border-t border-white/5 pt-6 text-xs text-slate-600">
-            AquaSentinel • Multimodal Early-Warning Intelligence for African Aquaculture
-          </footer>
-
-        </section>
-
+        </div>
       </div>
 
+      {/* LOADING OVERLAY */}
+      {loading && (
+        <div className="pointer-events-none fixed bottom-5 right-5 z-50 flex items-center gap-2 rounded-full border border-white/10 bg-[#07343a] px-4 py-2 shadow-xl">
+          <span className="h-2 w-2 animate-pulse rounded-full bg-teal-400" />
+
+          <span className="text-[10px] text-white/50">
+            {t.common.loading}
+          </span>
+        </div>
+      )}
     </main>
   );
 }
 
-function MetricCard({
+/* =========================================================
+   COMPONENTS
+   ========================================================= */
+
+function SidebarLink({
+  href,
   label,
-  value,
-  unit,
-  detail,
+  active = false,
   icon,
 }: {
+  href: string;
   label: string;
-  value: string;
-  unit: string;
-  detail: string;
+  active?: boolean;
   icon: string;
 }) {
   return (
-    <div className="group rounded-3xl border border-white/5 bg-[#06434a] p-6 transition duration-300 hover:-translate-y-1 hover:border-[#27e0d0]/20 hover:shadow-[0_15px_50px_rgba(0,0,0,0.2)]">
+    <Link
+      href={href}
+      className={`flex items-center gap-3 rounded-xl px-4 py-3 text-xs transition ${
+        active
+          ? "bg-teal-400/10 text-teal-300"
+          : "text-white/45 hover:bg-white/5 hover:text-white"
+      }`}
+    >
+      <NavIcon icon={icon} />
+      <span>{label}</span>
+    </Link>
+  );
+}
+
+function MobileNavLink({
+  href,
+  label,
+  active = false,
+  onClick,
+}: {
+  href: string;
+  label: string;
+  active?: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <Link
+      href={href}
+      onClick={onClick}
+      className={`block rounded-xl px-4 py-3 text-sm ${
+        active
+          ? "bg-teal-400/10 text-teal-300"
+          : "text-white/55 hover:bg-white/5 hover:text-white"
+      }`}
+    >
+      {label}
+    </Link>
+  );
+}
+
+function NavIcon({
+  icon,
+}: {
+  icon: string;
+}) {
+  const common = {
+    width: 17,
+    height: 17,
+    viewBox: "0 0 24 24",
+    fill: "none",
+    stroke: "currentColor",
+    strokeWidth: 1.7,
+    strokeLinecap: "round" as const,
+    strokeLinejoin: "round" as const,
+  };
+
+  if (icon === "pond") {
+    return (
+      <svg {...common}>
+        <path d="M3 12c3-5 6-5 9 0s6 5 9 0" />
+        <path d="M3 17c3-5 6-5 9 0s6 5 9 0" />
+      </svg>
+    );
+  }
+
+  if (icon === "insight") {
+    return (
+      <svg {...common}>
+        <path d="M4 19V5" />
+        <path d="M4 19h16" />
+        <path d="m7 15 4-4 3 2 5-6" />
+      </svg>
+    );
+  }
+
+  if (icon === "alert") {
+    return (
+      <svg {...common}>
+        <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" />
+        <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+      </svg>
+    );
+  }
+
+  if (icon === "history") {
+    return (
+      <svg {...common}>
+        <path d="M3 12a9 9 0 1 0 3-6.7" />
+        <path d="M3 4v5h5" />
+        <path d="M12 7v5l3 2" />
+      </svg>
+    );
+  }
+
+  return (
+    <svg {...common}>
+      <rect
+        x="3"
+        y="3"
+        width="7"
+        height="7"
+        rx="1"
+      />
+      <rect
+        x="14"
+        y="3"
+        width="7"
+        height="7"
+        rx="1"
+      />
+      <rect
+        x="3"
+        y="14"
+        width="7"
+        height="7"
+        rx="1"
+      />
+      <rect
+        x="14"
+        y="14"
+        width="7"
+        height="7"
+        rx="1"
+      />
+    </svg>
+  );
+}
+
+function MetricCard({
+  title,
+  value,
+  subtitle,
+  attention = false,
+  icon,
+}: {
+  title: string;
+  value: string;
+  subtitle: string;
+  attention?: boolean;
+  icon: string;
+}) {
+  return (
+    <div className="rounded-3xl border border-white/10 bg-white/[0.035] p-5">
 
       <div className="flex items-start justify-between">
 
-        <div>
+        <p className="text-xs text-white/40">
+          {title}
+        </p>
 
-          <p className="text-xs font-medium uppercase tracking-[0.14em] text-slate-500">
-            {label}
-          </p>
-
-          <div className="mt-4 flex items-baseline gap-2">
-
-            <span className="text-3xl font-semibold tracking-tight">
-              {value}
-            </span>
-
-            {unit && (
-              <span className="text-xs text-slate-500">
-                {unit}
-              </span>
-            )}
-
-          </div>
-
-          <p className="mt-2 text-xs text-slate-600">
-            {detail}
-          </p>
-
-        </div>
-
-        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#27e0d0]/5 text-[#27e0d0] transition group-hover:bg-[#27e0d0]/10">
-          {icon}
-        </div>
+        <span
+          className={`rounded-xl p-2 ${
+            attention
+              ? "bg-amber-400/10 text-amber-300"
+              : "bg-teal-400/10 text-teal-300"
+          }`}
+        >
+          {icon === "temperature" && "°"}
+          {icon === "ph" && "pH"}
+          {icon === "oxygen" && "O₂"}
+          {icon === "fish" && "🐟"}
+        </span>
 
       </div>
+
+      <p className="mt-5 text-2xl font-semibold tracking-tight">
+        {value}
+      </p>
+
+      <div className="mt-3 flex items-center gap-2">
+
+        <span
+          className={`h-1.5 w-1.5 rounded-full ${
+            attention
+              ? "bg-amber-400"
+              : "bg-teal-400"
+          }`}
+        />
+
+        <span
+          className={`text-[10px] ${
+            attention
+              ? "text-amber-300"
+              : "text-white/35"
+          }`}
+        >
+          {subtitle}
+        </span>
+
+      </div>
+    </div>
+  );
+}
+
+function InfoBox({
+  label,
+  value,
+  danger = false,
+}: {
+  label: string;
+  value: string;
+  danger?: boolean;
+}) {
+  return (
+    <div className="rounded-2xl border border-white/5 bg-black/10 p-4">
+
+      <p className="text-[10px] uppercase tracking-[0.12em] text-white/30">
+        {label}
+      </p>
+
+      <p
+        className={`mt-2 text-sm font-medium ${
+          danger
+            ? "text-red-300"
+            : "text-white/75"
+        }`}
+      >
+        {value}
+      </p>
+
+    </div>
+  );
+}
+
+function ReasoningStep({
+  number,
+  title,
+}: {
+  number: string;
+  title: string;
+}) {
+  return (
+    <div className="rounded-2xl border border-white/5 bg-black/10 p-4">
+
+      <p className="text-[10px] font-semibold text-teal-300">
+        {number}
+      </p>
+
+      <p className="mt-2 text-xs font-medium text-white/70">
+        {title}
+      </p>
 
     </div>
   );
