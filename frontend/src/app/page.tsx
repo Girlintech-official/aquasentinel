@@ -746,19 +746,346 @@ export default function Home() {
   };
 
   /*
-   * Localized alert presentation.
+   * Translate the COMPLETE alert message.
    *
-   * IMPORTANT: alert.message is deliberately preserved.
-   * It contains the detailed contributing factors returned
-   * by the risk engine, including any sensor values or
-   * explanations. We only translate the surrounding alert
-   * labels here instead of replacing the technical details
-   * with a generic sentence.
-   *
-   * Dagbani: "barina" is a verified dictionary term for
-   * danger/risk. We do not fabricate a full Dagbani
-   * sentence until the wording is verified by a speaker.
+   * The risk engine sends useful detail in alert.message.
+   * We keep that information and translate the known alert
+   * phrases/factors instead of replacing the message with a
+   * generic "high risk" sentence.
    */
+  const translateAlertMessage = (
+    message: string,
+    language: AlertLanguage
+  ) => {
+    if (!message) {
+      return "";
+    }
+
+    if (language === "English") {
+      return message;
+    }
+
+    const pondMatch = message.match(
+      /pond\s+(\d+)/i
+    );
+    const pondNumber =
+      pondMatch?.[1] || "";
+
+    /*
+     * Remove the pond number from the source temporarily so
+     * the same translation rules work for every pond.
+     */
+    let text = message.replace(
+      /pond\s+\d+/gi,
+      "__POND__"
+    );
+
+    const translations: Record<
+      Exclude<AlertLanguage, "English">,
+      Array<[RegExp, string]>
+    > = {
+      Twi: [
+        [
+          /Moderate stress risk detected/i,
+          "Wɔahu ahokyere kakra",
+        ],
+        [
+          /High stress risk detected/i,
+          "Wɔahu ahokyere kɛse",
+        ],
+        [
+          /Critical risk detected/i,
+          "Wɔahu asiane kɛse paa",
+        ],
+        [
+          /AquaSentinel detected moderate risk conditions/i,
+          "AquaSentinel ahu asiane kakra",
+        ],
+        [
+          /AquaSentinel detected high risk conditions/i,
+          "AquaSentinel ahu asiane kɛse",
+        ],
+        [
+          /AquaSentinel detected critical risk conditions/i,
+          "AquaSentinel ahu asiane kɛse paa",
+        ],
+        [
+          /Factors?:/i,
+          "Nneɛma a ɛde eyi bae:",
+        ],
+        [
+          /Dissolved oxygen is below its recent average/i,
+          "Nsuo mu oxygen so atew sen ne sɛnea ɛte daa",
+        ],
+        [
+          /Dissolved oxygen is declining/i,
+          "Nsuo mu oxygen redwane",
+        ],
+        [
+          /Dissolved oxygen is low/i,
+          "Nsuo mu oxygen sua",
+        ],
+        [
+          /Temperature is above normal/i,
+          "Nsuo hyew no akɔ soro sen sɛnea ɛte daa",
+        ],
+        [
+          /Temperature is high/i,
+          "Nsuo hyew no yɛ kɛse",
+        ],
+        [
+          /Temperature is below normal/i,
+          "Nsuo hyew no akɔ fam sen sɛnea ɛte daa",
+        ],
+        [
+          /pH is above the healthy range/i,
+          "pH no akɔ soro sen baabi a ɛyɛ papa ma nsuo",
+        ],
+        [
+          /pH is below the healthy range/i,
+          "pH no akɔ fam sen baabi a ɛyɛ papa ma nsuo",
+        ],
+        [
+          /pH is high/i,
+          "pH no yɛ kɛse",
+        ],
+        [
+          /pH is low/i,
+          "pH no sua",
+        ],
+        [
+          /ML detected an unusual water-quality pattern/i,
+          "ML ahu nsuo no mu nsakrae a ɛnyɛ sɛnea ɛtaa te",
+        ],
+        [
+          /unusual water-quality pattern/i,
+          "nsuo no mu nsakrae a ɛnyɛ sɛnea ɛtaa te",
+        ],
+        [
+          /Fish activity is low/i,
+          "mpataa no dwumadi sua",
+        ],
+        [
+          /Feeding response is poor/i,
+          "mpataa no adidi ho mmuae no nyɛ papa",
+        ],
+        [
+          /Unusual behaviour detected/i,
+          "wɔahu mpataa no suban a ɛnyɛ sɛnea ɛtaa te",
+        ],
+      ],
+
+      Hausa: [
+        [
+          /Moderate stress risk detected/i,
+          "An gano matsakaicin haɗarin damuwa",
+        ],
+        [
+          /High stress risk detected/i,
+          "An gano babban haɗarin damuwa",
+        ],
+        [
+          /Critical risk detected/i,
+          "An gano babban haɗari sosai",
+        ],
+        [
+          /AquaSentinel detected moderate risk conditions/i,
+          "AquaSentinel ya gano matsakaicin haɗari",
+        ],
+        [
+          /AquaSentinel detected high risk conditions/i,
+          "AquaSentinel ya gano babban haɗari",
+        ],
+        [
+          /AquaSentinel detected critical risk conditions/i,
+          "AquaSentinel ya gano babban haɗari sosai",
+        ],
+        [
+          /Factors?:/i,
+          "Dalilai:",
+        ],
+        [
+          /Dissolved oxygen is below its recent average/i,
+          "Oxygen da ke cikin ruwa ya ragu fiye da matsakaicin da aka saba",
+        ],
+        [
+          /Dissolved oxygen is declining/i,
+          "Oxygen da ke cikin ruwa yana raguwa",
+        ],
+        [
+          /Dissolved oxygen is low/i,
+          "Oxygen da ke cikin ruwa ya yi ƙasa",
+        ],
+        [
+          /Temperature is above normal/i,
+          "Zafin ruwan ya fi yadda aka saba",
+        ],
+        [
+          /Temperature is high/i,
+          "Zafin ruwan ya yi yawa",
+        ],
+        [
+          /Temperature is below normal/i,
+          "Zafin ruwan ya yi ƙasa da yadda aka saba",
+        ],
+        [
+          /pH is above the healthy range/i,
+          "pH na ruwa ya wuce iyakar da ta dace",
+        ],
+        [
+          /pH is below the healthy range/i,
+          "pH na ruwa ya yi ƙasa da iyakar da ta dace",
+        ],
+        [
+          /pH is high/i,
+          "pH na ruwa ya yi yawa",
+        ],
+        [
+          /pH is low/i,
+          "pH na ruwa ya yi ƙasa",
+        ],
+        [
+          /ML detected an unusual water-quality pattern/i,
+          "Tsarin ML ya gano wani yanayi na ingancin ruwa wanda ba a saba gani ba",
+        ],
+        [
+          /unusual water-quality pattern/i,
+          "wani yanayi na ingancin ruwa wanda ba a saba gani ba",
+        ],
+        [
+          /Fish activity is low/i,
+          "Ayyukan kifaye sun yi ƙasa",
+        ],
+        [
+          /Feeding response is poor/i,
+          "Amsar kifaye ga ciyarwa ba ta da kyau",
+        ],
+        [
+          /Unusual behaviour detected/i,
+          "An gano halin kifaye da ba a saba gani ba",
+        ],
+      ],
+
+      /*
+       * Dagbani terminology is kept conservative here.
+       * "barna" is documented as danger/risk, "kom" as water,
+       * and "zahim" as fish. Technical terms such as oxygen and
+       * pH are retained where a verified aquaculture equivalent
+       * is not available, rather than inventing a translation.
+       */
+      Dagbani: [
+        [
+          /Moderate stress risk detected/i,
+          "Barna din yɛla ka pond maa niŋla",
+        ],
+        [
+          /High stress risk detected/i,
+          "Barna kpeɛlim ka pond maa niŋla",
+        ],
+        [
+          /Critical risk detected/i,
+          "Barna kpeɛlim pam ka pond maa niŋla",
+        ],
+        [
+          /AquaSentinel detected moderate risk conditions/i,
+          "AquaSentinel nyɛli barna din yɛla",
+        ],
+        [
+          /AquaSentinel detected high risk conditions/i,
+          "AquaSentinel nyɛli barna kpeɛlim",
+        ],
+        [
+          /AquaSentinel detected critical risk conditions/i,
+          "AquaSentinel nyɛli barna kpeɛlim pam",
+        ],
+        [
+          /Factors?:/i,
+          "Din nyɛli niŋgbɛlim:",
+        ],
+        [
+          /Dissolved oxygen is below its recent average/i,
+          "kom ni oxygen maa nyɛla ka o palli n-tiŋgbana",
+        ],
+        [
+          /Dissolved oxygen is declining/i,
+          "kom ni oxygen maa palli",
+        ],
+        [
+          /Dissolved oxygen is low/i,
+          "kom ni oxygen maa yɛla pam",
+        ],
+        [
+          /Temperature is above normal/i,
+          "kom maa yuli pam n-tiŋgbana",
+        ],
+        [
+          /Temperature is high/i,
+          "kom maa yuli pam",
+        ],
+        [
+          /Temperature is below normal/i,
+          "kom maa yuli yɛla",
+        ],
+        [
+          /pH is above the healthy range/i,
+          "pH maa nyɛla ka o palli n-tiŋgbana",
+        ],
+        [
+          /pH is below the healthy range/i,
+          "pH maa nyɛla ka o yuli",
+        ],
+        [
+          /pH is high/i,
+          "pH maa pam",
+        ],
+        [
+          /pH is low/i,
+          "pH maa yɛla",
+        ],
+        [
+          /ML detected an unusual water-quality pattern/i,
+          "ML nyɛli kom maa niŋgbɛlim din kaŋa",
+        ],
+        [
+          /unusual water-quality pattern/i,
+          "kom maa niŋgbɛlim din kaŋa",
+        ],
+        [
+          /Fish activity is low/i,
+          "zahim maa yɛla niŋgbɛlim",
+        ],
+        [
+          /Feeding response is poor/i,
+          "zahim maa niŋgbɛlim pam n-diibu",
+        ],
+        [
+          /Unusual behaviour detected/i,
+          "wɔ nyɛli zahim maa niŋgbɛlim din kaŋa",
+        ],
+      ],
+    };
+
+    for (const [pattern, replacement] of translations[
+      language
+    ]) {
+      text = text.replace(
+        pattern,
+        replacement
+      );
+    }
+
+    text = text.replace(
+      /__POND__/g,
+      language === "Twi"
+        ? `ɔtare ${pondNumber}`
+        : language === "Hausa"
+        ? `tafki na ${pondNumber}`
+        : `pond ${pondNumber}`
+    );
+
+    return text;
+  };
+
   const getAlertPresentation = (
     alert: Alert
   ) => {
@@ -790,10 +1117,10 @@ export default function Home() {
         medium: "Matsakaicin haɗari",
       },
       Dagbani: {
-        critical: "Barina",
-        high: "Barina",
-        moderate: "Barina",
-        medium: "Barina",
+        critical: "Barna kpeɛlim pam",
+        high: "Barna kpeɛlim",
+        moderate: "Barna din yɛla",
+        medium: "Barna din yɛla",
       },
     };
 
@@ -803,7 +1130,7 @@ export default function Home() {
     > = {
       English: "Details",
       Twi: "Nkyerɛkyerɛmu",
-      Dagbani: "Details",
+      Dagbani: "Niŋgbɛlim",
       Hausa: "Cikakkun bayanai",
     };
 
@@ -816,11 +1143,26 @@ export default function Home() {
       ] ||
       alert.alert_level;
 
+    const pondLabels: Record<
+      AlertLanguage,
+      string
+    > = {
+      English: "Pond",
+      Twi: "Ɔtare",
+      Dagbani: "Pond",
+      Hausa: "Tafki",
+    };
+
     return {
       localizedLevel,
       detailLabel:
         detailLabels[alertLanguage],
-      message: alert.message,
+      pondLabel:
+        pondLabels[alertLanguage],
+      message: translateAlertMessage(
+        alert.message,
+        alertLanguage
+      ),
     };
   };
 
@@ -1354,6 +1696,11 @@ export default function Home() {
                                   alert.id
                                 );
 
+                              const presentation =
+                                getAlertPresentation(
+                                  alert
+                                );
+
                               return (
                                 <button
                                   key={
@@ -1379,9 +1726,7 @@ export default function Home() {
                                         alert.alert_level
                                       )}`}
                                     >
-                                      {
-                                        alert.alert_level
-                                      }
+                                      {presentation.localizedLevel}
                                     </span>
 
                                     {isUnread && (
@@ -1391,17 +1736,12 @@ export default function Home() {
                                     <div className="min-w-0 flex-1">
 
                                       {(() => {
-                                        const presentation =
-                                          getAlertPresentation(
-                                            alert
-                                          );
-
                                         return (
                                           <>
                                             <p className="text-xs font-medium text-slate-300">
                                               {presentation.localizedLevel}
                                               {" · "}
-                                              Pond{" "}
+                                              {presentation.pondLabel}{" "}
                                               {alert.pond_id}
                                             </p>
 
