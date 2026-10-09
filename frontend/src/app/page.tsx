@@ -578,75 +578,75 @@ const translations = {
     nav: {
       dashboard: "Dashboard",
       ponds: "Nɔɔŋu",
-      insights: "Nimdi",
-      alerts: "Kɔkɔbɩ",
-      history: "Dɔɣim",
+      insights: "Din' beni",
+      alerts: "Kukɔli",
+      history: "History",
     },
 
     common: {
       dashboard: "Dashboard",
       loading: "A yi mali...",
-      noData: "Data ka be",
-      normal: "Yuli",
-      low: "Kaɣila Palli",
-      moderate: "Kaɣila Palli Ka",
-      medium: "Kaɣila Palli Ka",
+      noData: "Data ka ni",
+      normal: "vien'yela",
+      low: "Kaɣila biela",
+      moderate: "Kaɣila biela pam",
+      medium: "Kaɣila din' sahi",
       high: "Kaɣila Kpema",
       critical: "Kaɣila Kpema Pam",
       attentionRequired:
-        "A niŋdi pam",
-      healthy: "A yɛla",
-      active: "A niŋdi",
-      detected: "Wɔ nyɛli",
-      none: "Ka be",
-      latest: "Din kaŋa",
-      current: "Naa",
-      score: "Nɔɔŋu",
+        "niŋmi zaŋsim",
+      healthy: "Alaafei",
+      active: "Di yulinda",
+      detected: "Di nyela",
+      none: "cheli kani",
+      latest: "Din na kuli yɔli kana",
+      current: "Pun'pɔŋɔ dini",
+      score: "Din' nye shem",
       status: "Yuli",
       details: "N-yɛli",
-      alert: "Kɔkɔbɩ",
-      alerts: "Kɔkɔbɩ",
+      alert: "Kukɔli",
+      alerts: "Kukɔya",
       pond: "Nɔɔŋu",
     },
 
     hero: {
       badge:
-        "KƆKƆBƆ DIN BA NTƐM",
+        "KUKƆLI DIN' KAN'NA YɔM",
       title: "N-yɛli",
       monitoring:
-        "Sentinel ni nyɛ nɔɔŋu maa yɛli pam pam.",
+        "Sentinel ni nyɛ nɔɔŋu maa yɛl'Sheli.",
       farm: "Saha Aqua Farm",
       location: "Gurugu, Tamale",
     },
 
     metrics: {
-      temperature: "Kɔligu",
-      ph: "pH Yuli",
+      temperature: "Biisim ni Maasim",
+      ph: "pH",
       oxygen:
         "Oxygen din be nɔɔŋu ni",
       fishActivity:
-        "Bihi N-yɛli",
+        "Zahim maa yɛla",
       optimal:
-        "A be yuli din mali",
+        "Binshehu kani",
       attention:
-        "A niŋdi pam",
+        "Yulima!",
     },
 
     fish: {
-      title: "Bihi N-yɛli",
+      title: "Zahim maa yɛla",
       activity:
-        "N-yɛli Yuli",
+        "yɛla",
       feeding:
-        "Diibu N-yɛli",
+        "Dihibu yɛla",
       unusual:
         "N-yɛli din mali yɛli maa",
       fishCount:
-        "Bihi Dɔɔgu",
-      normal: "Yuli",
+        "Zahim kalinsi",
+      normal: "Dɛdɛ",
       observed:
         "Wɔ nyɛli",
       noneObserved:
-        "Wɔ ka nyɛli",
+        "yɛl'shɛli kani",
       monitoring:
         "Sentinel ni nyɛ bihi n-yɛli ka o nyɛli yɛli din niŋ ka bihi maa brɛ.",
     },
@@ -744,20 +744,20 @@ const translations = {
     },
 
     factors: {
-      temperature: "Kɔligu",
+      temperature: "Biism ni Maasim",
       ph: "pH",
       dissolved_oxygen:
         "Oxygen din be nɔɔŋu ni",
       fish_activity:
-        "Bihi n-yɛli",
+        "Zahim maa yɛla",
       feeding_response:
-        "Diibu n-yɛli",
+        "Dihibu yɛla",
       unusual_behaviour:
-        "N-yɛli din mali yɛli maa",
+        "Yɛla beni",
       ml_anomaly:
         "ML n-yɛli",
       water_quality:
-        "Nɔɔŋu yuli",
+        "Nɔɔŋu kom yeltoha",
     },
 
     voice: {
