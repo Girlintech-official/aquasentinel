@@ -695,52 +695,52 @@ const translations = {
     },
 
     alerts: {
-      title: "Kɔkɔbɩ",
+      title: "Kukɔli",
       unread:
-        "ka wɔ karigimi",
+        "Din na bi karim",
       markRead:
-        "Maali ka wɔ karigimi",
+        "Wuhumi ni a karimya",
       markAllRead:
-        "Maali nyɛla ka wɔ karigimi",
+        "Wuhumi ni a karim di zaa",
       noAlerts:
-        "Kɔkɔbɩ ka be naa.",
+        "kukɔli shɛli na kani.",
       notification:
-        "Yɛli",
+        "Yɛlli",
       riskAlert:
-        "Kaɣila Kɔkɔbɩ",
+        "Kaɣila kukɔli",
       temperatureHigh:
-        "Nɔɔŋu maa kɔligu yɛ pam.",
+        "Pond maa kom maa bii ya pam.",
       temperatureLow:
-        "Nɔɔŋu maa kɔligu yɛ kpɛligu.",
+        "Pond maa kom maa biisim bɛ tiŋa.",
       phHigh:
-        "pH maa yɛ pam.",
+        "pH maa duya pam.",
       phLow:
-        "pH maa yɛ kpɛligu.",
+        "pH maa bɛ tiŋa.",
       oxygenHigh:
-        "Oxygen din be nɔɔŋu ni yɛ pam.",
+        "Oxygen maa duya pam.",
       oxygenLow:
-        "Oxygen din be nɔɔŋu ni yɛ kpɛligu.",
+        "Oxygen din be Pond maa ni bɛ tiŋa.",
       unusualFishBehaviour:
-        "Wɔ nyɛli bihi n-yɛli din mali yɛli maa.",
+        "Zaɣima maa niŋsim bɛ kon'koba zuŋɔ.",
       poorFeeding:
-        "Bihi maa diibu n-yɛli yɛ kpɛligu.",
+        "Zaɣima maa be diri vien'yela.",
       anomaly:
-        "Wɔ nyɛli yɛli din mali yɛli maa nɔɔŋu maa data ni.",
+        "ŋɔ n yɛri yɛlli din mali Pond maa.",
       attention:
-        "A niŋdi pam ka wɔ yɛli nɔɔŋu maa.",
+        "niŋmi zaha pam niŋ Pond maa ni.",
       normal:
-        "Nɔɔŋu maa yɛli ni be yuli din mali.",
+        "Binsheɣu kam chɛni vien'yela.",
 
       readAloud:
-        "Karigimi kɔkɔbɩ ni yɛlima",
+        "Karigimi kukɔli n yɛlima.",
       stopVoice:
-        "Gya yɛlima",
+        "Cheli yɛlibu",
       voiceUnavailable:
-        "Nne din be saa kasa ni ka be afiri maa ni.",
+        "yɛltoha tɔɣsira maa ka ni. ",
       voiceUnsupported:
-        "Browser maa ka tɔɣsi kɔkɔbɩ karigimi ni yɛlima.",
+        "Browser maa ku tooi tɔɣsi yɛltoha maa ka a wum",
       voiceError:
-        "Kɔkɔbɩ maa ka karigimi ni yɛlima.",
+        "Binsheɣu mali yɛltoha tɔɣsira maa.",
     },
 
     factors: {
@@ -762,15 +762,15 @@ const translations = {
 
     voice: {
       prefix:
-        "AquaSentinel kɔkɔbɩ.",
+        "AquaSentinel kukɔli.",
       detected:
-        "Wɔ nyɛli kaɣila wɔ",
+        "kaɣila din bɛni",
       action:
-        "Pahim ni o yɛlima pam kaŋsim maa, ka di niŋ zaŋsim.",
+        "niŋmi zaha pam niŋ Pond maa ni.",
     },
 
     footer:
-      "AquaSentinel • Kɔkɔbɩ Din Ba Ntɛm ma Africa Fish Farming",
+      "AquaSentinel •Africa Zaɣim wumsibu Kukɔli Din Kan'na Yɔm.",
   },
 } as const;
 
