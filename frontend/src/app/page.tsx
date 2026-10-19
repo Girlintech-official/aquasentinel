@@ -2295,16 +2295,6 @@ export default function Home() {
                 height={42}
                 className="rounded-xl object-cover"
               />
-
-              <div>
-                <p className="text-sm font-bold">
-                  AquaSentinel
-                </p>
-
-                <p className="text-[10px] uppercase tracking-[0.2em] text-teal-300">
-                  Labs
-                </p>
-              </div>
             </div>
 
             <nav className="mt-6 flex-1 px-4">
