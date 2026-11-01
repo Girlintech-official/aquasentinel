@@ -2291,8 +2291,8 @@ export default function Home() {
               <Image
                 src="/logo.jpg"
                 alt="AquaSentinel Labs"
-                width={42}
-                height={42}
+                width={100}
+                height={100}
                 className="rounded-xl object-cover"
               />
             </div>

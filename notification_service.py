@@ -1,17 +1,26 @@
+
 """
 AquaSentinel notification service.
 
-Provider-neutral notification layer for dashboard, SMS and future voice/push.
-SMS is optional and only activates when the required environment variables
-are configured. Until then, the service safely logs the event instead of
-breaking risk analysis.
+Provider-neutral notification layer for dashboard, SMS, email and
+future voice/push notifications.
+
+SMS is optional and only activates when the required environment
+variables are configured.
+
+Email notifications are sent to the registered owner of a farm
+when a pond reaches the existing High risk level.
 """
 
 import logging
 import os
+from datetime import datetime, timezone
 from typing import Optional
 
+import psycopg
 from dotenv import load_dotenv
+
+from email_service import send_critical_alert
 
 load_dotenv()
 
@@ -31,6 +40,67 @@ FARMER_PHONE_NUMBER = os.getenv("FARMER_PHONE_NUMBER")
 TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID")
 TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN")
 TWILIO_FROM_NUMBER = os.getenv("TWILIO_FROM_NUMBER")
+
+
+# ============================================================
+# FARMER / POND OWNER DETAILS
+# ============================================================
+
+
+def get_pond_owner_details(pond_id: int):
+    """
+    Retrieve the pond, farm and registered farm owner's details.
+
+    The farmer's registered AquaSentinel account email is used
+    as the email notification recipient.
+    """
+
+    database_url = os.getenv("DATABASE_URL")
+
+    if not database_url:
+        logger.error("DATABASE_URL is not configured.")
+        return None
+
+    try:
+        with psycopg.connect(database_url) as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    """
+                    SELECT
+                        u.email,
+                        f.name,
+                        p.name
+                    FROM ponds p
+                    JOIN farms f
+                        ON p.farm_id = f.id
+                    JOIN users u
+                        ON f.user_id = u.id
+                    WHERE p.id = %s;
+                    """,
+                    (pond_id,),
+                )
+
+                result = cur.fetchone()
+
+                if not result:
+                    logger.warning(
+                        "No farm owner found for pond %s",
+                        pond_id,
+                    )
+                    return None
+
+                return {
+                    "email": result[0],
+                    "farm_name": result[1],
+                    "pond_name": result[2],
+                }
+
+    except Exception:
+        logger.exception(
+            "Could not retrieve owner details for pond %s",
+            pond_id,
+        )
+        return None
 
 
 # ============================================================
@@ -60,6 +130,107 @@ def build_sms_message(
 
 
 # ============================================================
+# EMAIL MESSAGE BUILDING
+# ============================================================
+
+
+def build_email_recommendation(
+    contributing_factors: str,
+) -> str:
+    """
+    Build a general immediate-action recommendation.
+
+    This does not replace the risk engine's contributing factors
+    or introduce new risk classifications.
+    """
+
+    return (
+        "Please inspect the pond immediately. Check the water "
+        "conditions associated with the reported warning, verify "
+        "that your aeration and water-management systems are "
+        "functioning, and take appropriate corrective action. "
+        "Continue monitoring the pond closely."
+    )
+
+
+# ============================================================
+# EMAIL DELIVERY
+# ============================================================
+
+
+def send_farmer_email(
+    pond_id: int,
+    risk_score: float,
+    contributing_factors: str,
+) -> bool:
+    """
+    Send a High-risk email alert to the registered farm owner.
+
+    Email delivery failures are logged and do not interrupt
+    the risk-analysis process.
+    """
+
+    owner_details = get_pond_owner_details(pond_id)
+
+    if not owner_details:
+        logger.warning(
+            "Email not sent: owner details unavailable for pond %s",
+            pond_id,
+        )
+        return False
+
+    recipient = owner_details.get("email")
+
+    if not recipient:
+        logger.warning(
+            "Email not sent: no registered email for pond %s",
+            pond_id,
+        )
+        return False
+
+    recommendation = build_email_recommendation(
+        contributing_factors
+    )
+
+    detected_at = datetime.now(timezone.utc).strftime(
+        "%Y-%m-%d %H:%M:%S UTC"
+    )
+
+    try:
+        result = send_critical_alert(
+            to_email=recipient,
+            farm_name=owner_details["farm_name"],
+            pond_name=owner_details["pond_name"],
+            risk_score=risk_score,
+            contributing_factors=contributing_factors,
+            recommendation=recommendation,
+            detected_at=detected_at,
+        )
+
+        email_sent = bool(result)
+
+        if email_sent:
+            logger.info(
+                "High-risk email notification accepted for pond %s",
+                pond_id,
+            )
+        else:
+            logger.warning(
+                "High-risk email notification was not accepted for pond %s",
+                pond_id,
+            )
+
+        return email_sent
+
+    except Exception:
+        logger.exception(
+            "Email notification failed for pond %s",
+            pond_id,
+        )
+        return False
+
+
+# ============================================================
 # SMS DELIVERY
 # ============================================================
 
@@ -73,7 +244,10 @@ def send_sms(message: str, to_number: Optional[str] = None) -> bool:
     """
 
     if not NOTIFICATION_SMS_ENABLED:
-        logger.info("SMS disabled; notification logged only: %s", message)
+        logger.info(
+            "SMS disabled; notification logged only: %s",
+            message,
+        )
         return False
 
     recipient = to_number or FARMER_PHONE_NUMBER
@@ -127,8 +301,8 @@ def send_sms(message: str, to_number: Optional[str] = None) -> bool:
         )
         return False
 
-    except Exception as exc:
-        logger.exception("SMS notification failed: %s", exc)
+    except Exception:
+        logger.exception("SMS notification failed.")
         return False
 
 
@@ -177,6 +351,7 @@ def dispatch_notification(
 
     sms_sent = False
     voice_sent = False
+    email_sent = False
 
     sms_message = build_sms_message(
         pond_id=pond_id,
@@ -186,6 +361,15 @@ def dispatch_notification(
     )
 
     if risk_level == "High":
+
+        # Send email to the registered owner of the farm.
+        email_sent = send_farmer_email(
+            pond_id=pond_id,
+            risk_score=risk_score,
+            contributing_factors=contributing_factors,
+        )
+
+        # Existing optional SMS notification.
         sms_sent = send_sms(sms_message)
 
         # Voice will be enabled once the provider/language layer is selected.
@@ -206,6 +390,7 @@ def dispatch_notification(
     return {
         "pond_id": pond_id,
         "risk_level": risk_level,
+        "email_sent": email_sent,
         "sms_sent": sms_sent,
         "voice_sent": voice_sent,
         "sms_message": sms_message,
